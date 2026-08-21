@@ -15,7 +15,7 @@ C'est **la** chose à comprendre avant tout le reste. Une app React Native conti
 | Couche | Contenu | Vitesse de mise à jour |
 |---|---|---|
 | **JavaScript / TypeScript** | Tes écrans, composants, styles NativeWind, state Zustand, requêtes Drizzle | **Instantané** (Fast Refresh) |
-| **Natif** (Java/Kotlin, C++) | Le code compilé des modules natifs : `op-sqlite`, `expo-share-intent`, `reanimated`… | **Nécessite une recompilation** (~10-20 min) |
+| **Natif** (Java/Kotlin, C++) | Le code compilé des modules natifs : `expo-sqlite`, `expo-share-intent`, `reanimated`… | **Nécessite une recompilation** (~10-20 min) |
 
 L'app installée sur ton téléphone (le **dev client**) est un conteneur natif compilé une fois.
 Il va chercher le JavaScript à distance, sur le serveur **Metro** qui tourne sur ton PC.
@@ -48,8 +48,9 @@ Il va chercher le JavaScript à distance, sur le serveur **Metro** qui tourne su
    ```
 
 > ⚠️ **Expo Go ne fonctionnera jamais sur ce projet.** Expo Go est un dev client générique qui
-> ne contient que les modules du SDK Expo standard. PostKeep utilise `expo-share-intent` et
-> `@op-engineering/op-sqlite`, qui n'y sont pas. C'est pour ça qu'on a notre propre dev client.
+> ne contient que les modules du SDK Expo standard. PostKeep utilise `expo-share-intent`,
+> qui n'y est pas (même si `expo-sqlite` lui, en fait partie). C'est pour ça qu'on a notre
+> propre dev client.
 
 ---
 
@@ -280,9 +281,10 @@ Créer un fichier dans `src/app/` suffit à créer la route — aucune config à
 
 ### Données : SQLite est la source de vérité
 
-- Toute donnée persistante passe par **Drizzle + op-sqlite**. Jamais dans Zustand, jamais dans un state React.
-- Ouvrir la base avec **`enableChangeListener: true`** — sans ça, `useLiveQuery` ne réagit à rien.
+- Toute donnée persistante passe par **Drizzle + expo-sqlite**. Jamais dans Zustand, jamais dans un state React.
+- Ouvrir la base avec **`enableChangeListener: true`** (`SQLite.openDatabaseSync('db.db', { enableChangeListener: true })`) — sans ça, `useLiveQuery` ne réagit à rien.
 - L'UI se met à jour automatiquement via `useLiveQuery` (pas besoin de TanStack Query en V1).
+- `useLiveQuery` n'existe **que** pour le driver `expo-sqlite`, pas pour `op-sqlite` (raison du changement de driver, voir `INIT.md` §5).
 
 ### Schéma de base : 5 colonnes obligatoires
 

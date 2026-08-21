@@ -53,7 +53,7 @@ Instagram/TikTok → l'app s'ouvre → il ajoute collection + note → retour.
 ### Données locales (source de vérité)
 | Paquet | Note |
 |---|---|
-| `@op-engineering/op-sqlite` | Base SQLite — **pas `expo-sqlite`** (voir §5) |
+| `expo-sqlite` | Base SQLite — voir §5, corrigé post-init : `@op-engineering/op-sqlite` initialement choisi, revenu sur `expo-sqlite` |
 | `drizzle-orm` | Requêtes typées |
 | `drizzle-kit` | Migrations (devDependency) |
 | `useLiveQuery` | Réactivité UI, natif Drizzle — **pas de TanStack Query en V1** |
@@ -307,8 +307,11 @@ Prérequis : téléphone Android en USB avec débogage activé, ou émulateur la
 
 ### Étape 9 — Verrouillage
 Une fois le build validé, retirer les `^` et `~` dans `package.json` pour :
-`expo`, `nativewind`, `tailwindcss`, `@op-engineering/op-sqlite`, `expo-share-intent`,
+`expo`, `nativewind`, `tailwindcss`, `expo-share-intent`,
 `react-native-reanimated`, `react-native-gesture-handler`
+(`expo-sqlite`, package du registre Expo comme `expo-image`/`expo-haptics`, n'a pas besoin
+d'un verrouillage exact — contrairement à `@op-engineering/op-sqlite` initialement prévu ici,
+hors registre. Voir §5, correction post-init.)
 
 ```bash
 git init
@@ -320,16 +323,32 @@ git commit -m "chore: init — stack validated on SDK 57, versions locked"
 
 ## 5. Décisions d'architecture à respecter
 
-### op-sqlite, pas expo-sqlite
-PowerSync (moteur de sync prévu en V1.5) **ne fonctionne pas avec `expo-sqlite`**.
-Partir directement sur `op-sqlite` élimine une migration future.
-Drizzle supporte les deux avec une API quasi identique.
+### expo-sqlite, pas op-sqlite (corrigé post-init)
+
+**Décision initiale (fausse)** : PowerSync ne fonctionnerait pas avec `expo-sqlite`, donc
+partir directement sur `op-sqlite` éliminerait une migration future.
+
+**Correction** — deux erreurs vérifiées après coup :
+
+1. `drizzle-orm/op-sqlite` n'a **pas** de `useLiveQuery`. Feature request ouverte chez
+   Drizzle depuis le 8 sept. 2024, toujours non résolue :
+   [drizzle-orm#2926](https://github.com/drizzle-team/drizzle-orm/issues/2926).
+   La doc officielle op-sqlite ne documente que `useMigrations`, jamais `useLiveQuery`.
+2. La prémisse elle-même était fausse : PowerSync **n'utilise pas** la connexion op-sqlite
+   de l'app — il instancie sa propre base (`PowerSyncDatabase` + `OPSqliteOpenFactory` ou
+   équivalent), quel que soit le driver de départ. Le bénéfice "zéro migration" en V1.5
+   n'existe pas : l'instanciation de la base est de toute façon remplacée à la transition.
+   Ce qui survit, c'est le **schéma Drizzle**, identique avec `expo-sqlite` ou `op-sqlite`.
+
+→ **`expo-sqlite` retenu** : `useLiveQuery` y est documenté et standard, c'est le chemin
+le plus emprunté de la doc Drizzle/Expo, et il n'y a aucune perte côté V1.5.
 
 ### Pas de TanStack Query en V1
-Drizzle fournit `useLiveQuery`, qui observe les changements SQLite et re-render
-automatiquement. TanStack Query ferait doublon.
+Drizzle fournit `useLiveQuery` (driver `expo-sqlite`), qui observe les changements SQLite
+et re-render automatiquement. TanStack Query ferait doublon.
 
-⚠️ **Requiert `enableChangeListener: true`** à l'ouverture de la base, sinon
+⚠️ **Requiert `enableChangeListener: true`** à l'ouverture de la base
+(`SQLite.openDatabaseSync('db.db', { enableChangeListener: true })`), sinon
 `useLiveQuery` ne réagit à rien.
 
 → TanStack Query reviendra en V1.5 via `@powersync/react-query`, pour l'état réseau.

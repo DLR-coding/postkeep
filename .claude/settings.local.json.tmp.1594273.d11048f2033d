@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx expo-doctor *)",
+      "Bash(npx expo *)",
+      "Bash(git mv *)",
+      "Bash(timeout 60 npx @react-native-reusables/cli doctor --yes 2>&1)",
+      "Bash(npx eas-cli *)",
+      "Bash(git commit *)",
+      "WebSearch",
+      "Bash(gh issue *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:powersync.mintlify.app)",
+      "WebFetch(domain:orm.drizzle.team)",
+      "Bash(npm uninstall *)",
+      "Bash(git add *)"
+    ]
+  }
+}
