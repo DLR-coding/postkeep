@@ -1,5 +1,29 @@
 # Initialisation du projet — Spec pour Claude Code
 
+> ## 📦 Document historique — archivé
+>
+> **L'initialisation décrite ici est terminée** (21 août 2026). Ce document est conservé
+> comme trace du raisonnement et des pièges rencontrés, **pas comme référence courante**.
+>
+> Pour travailler sur le projet aujourd'hui :
+>
+> | Besoin | Document |
+> |---|---|
+> | Les décisions d'architecture en vigueur | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+> | Lancer et développer au quotidien | [DEVELOPMENT.md](./DEVELOPMENT.md) |
+> | Conventions et workflow git | [CONTRIBUTING.md](./CONTRIBUTING.md) |
+> | Ce qu'il reste à faire | [ROADMAP.md](./ROADMAP.md) · [TODO.md](./TODO.md) |
+>
+> ⚠️ **En cas de contradiction, `ARCHITECTURE.md` fait foi.** Certaines décisions de ce
+> document ont été corrigées après vérification — notamment le choix du driver SQLite
+> (§5), revenu de `op-sqlite` à `expo-sqlite`.
+>
+> Les écarts constatés pendant l'exécution (dépendances manquantes non listées ici,
+> procédure de build remplacée par EAS Build, étape de validation `bottom-sheet` ajoutée)
+> sont consignés dans [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
 > **À lire en entier avant d'exécuter quoi que ce soit.**
 > Ce document décrit l'initialisation complète d'une app mobile Expo/React Native.
 > Une première tentative a échoué sur 4 points précis, documentés en section « Pièges ».

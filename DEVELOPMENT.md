@@ -3,8 +3,17 @@
 > Guide destiné à quelqu'un qui débute en React Native / Expo.
 > Il décrit **comment travailler au quotidien** sur ce projet : lancer, tester, ajouter du code,
 > ajouter une dépendance, et savoir quand il faut reconstruire l'application.
->
-> Pour la stack et les décisions d'architecture, voir [`INIT.md`](./INIT.md).
+
+**Les autres documents du projet :**
+
+| Fichier | Contenu |
+|---|---|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Les décisions techniques et leurs raisons — **à lire avant de coder** |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Conventions de code, workflow git, checklist de relecture |
+| [ROADMAP.md](./ROADMAP.md) | Les phases de développement et leur ordre |
+| [TODO.md](./TODO.md) | Ce qu'il y a à faire maintenant |
+| [CHANGELOG.md](./CHANGELOG.md) | Historique des changements |
+| [INIT.md](./INIT.md) | Archive de l'initialisation — historique, pas une référence courante |
 
 ---
 
@@ -82,6 +91,31 @@ Puis sur le téléphone : ouvrir l'app **postkeep**, et se connecter au serveur.
 Les erreurs JavaScript s'affichent en rouge sur le téléphone **et** dans le terminal.
 Les `console.log()` apparaissent dans le terminal où tourne Metro.
 
+### Tester la réception d'un partage
+
+C'est la fonctionnalité d'entrée du produit — et elle a **deux chemins de code différents**
+qu'il faut tester séparément (cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7).
+
+**Cas 1 — app déjà ouverte** (le plus courant en développement) :
+
+1. Ouvrir postkeep, se connecter à Metro, attendre l'écran d'accueil
+2. Basculer vers une autre app (Chrome, Notes…) — **sans fermer postkeep**
+3. Sélectionner du texte ou une URL → Partager → PostKeep
+4. → L'app revient au premier plan et navigue vers l'écran de partage
+
+**Cas 2 — app fermée (démarrage à froid)** :
+
+1. Fermer postkeep (balayage dans les applications récentes)
+2. Partager depuis une autre app
+3. → L'app démarre. **En développement, elle affichera l'écran de connexion au serveur**
+   avant de pouvoir charger le JavaScript : c'est normal, le dev client doit d'abord
+   joindre Metro. Ce n'est pas un bug — en production, le JS est embarqué et l'écran de
+   partage s'ouvre directement.
+
+> 🐛 **Piège vécu** : un partage reçu alors que l'app tournait déjà ne déclenchait rien.
+> `+native-intent.tsx` ne couvre que le démarrage à froid. Il faut **aussi** un
+> `ShareIntentProvider` monté à la racine. Si vous touchez à cette partie, testez les deux cas.
+
 ---
 
 ## 4. Quand faut-il reconstruire l'app ? (la question qui revient tout le temps)
@@ -111,6 +145,25 @@ Les `console.log()` apparaissent dans le terminal où tourne Metro.
 > 💡 **Bonne pratique senior :** grouper les changements natifs. Si tu sais que tu vas ajouter
 > trois modules natifs, installe-les **tous d'abord**, puis fais **un seul** build — au lieu de
 > payer 3 × 15 minutes de compilation.
+
+### ⚠️ État actuel : un rebuild est en attente
+
+`expo-sqlite` a été ajouté au projet **après** la construction du dev client actuellement
+installé. Le module natif n'est donc **pas** dans l'app sur le téléphone.
+
+Ça ne pose aucun problème tant que **rien n'importe `expo-sqlite`** — du code jamais exécuté
+ne peut pas planter. Mais dès la première ligne de code qui ouvre la base
+(début de la Phase 1, cf. [ROADMAP.md](./ROADMAP.md)), il faudra reconstruire une fois :
+
+```bash
+npx eas-cli build --profile development --platform android
+```
+
+Après ce rebuild, retour au Fast Refresh normal — modifier le schéma ou écrire des requêtes
+ne demandera **pas** de nouveau build.
+
+Symptôme si on oublie : l'app plante au lancement avec une erreur du type
+*« native module not found »*.
 
 ---
 
@@ -243,23 +296,33 @@ C'est normal et sans danger : Expo publie des versions patch régulièrement.
 ```
 postkeep/
 ├── src/
-│   ├── app/                 # Écrans — expo-router : 1 fichier = 1 route
-│   │   ├── _layout.tsx      #   Layout racine : providers globaux
-│   │   └── index.tsx        #   Écran d'accueil ("/")
+│   ├── app/                    # Routes UNIQUEMENT — expo-router : 1 fichier = 1 route
+│   │   ├── _layout.tsx         #   Layout racine : providers globaux + Stack
+│   │   ├── +native-intent.tsx  #   Redirection des partages entrants (app fermée)
+│   │   ├── shareintent.tsx     #   Écran de réception d'un partage (modale)
+│   │   └── (tabs)/             #   Groupe d'onglets
+│   │       ├── _layout.tsx
+│   │       ├── index.tsx       #     Accueil ("/")
+│   │       └── explore.tsx     #     (démo du template, à supprimer)
+│   ├── screens/                # Corps des écrans complexes (à créer, voir CONTRIBUTING §3)
 │   ├── components/
-│   │   └── ui/              # Composants React Native Reusables (copiés, modifiables)
+│   │   └── ui/                 # Composants React Native Reusables (copiés, modifiables)
+│   ├── db/
+│   │   ├── schema.ts           #   Schéma Drizzle (vide pour l'instant)
+│   │   └── migrations/         #   Migrations générées par drizzle-kit
 │   ├── lib/
-│   │   ├── utils.ts         #   cn() — fusion de classes Tailwind
-│   │   └── theme.ts         #   THEME + NAV_THEME (couleurs en TS)
-│   ├── constants/theme.ts   # Thème du template Expo d'origine
+│   │   ├── utils.ts            #   cn() — fusion de classes Tailwind
+│   │   └── theme.ts            #   THEME + NAV_THEME (couleurs en TS)
+│   ├── constants/theme.ts      # Thème du template Expo d'origine (à fusionner/supprimer)
 │   └── hooks/
-├── global.css               # Directives Tailwind + variables CSS du thème
-├── tailwind.config.js       # Mapping couleurs → variables CSS. content: ./src/**
-├── metro.config.js          # Bundler + NativeWind (inlineRem: 16 requis par RNR)
-├── babel.config.js          # Preset Expo + NativeWind
-├── app.json                 # Config de l'app : nom, package, plugins, permissions
-├── eas.json                 # Profils de build cloud
-└── components.json          # Config du CLI React Native Reusables
+├── global.css                  # Directives Tailwind + variables CSS du thème
+├── tailwind.config.js          # Mapping couleurs → variables CSS. content: ./src/**
+├── metro.config.js             # Bundler + NativeWind (inlineRem: 16) + .sql (Drizzle)
+├── babel.config.js             # Preset Expo + NativeWind + inline-import (.sql)
+├── drizzle.config.ts           # Configuration drizzle-kit (dialect sqlite, driver expo)
+├── app.json                    # Config de l'app : nom, package, plugins, permissions
+├── eas.json                    # Profils de build cloud
+└── components.json             # Config du CLI React Native Reusables
 ```
 
 ### Routing : expo-router
@@ -268,36 +331,35 @@ Le routing est **basé sur les fichiers**, comme Next.js :
 
 | Fichier | Route |
 |---|---|
-| `src/app/index.tsx` | `/` |
+| `src/app/(tabs)/index.tsx` | `/` |
 | `src/app/settings.tsx` | `/settings` |
 | `src/app/post/[id].tsx` | `/post/123` (paramètre dynamique) |
 | `src/app/_layout.tsx` | Layout partagé (ne crée pas de route) |
+| `src/app/(tabs)/` | Groupe — les parenthèses **n'apparaissent pas** dans l'URL |
 
 Créer un fichier dans `src/app/` suffit à créer la route — aucune config à modifier.
+
+⚠️ **`src/app/` ne doit contenir que des routes.** Un écran qui grossit va dans
+`src/screens/`, la route se contentant de le rendre. Voir
+[CONTRIBUTING.md](./CONTRIBUTING.md) §3.
 
 ---
 
 ## 11. Règles de code spécifiques au projet
 
-### Données : SQLite est la source de vérité
+Les règles complètes et leurs justifications sont dans
+[ARCHITECTURE.md](./ARCHITECTURE.md) — **source de vérité**, ne pas dupliquer ici.
+Le rappel minimal pour le travail quotidien :
 
-- Toute donnée persistante passe par **Drizzle + expo-sqlite**. Jamais dans Zustand, jamais dans un state React.
-- Ouvrir la base avec **`enableChangeListener: true`** (`SQLite.openDatabaseSync('db.db', { enableChangeListener: true })`) — sans ça, `useLiveQuery` ne réagit à rien.
-- L'UI se met à jour automatiquement via `useLiveQuery` (pas besoin de TanStack Query en V1).
-- `useLiveQuery` n'existe **que** pour le driver `expo-sqlite`, pas pour `op-sqlite` (raison du changement de driver, voir `INIT.md` §5).
-
-### Schéma de base : 5 colonnes obligatoires
-
-Toute table synchronisable **doit** avoir ces colonnes dès la V1, même si la synchronisation
-n'arrive qu'en V1.5 (migrer un schéma sur des appareils déjà installés coûte cher) :
-
-| Colonne | Type | Raison |
-|---|---|---|
-| `id` | `TEXT PRIMARY KEY` | UUID généré côté client — **jamais** d'auto-increment |
-| `created_at` | `INTEGER` | Requis par les moteurs de sync |
-| `updated_at` | `INTEGER` | Sync delta : quelles lignes ont changé |
-| `deleted_at` | `INTEGER NULL` | **Soft delete** — un vrai `DELETE` ne se propage pas entre appareils |
-| `user_id` | `TEXT NULL` | Nullable : rattacher a posteriori les données créées avant inscription |
+- **Données persistantes → SQLite** (Drizzle). Jamais dans Zustand, jamais dans un `useState`.
+  Zustand ne sert qu'à l'état d'interface (filtre actif, modale ouverte).
+- **Ouvrir la base avec `enableChangeListener: true`**, sinon `useLiveQuery` ne réagit à rien.
+- **5 colonnes obligatoires** sur toute table : `id` (TEXT, UUID client), `created_at`,
+  `updated_at`, `deleted_at`, `user_id` → [détail et raisons](./ARCHITECTURE.md#4-schéma-de-données--5-colonnes-obligatoires).
+- **Jamais de vrai `DELETE`** — mettre `deleted_at` à jour, et filtrer
+  `WHERE deleted_at IS NULL` dans **toutes** les lectures.
+- **Couleurs du thème uniquement** (`bg-background`, `text-foreground`…), jamais de couleur
+  en dur : sinon le mode sombre casse.
 
 ---
 
@@ -312,6 +374,11 @@ n'arrive qu'en V1.5 (migrer un schéma sur des appareils déjà installés coût
 | Écran rouge « native module not found » | Idem — le natif manque dans le dev client | Idem |
 | `expo-doctor` signale des versions décalées | Nouvelles versions patch publiées | `npx expo install --fix` |
 | Le CLI RNR reste bloqué sans rien afficher | Il attend une réponse interactive | Relancer avec `--yes` |
+| Texte invisible (noir sur noir en mode sombre) | `Text` de `react-native` au lieu de celui de RNR | Importer `Text` depuis `@/components/ui/text` |
+| Un partage n'ouvre pas l'écran attendu | Un seul des deux chemins de réception est câblé | Vérifier `+native-intent.tsx` **et** `ShareIntentProvider` racine (ARCHITECTURE §7) |
+| `useLiveQuery` ne se met jamais à jour | Base ouverte sans `enableChangeListener: true` | Corriger l'ouverture de la base dans `src/db/` |
+| Des éléments supprimés réapparaissent | Requête sans filtre sur la suppression logique | Ajouter `WHERE deleted_at IS NULL` |
+| Micro-saccade au lancement | Deux animations du template qui s'enchaînent | Comportement connu, disparaîtra au nettoyage du template ([TODO.md](./TODO.md)) |
 
 ---
 

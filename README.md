@@ -1,56 +1,92 @@
-# Welcome to your Expo app 👋
+# PostKeep
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile **Android** qui centralise les posts sauvegardés depuis les réseaux
+sociaux (Instagram, TikTok, X, Threads…), avec prise de notes et organisation par collections.
 
-## Get started
+Le problème qu'elle résout : les posts « enregistrés » dans chaque app deviennent des
+cimetières illisibles, cloisonnés par plateforme, sans recherche ni contexte. PostKeep les
+rassemble au même endroit, avec vos propres notes.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## État du projet
 
-2. Start the app
+| | |
+|---|---|
+| **Phase actuelle** | Phase 1 — Fondation données (voir [ROADMAP.md](./ROADMAP.md)) |
+| **Plateforme** | Android uniquement en V1 (iOS envisagé plus tard) |
+| **Architecture** | Local-first — SQLite est la source de vérité, l'app fonctionne hors ligne et sans compte |
+| **Backend** | Aucun en V1 (contrainte : coût zéro). Synchronisation prévue en V1.5 |
 
-   ```bash
-   npx expo start
-   ```
+⚠️ **L'app n'est pas encore utilisable.** L'initialisation technique est terminée
+(elle build, se lance, reçoit un partage), mais aucune fonctionnalité produit n'est
+implémentée.
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Comment ça marche (parcours utilisateur cible)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+Instagram/TikTok  →  Partager  →  PostKeep s'ouvre
+                                        ↓
+                        Choisir une collection + écrire une note
+                                        ↓
+                              Retour à l'app d'origine
+                                        ↓
+                   Plus tard : retrouver, chercher, rouvrir le post
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-### Other setup steps
+## Stack
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Domaine | Choix |
+|---|---|
+| Framework | Expo SDK 57 / React Native 0.86 / React 19.2 / TypeScript |
+| Navigation | `expo-router` (routing par fichiers) |
+| Style | NativeWind 4 + Tailwind 3 (versions épinglées) |
+| Composants | [React Native Reusables](https://reactnativereusables.com) (shadcn/ui pour mobile) |
+| Données | `expo-sqlite` + Drizzle ORM |
+| État UI | Zustand (état d'interface uniquement — jamais les données) |
+| Formulaires | react-hook-form + Zod |
+| Réception des partages | `expo-share-intent` |
+| Build & distribution | EAS Build (cloud) |
 
-## Learn more
+Le détail des choix et de leurs raisons : [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Démarrage rapide
 
-## Join the community
+**Prérequis :** Node.js 22.13.x, un téléphone Android, le même réseau Wi-Fi que votre PC.
 
-Join our community of developers creating universal apps.
+```bash
+npm install
+npx expo start --dev-client
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Puis ouvrir l'app **postkeep** sur le téléphone et se connecter au serveur affiché.
+
+⚠️ **Expo Go ne fonctionne pas sur ce projet** — il faut un *development build*.
+La procédure complète (installation du dev client, quand reconstruire, dépannage) est dans
+[DEVELOPMENT.md](./DEVELOPMENT.md). **À lire avant de commencer.**
+
+---
+
+## Documentation
+
+| Fichier | À lire quand |
+|---|---|
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | **En premier.** Comment lancer, coder, tester au quotidien |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Avant d'écrire du code — les règles non négociables et leurs raisons |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Avant votre première contribution — git, commits, conventions de code |
+| [ROADMAP.md](./ROADMAP.md) | Pour comprendre où va le projet et ce qui est dans quelle phase |
+| [TODO.md](./TODO.md) | Pour trouver quoi faire maintenant |
+| [CHANGELOG.md](./CHANGELOG.md) | Ce qui a changé, version par version |
+| [INIT.md](./INIT.md) | Archive historique de l'initialisation — pas une référence courante |
+
+---
+
+## Licence
+
+Voir [LICENSE](./LICENSE).
