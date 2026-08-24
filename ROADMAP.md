@@ -71,7 +71,8 @@ produit ne peut exister sans stockage.
 
 **Objectif** : le parcours principal du produit fonctionne de bout en bout.
 
-> Partager un post depuis Instagram → choisir une collection → écrire une note → c'est sauvegardé.
+> Partager un post depuis Instagram → choisir une ou plusieurs collections → écrire une note →
+> c'est sauvegardé.
 
 ### Contenu
 
@@ -96,7 +97,8 @@ quitter le parcours.
 - Tester **les deux chemins de réception** (app fermée / app en arrière-plan) —
   cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7
 - Le texte partagé n'est pas toujours une URL propre — prévoir les cas dégradés
-- Un même post partagé deux fois : doublon ou mise à jour ? À trancher.
+- Un même post partagé deux fois : normaliser l'URL (query + fragment retirés) et rouvrir
+  l'existant en édition plutôt que dupliquer — tranché, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4
 
 ---
 

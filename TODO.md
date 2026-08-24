@@ -6,44 +6,44 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 22 août 2026
+Dernière mise à jour : 24 août 2026
 
 ---
 
-## 🔴 Bloquant — Phase 1 (fondation données)
+## 🔴 Bloquant — Phase 2 (capture)
 
-Rien d'autre ne peut avancer tant que ceci n'est pas fait.
+Objectif : partager un post depuis Instagram → choisir une ou plusieurs collections → écrire
+une note → c'est sauvegardé, retour à l'app d'origine. Voir
+[ROADMAP.md](./ROADMAP.md#phase-2--capture) pour le détail et les points d'attention.
 
-- [x] **Définir le schéma Drizzle** dans `src/db/schema.ts` — tables `posts`, `collections` et
-      `post_collections`, les 5 colonnes obligatoires sur chacune, `id` en `TEXT PRIMARY KEY`
-- [x] **Générer la première migration** — `src/db/migrations/0000_special_next_avengers.sql`
-- [x] **Créer `src/db/index.ts`** : base ouverte avec `enableChangeListener: true`,
-      plus `newId()` (UUID natif d'`expo-modules-core`)
-- [x] **Appliquer les migrations au démarrage** — `useMigrations` dans `src/app/_layout.tsx`,
-      avec calque d'attente et calque d'erreur
-- [x] **Premier rebuild natif** — build `82dbc870` du 24 août 2026, sur le commit `471e31e`
-  - ⚠️ **`expo-clipboard` n'est pas dedans** : installé le 24 mais non commité au moment du
-    build, et EAS builde depuis `git HEAD` (cf. [DEVELOPMENT.md](./DEVELOPMENT.md) §7).
-    **Ne pas l'importer avant le prochain build.** Pas nécessaire avant la phase 3.
-  - 📝 Côté natif l'APK est en `expo` 57.0.15 alors que l'arbre de travail est en ~57.0.16 :
-    écart de patch, sans conséquence pratique, résorbé au prochain build
-  - 📝 Un build embarque les modules natifs présents dans `package.json` **au moment du build**
-    (autolinking). Le tableau `plugins` d'`app.json` ne sert qu'aux *config plugins*, ceux qui
-    modifient le projet natif — un module sans config plugin est embarqué sans y figurer.
-  - ✅ Contient tout ce que les phases 1 à 3 demandent : `expo-sqlite`, `expo-share-intent`,
-    `expo-haptics`, `expo-notifications`, `@shopify/flash-list`, `react-native-svg`,
-    `react-native-keyboard-controller`. Le retour à l'app d'origine après sauvegarde passe
-    par `BackHandler.exitApp()` du cœur de RN — `expo-share-intent` ne fournit rien pour ça,
-    seulement `resetShareIntent()`.
-  - 💡 Un second build sera de toute façon nécessaire en phase 6 (icône, splash, nom, version) :
-    la configuration du plugin `expo-notifications` (icône et couleur) voyagera avec celui-là
-- [x] **Partage vérifié sur appareil réel** (24 août 2026, build `82dbc870`) — les deux
-      chemins fonctionnent : app fermée (`+native-intent.tsx` redirige vers `/shareintent`
-      après connexion au dev server) et app en arrière-plan (le provider racine navigue
-      directement, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7)
-- [x] **Validé sur appareil réel** (24 août 2026) : le compteur s'incrémente sans
-      rechargement (`enableChangeListener` fonctionne) et le compte persiste après
-      redémarrage complet de l'app — critère de fin de la phase 1 atteint
+Modules natifs déjà présents dans le dev client (build `ca01f523`, cf. « ✅ Terminé »
+ci-dessous) — rien à réinstaller pour cette phase : `@gorhom/bottom-sheet`,
+`react-native-toast-message`, `expo-haptics`, `expo-clipboard`.
+
+- [ ] **Analyser l'URL partagée** : détecter la plateforme (Instagram, TikTok, X, Threads),
+      extraire l'URL propre du texte partagé, normaliser (query + fragment retirés,
+      cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4)
+  - 💡 Logique pure, sans interface — le candidat le plus rentable pour le premier test
+    automatisé du projet (cf. section Outillage ci-dessous)
+- [ ] **Retrouver un post existant** par URL normalisée (`WHERE url = ? AND deleted_at IS NULL`)
+      pour rouvrir en édition plutôt que dupliquer
+- [ ] **Écran de sauvegarde réel**, remplace `src/app/shareintent.tsx` (actuellement un écran
+      de test) :
+  - Aperçu = logo de la plateforme déduit de l'URL (pas de récupération de métadonnées,
+    cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §6)
+  - Collections en **multi-sélection** (création à la volée incluse) — zéro collection est
+    un état valide
+  - Champ de note
+  - `@gorhom/bottom-sheet` + `react-hook-form` + validation Zod
+- [ ] **Écriture transactionnelle** : upsert du post, puis diff des rangements
+      `post_collections` (cochée et absente → insertion ou résurrection si la ligne existe déjà
+      supprimée ; décochée mais présente → `deleted_at`), cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4
+- [ ] **Retour à l'app d'origine** après sauvegarde — `BackHandler.exitApp()` (cœur de RN ;
+      `expo-share-intent` n'offre que `resetShareIntent()`, pas de retour à l'app source)
+- [ ] **Confirmation visuelle** (`react-native-toast-message` + `expo-haptics`)
+- [ ] **Valider sur appareil** : partager trois posts de trois plateformes différentes, avec
+      notes et collections, sans quitter le parcours — et tester les deux chemins de réception
+      (app fermée / arrière-plan, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7)
 
 ---
 
@@ -129,6 +129,29 @@ post déjà présent rouvert plutôt que dupliqué.
 ---
 
 ## ✅ Terminé
+
+<details>
+<summary>Phase 1 — Fondation données (24 août 2026)</summary>
+
+- [x] Schéma Drizzle : `posts`, `collections`, `post_collections` (jointure N↔N), les 5
+      colonnes de sync sur chacune — décisions consignées dans
+      [ARCHITECTURE.md](./ARCHITECTURE.md) §4
+- [x] Première migration générée — `src/db/migrations/0000_special_next_avengers.sql`
+- [x] `src/db/index.ts` : base ouverte avec `enableChangeListener: true`, `newId()` (UUID natif)
+- [x] `useMigrations` au démarrage (`src/app/_layout.tsx`), calque d'attente + calque d'erreur
+- [x] `expo-clipboard` installé (préparation du « copier le lien » de la phase 3), versions
+      SDK 57 réalignées (`expo-doctor` 21/21)
+- [x] Rebuild natif — deux builds le 24 août : `82dbc870` sur le commit `471e31e` (sans
+      `expo-clipboard` ni l'alignement de patch, commités après coup), puis `ca01f523` sur le
+      commit `021e7fd` une fois la phase 1 committée. **C'est ce second build qui est sur
+      l'appareil** — cf. [DEVELOPMENT.md](./DEVELOPMENT.md) §7 « EAS builde depuis `git HEAD` »
+      pour ne pas reproduire le décalage
+- [x] Banc d'essai (`DatabaseSmokeTest`) retiré de l'onglet Home une fois son rôle rempli
+- [x] Validé sur appareil réel : les deux chemins de partage (app fermée / arrière-plan),
+      écriture reflétée sans rechargement, persistance après redémarrage complet — reconfirmé
+      fonctionnel sur le build final `ca01f523`
+
+</details>
 
 <details>
 <summary>Phase 0 — Initialisation (21 août 2026)</summary>
