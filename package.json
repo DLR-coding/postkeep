@@ -5,6 +5,8 @@
   "dependencies": {
     "@expo/ui": "~57.0.13",
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@rn-primitives/checkbox": "^1.5.2",
+    "@rn-primitives/label": "^1.5.2",
     "@rn-primitives/portal": "^1.5.3",
     "@rn-primitives/slot": "^1.5.2",
     "@shopify/flash-list": "2.0.2",
@@ -53,8 +55,11 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "@types/react": "~19.2.2",
     "drizzle-kit": "^0.31.10",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -63,7 +68,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "node --test src/**/*.test.ts"
   },
   "private": true
 }

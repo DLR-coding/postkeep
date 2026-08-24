@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
 
 import { PortalHost } from '@rn-primitives/portal';
 
@@ -84,6 +85,7 @@ export default function RootLayout() {
           </Stack>
           {!success && <MigrationGate error={error} />}
           <PortalHost />
+          <Toast />
         </ThemeProvider>
       </ShareIntentProvider>
     </GestureHandlerRootView>
