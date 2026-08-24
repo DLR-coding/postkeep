@@ -20,6 +20,29 @@ fonctionnalité produit n'est implémentée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Écran de sauvegarde d'un post** (`src/screens/save-post/`) : reçoit un partage, propose les
+  collections en cases à cocher (création à la volée via un bouton dédié), un champ note, puis
+  enregistre et referme l'app vers l'app d'origine (`BackHandler.exitApp()`) après une
+  confirmation (`react-native-toast-message` + `expo-haptics`)
+  - Un post déjà partagé (même URL normalisée) se rouvre en édition — note et collections
+    préremplies — plutôt que de se dupliquer
+  - `src/lib/share-url.ts` : détection de plateforme (Instagram/TikTok/X/Threads) et
+    normalisation d'URL (query + fragment retirés), logique pure testée
+    (`src/lib/share-url.test.ts`)
+  - `src/db/posts.ts` (`findPostByUrl`, `findPostCollectionIds`, `savePost`) et
+    `src/db/collections.ts` (`createCollection`)
+  - `savePost` diffuse les rangements `post_collections` (insertion, résurrection d'une ligne
+    supprimée, ou `deleted_at`) dans une seule transaction — jamais de vrai `DELETE`
+    (ARCHITECTURE.md §4)
+  - Composants React Native Reusables ajoutés : `checkbox`, `label`, `icon`. La note et le
+    champ « nouvelle collection » utilisent `BottomSheetTextInput` (clavier intégré à la
+    feuille) plutôt que `Input`/`Textarea` — `className` NativeWind ne s'applique pas
+    automatiquement aux composants tiers non enregistrés via `cssInterop`, stylés en `style`
+    inline avec les couleurs du thème à la place
+- **`node --test`** (natif Node 24, zéro dépendance) comme suite de tests — `npm test`. Premier
+  module couvert : l'analyse d'URL
+- **ESLint configuré** (`eslint.config.js`, `eslint-config-expo`) — `npm run lint` (`expo lint`)
+  échoue avec une erreur de résolution de module ; `npx eslint .` fonctionne en attendant
 - Initialisation du projet sur **Expo SDK 57** (React Native 0.86.2, React 19.2.3, TypeScript),
   `expo-doctor` 21/21
 - **NativeWind 4.2.6 + Tailwind CSS 3.4.19** — versions épinglées volontairement

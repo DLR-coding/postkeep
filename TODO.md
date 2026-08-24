@@ -6,44 +6,29 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 24 août 2026
+Dernière mise à jour : 25 août 2026
 
 ---
 
-## 🔴 Bloquant — Phase 2 (capture)
+## 🔴 Bloquant — Phase 3 (consultation)
 
-Objectif : partager un post depuis Instagram → choisir une ou plusieurs collections → écrire
-une note → c'est sauvegardé, retour à l'app d'origine. Voir
-[ROADMAP.md](./ROADMAP.md#phase-2--capture) pour le détail et les points d'attention.
+Objectif : retrouver et rouvrir ce qu'on a sauvegardé. Sans ça, la phase 2 ne sert à rien. Voir
+[ROADMAP.md](./ROADMAP.md#phase-3--consultation) pour le détail et les points d'attention.
 
-Modules natifs déjà présents dans le dev client (build `ca01f523`, cf. « ✅ Terminé »
-ci-dessous) — rien à réinstaller pour cette phase : `@gorhom/bottom-sheet`,
-`react-native-toast-message`, `expo-haptics`, `expo-clipboard`.
-
-- [ ] **Analyser l'URL partagée** : détecter la plateforme (Instagram, TikTok, X, Threads),
-      extraire l'URL propre du texte partagé, normaliser (query + fragment retirés,
-      cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4)
-  - 💡 Logique pure, sans interface — le candidat le plus rentable pour le premier test
-    automatisé du projet (cf. section Outillage ci-dessous)
-- [ ] **Retrouver un post existant** par URL normalisée (`WHERE url = ? AND deleted_at IS NULL`)
-      pour rouvrir en édition plutôt que dupliquer
-- [ ] **Écran de sauvegarde réel**, remplace `src/app/shareintent.tsx` (actuellement un écran
-      de test) :
-  - Aperçu = logo de la plateforme déduit de l'URL (pas de récupération de métadonnées,
-    cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §6)
-  - Collections en **multi-sélection** (création à la volée incluse) — zéro collection est
-    un état valide
-  - Champ de note
-  - `@gorhom/bottom-sheet` + `react-hook-form` + validation Zod
-- [ ] **Écriture transactionnelle** : upsert du post, puis diff des rangements
-      `post_collections` (cochée et absente → insertion ou résurrection si la ligne existe déjà
-      supprimée ; décochée mais présente → `deleted_at`), cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4
-- [ ] **Retour à l'app d'origine** après sauvegarde — `BackHandler.exitApp()` (cœur de RN ;
-      `expo-share-intent` n'offre que `resetShareIntent()`, pas de retour à l'app source)
-- [ ] **Confirmation visuelle** (`react-native-toast-message` + `expo-haptics`)
-- [ ] **Valider sur appareil** : partager trois posts de trois plateformes différentes, avec
-      notes et collections, sans quitter le parcours — et tester les deux chemins de réception
-      (app fermée / arrière-plan, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7)
+- [ ] **Liste des posts** avec `@shopify/flash-list` (**pas** `FlatList` — les listes seront
+      longues)
+- [ ] **Carte de post** : plateforme (déduite de l'URL, cf. `src/lib/share-url.ts`), note,
+      collection(s), date
+- [ ] **Ouverture** : appui sur la carte → `Linking.openURL()` → l'OS ouvre l'app d'origine
+      (pas de WebView, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §6)
+- [ ] **Suppression logique** (`deleted_at`, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4
+      « Deux niveaux de suppression ») : le balayage supprime le post dans « Tous les posts »,
+      mais l'ôte seulement de la collection courante dans une vue collection — libellés
+      distincts obligatoires (« Supprimer » vs « Retirer de … »), suppression définitive
+      depuis une vue collection réservée à un chemin explicite
+- [ ] **État vide** soigné — c'est le premier écran que verra un nouvel utilisateur
+- [ ] **Valider sur appareil** : voir tous ses posts, en rouvrir un dans son app d'origine, en
+      supprimer un et qu'il ne revienne pas après redémarrage (critère de fin de phase)
 
 ---
 
@@ -61,7 +46,7 @@ terrain de test.
 - [ ] Reconfigurer `src/components/app-tabs.tsx` (onglets « Home »/« Explore » actuels)
 - [ ] Nettoyer `assets/images/` : `react-logo*`, `expo-badge*`, `expo-logo`, `logo-glow`,
       `tutorial-web`, `tabIcons/`
-- [ ] Remplacer l'écran de test `src/app/shareintent.tsx` par le vrai écran de sauvegarde
+- [x] Remplacer l'écran de test `src/app/shareintent.tsx` par le vrai écran de sauvegarde
 - [x] Supprimer `DatabaseSmokeTest` de `src/app/(tabs)/index.tsx` (banc d'essai de la phase 1)
 - [ ] Supprimer l'animation de démarrage Expo (`AnimatedSplashOverlay`)
   - 📝 C'est la cause du micro-saccade au lancement signalé en test : deux animations
@@ -83,13 +68,15 @@ terrain de test.
 
 ### Outillage
 
-- [ ] **Configurer ESLint** — `npm run lint` existe (`expo lint`) mais aucun fichier de
-      configuration n'est présent ; la commande propose de le créer au premier lancement
+- [x] **Configurer ESLint** — `eslint.config.js` généré par `expo lint` (`eslint-config-expo`).
+      ⚠️ `npm run lint` (`expo lint`) échoue avec « Cannot find module 'eslint' » — bug de
+      résolution dans `@expo/cli`, contourner avec `npx eslint .` en attendant
 - [ ] **Ajouter un dépôt distant** — le projet est en local uniquement (`git remote -v` est vide),
       donc aucune sauvegarde hors de cette machine
-- [ ] **Mettre en place des tests** — aucune suite automatisée. Commencer par le plus rentable :
-      l'analyse d'URL (extraction, normalisation) et la détection de plateforme — logique pure,
-      sans interface, et c'est elle qui décide si un doublon est détecté ou non
+- [x] **Mettre en place des tests** — `node --test` (natif Node 24, zéro dépendance), `npm test`.
+      Premier module couvert : l'analyse d'URL (`src/lib/share-url.ts`). Les fonctions
+      d'accès base (`src/db/`) restent non testées automatiquement — module natif
+      `expo-sqlite`, injouable hors runtime Expo
 
 ---
 
@@ -129,6 +116,35 @@ post déjà présent rouvert plutôt que dupliqué.
 ---
 
 ## ✅ Terminé
+
+<details>
+<summary>Phase 2 — Capture (25 août 2026)</summary>
+
+- [x] **Analyse de l'URL partagée** : détection de plateforme (Instagram, TikTok, X, Threads)
+      et normalisation (query + fragment retirés) — `src/lib/share-url.ts`, testé
+      (`src/lib/share-url.test.ts`, `npm test` via `node --test`, zéro dépendance ajoutée)
+- [x] **Retrouver un post existant** par URL normalisée pour rouvrir en édition plutôt que
+      dupliquer — `findPostByUrl` + `findPostCollectionIds` dans `src/db/posts.ts`
+- [x] **Écran de sauvegarde réel** (`src/screens/save-post/`) : feuille unique
+      (`@gorhom/bottom-sheet`), aperçu par badge de plateforme, collections en cases à cocher
+      (création à la volée via un champ révélé par un bouton « + »), champ note,
+      `react-hook-form` + validation Zod. Remplace l'écran de test `src/app/shareintent.tsx`
+- [x] **Écriture transactionnelle** (`savePost` dans `src/db/posts.ts`) : upsert du post puis
+      diff des rangements `post_collections` (insertion, résurrection d'une ligne supprimée,
+      ou `deleted_at`) — jamais de vrai `DELETE`
+  - ⚠️ Le driver `expo-sqlite` exécute les transactions Drizzle en synchrone : `.run()`/`.all()`
+    dans le callback, pas de `await` (silencieusement ignoré par le driver)
+- [x] **Retour à l'app d'origine** après sauvegarde (`BackHandler.exitApp()`) et **confirmation
+      visuelle** (`react-native-toast-message` + `expo-haptics`), séquencés pour que le toast
+      reste visible avant la fermeture
+- [x] **Validé sur appareil réel** (25 août 2026) : trois plateformes avec notes et
+      collections, doublon détecté et rouvert en édition, zéro collection accepté, partage
+      texte brut (badge « ? », texte en note), mode sombre, clavier — sur les deux chemins de
+      réception (app fermée et arrière-plan) — critère de fin de phase atteint
+- [x] `eslint.config.js` généré (`eslint-config-expo`) — `npm run lint` (`expo lint`) casse sur
+      une résolution de module, contourné avec `npx eslint .`
+
+</details>
 
 <details>
 <summary>Phase 1 — Fondation données (24 août 2026)</summary>

@@ -15,8 +15,8 @@ pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvr
 |---|---|---|
 | 0 | Initialisation technique | ✅ Terminée |
 | 1 | Fondation données | ✅ Terminée |
-| 2 | Capture — recevoir et sauvegarder un post | ⏳ **En cours** |
-| 3 | Consultation — retrouver et rouvrir un post | ⬜ |
+| 2 | Capture — recevoir et sauvegarder un post | ✅ Terminée |
+| 3 | Consultation — retrouver et rouvrir un post | ⏳ **En cours** |
 | 4 | Organisation — chercher et filtrer | ⬜ |
 | 5 | Rétention — rappels et triage | ⬜ |
 | 6 | Distribution — APK public | ⬜ |
@@ -41,7 +41,7 @@ Détail historique : [INIT.md](./INIT.md) · Décisions retenues : [ARCHITECTURE
 
 ---
 
-## Phase 1 — Fondation données ⏳
+## Phase 1 — Fondation données ✅
 
 **Objectif** : pouvoir écrire et lire des données persistantes.
 
@@ -67,7 +67,7 @@ produit ne peut exister sans stockage.
 
 ---
 
-## Phase 2 — Capture
+## Phase 2 — Capture ✅
 
 **Objectif** : le parcours principal du produit fonctionne de bout en bout.
 
@@ -102,7 +102,7 @@ quitter le parcours.
 
 ---
 
-## Phase 3 — Consultation
+## Phase 3 — Consultation ⏳
 
 **Objectif** : retrouver et rouvrir ce qu'on a sauvegardé. Sans ça, la phase 2 ne sert à rien.
 
