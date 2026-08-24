@@ -6,7 +6,7 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 21 août 2026
+Dernière mise à jour : 22 août 2026
 
 ---
 
@@ -14,19 +14,36 @@ Dernière mise à jour : 21 août 2026
 
 Rien d'autre ne peut avancer tant que ceci n'est pas fait.
 
-- [ ] **Définir le schéma Drizzle** dans `src/db/schema.ts`
-  - Tables : `posts`, `collections` (+ relation)
-  - Les 5 colonnes obligatoires sur chaque table ([ARCHITECTURE.md](./ARCHITECTURE.md) §4)
-  - `id` en `TEXT PRIMARY KEY`, généré côté client — **jamais** d'auto-increment
-- [ ] **Générer la première migration** — `npx drizzle-kit generate`
-- [ ] **Créer `src/db/index.ts`** : ouverture de la base avec `enableChangeListener: true`
-  - ⚠️ Sans cette option, `useLiveQuery` ne réagira à aucun changement
-- [ ] **Appliquer les migrations au démarrage** (`useMigrations` dans `src/app/_layout.tsx`),
-      avec un état d'attente et un état d'erreur visibles à l'écran
-- [ ] **Premier rebuild natif** pour intégrer `expo-sqlite` au dev client
-  - `npx eas-cli build --profile development --platform android`
-  - 💡 Grouper avec tout autre ajout natif prévu, pour ne consommer qu'un seul crédit EAS
-- [ ] **Valider sur appareil** : écrire une ligne, redémarrer l'app, la retrouver
+- [x] **Définir le schéma Drizzle** dans `src/db/schema.ts` — tables `posts`, `collections` et
+      `post_collections`, les 5 colonnes obligatoires sur chacune, `id` en `TEXT PRIMARY KEY`
+- [x] **Générer la première migration** — `src/db/migrations/0000_special_next_avengers.sql`
+- [x] **Créer `src/db/index.ts`** : base ouverte avec `enableChangeListener: true`,
+      plus `newId()` (UUID natif d'`expo-modules-core`)
+- [x] **Appliquer les migrations au démarrage** — `useMigrations` dans `src/app/_layout.tsx`,
+      avec calque d'attente et calque d'erreur
+- [x] **Premier rebuild natif** — build `82dbc870` du 24 août 2026, sur le commit `471e31e`
+  - ⚠️ **`expo-clipboard` n'est pas dedans** : installé le 24 mais non commité au moment du
+    build, et EAS builde depuis `git HEAD` (cf. [DEVELOPMENT.md](./DEVELOPMENT.md) §7).
+    **Ne pas l'importer avant le prochain build.** Pas nécessaire avant la phase 3.
+  - 📝 Côté natif l'APK est en `expo` 57.0.15 alors que l'arbre de travail est en ~57.0.16 :
+    écart de patch, sans conséquence pratique, résorbé au prochain build
+  - 📝 Un build embarque les modules natifs présents dans `package.json` **au moment du build**
+    (autolinking). Le tableau `plugins` d'`app.json` ne sert qu'aux *config plugins*, ceux qui
+    modifient le projet natif — un module sans config plugin est embarqué sans y figurer.
+  - ✅ Contient tout ce que les phases 1 à 3 demandent : `expo-sqlite`, `expo-share-intent`,
+    `expo-haptics`, `expo-notifications`, `@shopify/flash-list`, `react-native-svg`,
+    `react-native-keyboard-controller`. Le retour à l'app d'origine après sauvegarde passe
+    par `BackHandler.exitApp()` du cœur de RN — `expo-share-intent` ne fournit rien pour ça,
+    seulement `resetShareIntent()`.
+  - 💡 Un second build sera de toute façon nécessaire en phase 6 (icône, splash, nom, version) :
+    la configuration du plugin `expo-notifications` (icône et couleur) voyagera avec celui-là
+- [x] **Partage vérifié sur appareil réel** (24 août 2026, build `82dbc870`) — les deux
+      chemins fonctionnent : app fermée (`+native-intent.tsx` redirige vers `/shareintent`
+      après connexion au dev server) et app en arrière-plan (le provider racine navigue
+      directement, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7)
+- [x] **Validé sur appareil réel** (24 août 2026) : le compteur s'incrémente sans
+      rechargement (`enableChangeListener` fonctionne) et le compte persiste après
+      redémarrage complet de l'app — critère de fin de la phase 1 atteint
 
 ---
 
@@ -45,6 +62,7 @@ terrain de test.
 - [ ] Nettoyer `assets/images/` : `react-logo*`, `expo-badge*`, `expo-logo`, `logo-glow`,
       `tutorial-web`, `tabIcons/`
 - [ ] Remplacer l'écran de test `src/app/shareintent.tsx` par le vrai écran de sauvegarde
+- [x] Supprimer `DatabaseSmokeTest` de `src/app/(tabs)/index.tsx` (banc d'essai de la phase 1)
 - [ ] Supprimer l'animation de démarrage Expo (`AnimatedSplashOverlay`)
   - 📝 C'est la cause du micro-saccade au lancement signalé en test : deux animations
     indépendantes de 600 ms qui s'enchaînent sans être synchronisées. Comportement du
@@ -70,7 +88,8 @@ terrain de test.
 - [ ] **Ajouter un dépôt distant** — le projet est en local uniquement (`git remote -v` est vide),
       donc aucune sauvegarde hors de cette machine
 - [ ] **Mettre en place des tests** — aucune suite automatisée. Commencer par le plus rentable :
-      l'analyse d'URL et la détection de plateforme (logique pure, sans interface)
+      l'analyse d'URL (extraction, normalisation) et la détection de plateforme — logique pure,
+      sans interface, et c'est elle qui décide si un doublon est détecté ou non
 
 ---
 
@@ -93,13 +112,19 @@ terrain de test.
 
 Ce ne sont pas des tâches mais des décisions produit qui bloqueront le code le moment venu.
 
-- [ ] **Post partagé deux fois** : créer un doublon, ou mettre à jour l'existant ? (Phase 2)
-- [ ] **Un post peut-il appartenir à plusieurs collections ?** Change le schéma —
-      à trancher **avant** la première migration (Phase 1)
-- [ ] **Collections et tags** : deux notions distinctes ou une seule ? (Phases 1 & 4)
-- [ ] **Contenu partagé qui n'est pas une URL** (texte brut, capture d'écran) : accepter ou
-      refuser ? La V1 ne déclare que `text/*` dans les filtres d'intention (Phase 2)
 - [ ] **Rappels** : à quelle fréquence, et selon quel critère de pertinence ? (Phase 5)
+  - Volontairement non tranché : la réponse dépend d'un usage réel qui n'existe pas encore.
+    Rien à prévoir dans le schéma — la colonne `opened_at` s'ajoutera en phase 3, au moment
+    où l'ouverture d'un post est codée
+- [ ] **Contenu partagé qui n'est pas du texte** (capture d'écran, image) : la V1 ne déclare
+      que `text/*` dans les filtres d'intention. Accepter `image/*` demanderait de copier le
+      fichier et de gérer un stockage — hors V1 sauf décision contraire (Phase 2)
+
+Les quatre autres questions ont été tranchées le 22 août 2026 et sont consignées dans
+[ARCHITECTURE.md](./ARCHITECTURE.md) §4 (« Modèle V1 — décisions arrêtées ») : plusieurs
+collections par post via `post_collections`, note en colonne, pas de table `tags` (une
+collection multiple en tient lieu), plateforme déduite de l'URL, `url` nullable et normalisée,
+post déjà présent rouvert plutôt que dupliqué.
 
 ---
 

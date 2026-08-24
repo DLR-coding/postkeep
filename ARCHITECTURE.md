@@ -108,6 +108,59 @@ maintenant.
 - **Toutes les requêtes de lecture doivent filtrer `WHERE deleted_at IS NULL`** (piège classique :
   oublier ce filtre et voir réapparaître des éléments supprimés)
 
+### Modèle V1 — décisions arrêtées
+
+Tranchées avant la première migration. Chacune a un chemin de sortie additif : aucune ne
+demandera de reconstruire une table sur un appareil contenant déjà des données.
+
+| Décision | Raison | Si ça doit changer |
+|---|---|---|
+| **Un post peut appartenir à plusieurs collections** — table de jointure `post_collections` | Une même recette a sa place dans « Recettes » *et* dans « Idées repas de famille ». Dupliquer la ligne `posts` pour un second rangement ferait diverger la note entre les copies, et une suppression n'en retirerait qu'une | — |
+| **La note est une colonne de `posts`**, pas une table | Plusieurs notes par post n'est pas un besoin démontré | Table `notes` séparée |
+| **Pas de table `tags`** | Une collection multiple remplit déjà le rôle d'un tag : depuis que le rangement est N↔N, la notion est redondante | Migration additive si un besoin réellement distinct apparaît |
+| **Pas de colonne `platform`** — déduite de l'URL à l'affichage | C'est une fonction pure de l'URL ; la stocker crée une donnée qui divergera le jour où le parser change | Ajouter la colonne quand un filtre SQL par plateforme sera nécessaire |
+| **`url` est nullable** | Un partage sans lien exploitable (texte brut) est accepté plutôt que refusé : refuser perd la donnée de l'utilisateur *et* demande un écran d'erreur. Le texte part dans `note`, la carte n'est simplement pas ouvrable | — |
+| **L'URL stockée est normalisée** (query + fragment retirés) | Instagram régénère `?igsh=…` à chaque partage : sans normalisation, deux partages du même post ne se ressemblent pas et la détection de doublon ne se déclenche jamais | Ajouter `url_raw` si une plateforme exige ses paramètres pour s'ouvrir |
+| **Un post déjà présent est rouvert en édition, pas dupliqué** | Un doublon dans un « cimetière de liens » est le problème que l'app prétend résoudre | — |
+| **Ranger un post dans une collection d'où il avait été retiré ressuscite la ligne** de `post_collections` (on vide son `deleted_at`) au lieu d'en insérer une seconde | Sans contrainte `UNIQUE`, insérer à chaque fois accumulerait des lignes mortes pour la même paire au fil des allers-retours. Garantit « une ligne par paire, pour toujours » | — |
+
+⚠️ **Aucune contrainte `UNIQUE`, ni sur `url`, ni sur la paire `(post_id, collection_id)`.**
+Avec la suppression logique, la ligne supprimée reste physiquement présente : elle occuperait
+la valeur et empêcherait de re-sauvegarder l'URL, ou de reclasser un post dans une collection
+d'où il avait été retiré. Les deux vérifications de doublon se font en code, sur les lignes où
+`deleted_at IS NULL`.
+
+### Deux niveaux de suppression
+
+Retirer un post d'une collection et le supprimer de l'app sont **deux actions distinctes**,
+à deux niveaux différents :
+
+| Action | Écriture | Résultat |
+|---|---|---|
+| Retirer d'une collection | `deleted_at` sur la ligne `post_collections` | Le post survit, reste dans ses autres collections et dans « Tous les posts » |
+| Supprimer de PostKeep | `deleted_at` sur la ligne `posts` | Le post disparaît de partout — l'équivalent du « remove from saved » d'Instagram |
+
+**La suppression d'un post ne cascade pas sur ses rangements** — une seule écriture. Les lignes
+`post_collections` deviennent inertes, puisque toute lecture d'une collection joint `posts` et
+filtre `posts.deleted_at IS NULL`. Bénéfice concret : un futur « annuler » restitue le post
+**avec ses rangements intacts**, ce qu'une cascade aurait détruit.
+
+⚠️ **Le piège qui en découle** : un écran qui lit une collection en ne filtrant que
+`post_collections.deleted_at` fera réapparaître les posts supprimés. Le correctif, le jour où
+ça arrive, n'est **pas** d'ajouter une cascade mais une fonction de lecture partagée portant
+les deux filtres — un seul endroit à corriger plutôt qu'un par écran.
+
+**Conséquence sur l'interface (phase 3)** : le même geste de balayage signifie deux choses
+selon l'écran — dans « Tous les posts » il supprime le post, dans une collection il l'en
+retire. Les libellés doivent le dire (« Supprimer » vs « Retirer de Recettes »), et supprimer
+définitivement depuis une vue collection doit passer par un chemin explicite (appui long, ou
+le détail du post).
+
+**Génération des identifiants** : `newId()` dans `src/db/index.ts`, qui délègue au générateur
+UUID natif d'`expo-modules-core` (déjà présent, aucune dépendance ajoutée). Les colonnes `id`
+n'ont volontairement **pas** de valeur par défaut côté Drizzle : TypeScript force alors à
+passer un `id` à chaque insertion, et un oubli est une erreur de compilation.
+
 ---
 
 ## 5. Pas de TanStack Query en V1
@@ -172,7 +225,7 @@ le provider racine, le partage arrive mais rien ne se passe.
 |---|---|---|
 | `nativewind` | 4.2.6 | La v5 supprime `tailwind.config.js` (configuration CSS-first) → le CLI React Native Reusables en dépend et échoue |
 | `tailwindcss` | 3.4.19 | La v4 impose la même configuration CSS-first → même conséquence |
-| `expo` | 57.0.15 | Socle validé, `expo-doctor` 21/21 |
+| `expo` | ~57.0.16 | Socle validé, `expo-doctor` 21/21. Les patchs du même SDK se suivent avec `npx expo install --fix` — c'est le **mineur** (SDK 58) qui demande une décision |
 | `expo-share-intent` | 8.0.1 | Version requise pour SDK 57 (le plugin vérifie et refuse un décalage) |
 | `react-native-reanimated` | 4.5.1 | Version fournie par le SDK 57 |
 | `react-native-gesture-handler` | 2.32.0 | Idem |

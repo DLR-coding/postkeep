@@ -32,12 +32,35 @@ fonctionnalité produit n'est implémentée — voir [ROADMAP.md](./ROADMAP.md).
 - **Structure de routing** `(tabs)` + `Stack` racine, permettant de présenter l'écran de
   partage en modale par-dessus les onglets
 - **Squelette Drizzle** : `drizzle.config.ts`, `src/db/schema.ts` (vide), dossier de migrations
+- **Schéma de données V1** : tables `posts`, `collections` et `post_collections` (un post
+  peut appartenir à plusieurs collections), avec les 5 colonnes de synchronisation sur
+  chacune ; première migration générée
+  - Décisions de modèle consignées dans [ARCHITECTURE.md](./ARCHITECTURE.md) §4
+- **Accès à la base** (`src/db/index.ts`) : ouverture avec `enableChangeListener: true`
+  (requis par `useLiveQuery`) et `newId()` pour les UUID générés côté client
+- **Migrations appliquées au démarrage** (`useMigrations`), avec calque d'attente et calque
+  d'erreur ; le routage d'un partage attend que la base soit prête
+- **Phase 1 validée sur appareil réel** (24 août 2026) : les deux chemins de réception du
+  partage fonctionnent (app fermée, app en arrière-plan), l'écriture en base se reflète sans
+  rechargement, et persiste après redémarrage complet de l'app
 - **Chaîne de build EAS** (`eas.json`) : profils `development`, `preview`, `production`
 - Documentation du projet : `README`, `ARCHITECTURE`, `DEVELOPMENT`, `CONTRIBUTING`,
   `ROADMAP`, `TODO`, `CHANGELOG`
 
+- **`expo-clipboard`** installé en prévision du « copier le lien » de la phase 3 — ajouté
+  avant le premier rebuild natif pour ne pas consommer un second crédit EAS plus tard
+
+### Corrigé
+
+- `useColorScheme()` pouvait renvoyer `null` ou `'unspecified'` : le `?? 'light'` du layout
+  racine ne retombait pas sur un thème valide dans ces cas
+
 ### Modifié
 
+- **Versions de patch alignées sur le SDK 57** (`npx expo install --fix`) : `expo` ~57.0.16,
+  `@expo/ui`, `expo-constants`, `expo-dev-client`, `expo-notifications`, `expo-router`,
+  `expo-splash-screen`. Fait **avant** le premier rebuild natif, pour que le dev client
+  contienne ce code natif-là et pas la version précédente. `expo-doctor` : 21/21
 - **Driver SQLite : `@op-engineering/op-sqlite` → `expo-sqlite`**
   - `drizzle-orm/op-sqlite` ne fournit pas `useLiveQuery` — demande de fonctionnalité ouverte
     chez Drizzle depuis le 8 septembre 2024, toujours non implémentée

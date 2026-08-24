@@ -14,8 +14,8 @@ pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvr
 | Phase | Objectif | État |
 |---|---|---|
 | 0 | Initialisation technique | ✅ Terminée |
-| 1 | Fondation données | ⏳ **En cours** |
-| 2 | Capture — recevoir et sauvegarder un post | ⬜ |
+| 1 | Fondation données | ✅ Terminée |
+| 2 | Capture — recevoir et sauvegarder un post | ⏳ **En cours** |
 | 3 | Consultation — retrouver et rouvrir un post | ⬜ |
 | 4 | Organisation — chercher et filtrer | ⬜ |
 | 5 | Rétention — rappels et triage | ⬜ |
@@ -79,7 +79,8 @@ produit ne peut exister sans stockage.
    extraire l'URL propre du texte partagé (les apps ajoutent souvent du texte autour)
 2. **Écran de sauvegarde réel** — remplace l'écran de test actuel (`shareintent.tsx`) :
    - Aperçu = logo de la plateforme (pas de récupération de métadonnées, cf. ARCHITECTURE.md §6)
-   - Choix de collection (création à la volée incluse)
+   - Choix des collections en **multi-sélection** (création à la volée incluse) — zéro
+     collection est un état valide : le post existe, il n'est simplement rangé nulle part
    - Champ de note
    - `@gorhom/bottom-sheet` + `react-hook-form` + validation Zod
 3. **Retour à l'app d'origine** après sauvegarde
@@ -108,7 +109,9 @@ quitter le parcours.
 1. **Liste des posts** avec `@shopify/flash-list` (**pas** `FlatList` — les listes seront longues)
 2. **Carte de post** : plateforme, note, collection, date
 3. **Ouverture** : appui → `Linking.openURL()` → l'OS ouvre l'app d'origine
-4. **Suppression** (logique — `deleted_at`, cf. ARCHITECTURE.md §4), au geste de balayage
+4. **Suppression** (logique — `deleted_at`, cf. ARCHITECTURE.md §4 « Deux niveaux de
+   suppression ») : le balayage supprime le post dans « Tous les posts », mais l'ôte
+   seulement de la collection dans une vue collection — libellés distincts obligatoires
 5. **État vide** soigné — c'est le premier écran que verra un nouvel utilisateur
 
 ### Critère de fin
@@ -126,8 +129,8 @@ après redémarrage.
 
 1. **Recherche locale** (sur les notes et les URL)
 2. **Filtre par collection**
-3. **Tags** — modèle, attribution, filtrage
-4. **Gestion des collections** : renommer, supprimer, réorganiser
+3. **Gestion des collections** : renommer, supprimer, réorganiser, ranger un post existant
+   dans une collection supplémentaire
 
 ### Critère de fin
 

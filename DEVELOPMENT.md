@@ -246,6 +246,20 @@ Le build se fait **dans le cloud** (pas besoin d'Android Studio ni d'une machine
 > jusqu'au renouvellement** — jamais facturés automatiquement. Raison de plus pour grouper les
 > changements natifs.
 
+### ⚠️ EAS builde depuis `git HEAD`, pas depuis votre dossier de travail
+
+L'archive envoyée au cloud est construite à partir du **dernier commit**. Un paquet natif
+installé mais non commité **ne sera pas dans l'APK**, alors que `package.json` sur le disque
+le mentionne — l'import compilera et plantera à l'exécution.
+
+**Donc : commiter avant de lancer un build.** C'est arrivé le 24 août 2026 — `expo-clipboard`
+venait d'être installé, le build est parti sur le commit précédent, et le module manque dans
+le dev client jusqu'au prochain build.
+
+Ça ne concerne **que le natif** : tout le JavaScript (écrans, requêtes, schéma Drizzle) est
+servi par Metro depuis le dossier de travail et n'a jamais besoin d'être commité pour être
+testé sur l'appareil.
+
 ### Les trois profils (`eas.json`)
 
 | Profil | Commande | Usage |
