@@ -44,3 +44,6 @@ example
 # generated native folders
 /ios
 /android
+
+# graphify - regenerate with /graphify
+graphify-out/
