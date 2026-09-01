@@ -15,11 +15,33 @@ Le projet suivra [SemVer](https://semver.org/lang/fr/) à partir de la première
 
 ## [Non publié]
 
-Aucune version n'a encore été distribuée. L'app build et se lance, mais aucune
-fonctionnalité produit n'est implémentée — voir [ROADMAP.md](./ROADMAP.md).
+Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Consultation des posts sauvegardés** (Phase 3) : liste (`@shopify/flash-list`,
+  `(tabs)/index.tsx`), carte de post (`src/components/post-card.tsx` — plateforme, note,
+  badges de collection tronqués à 3 + `+N`, date), état vide soigné
+  - **Sheet de détail/édition fusionnée** (`src/components/post-detail-sheet.tsx`), pattern
+    « Now Playing » : une seule `BottomSheetModal` à deux snap points (50 % aperçu, 100 %
+    édition), plus de route séparée `post/[id]/edit`. Coins et poignée animés sur
+    `animatedIndex`, `topInset={0}`, bouton retour Android re-snap plutôt que fermeture en
+    plein écran. Ouverture d'un post (`Linking.openURL()`, pas de WebView) via le bouton
+    « Ouvrir dans X » de l'aperçu plutôt qu'au tap direct sur la carte
+  - **Suppression logique à deux niveaux** : balayage = suppression réelle dans « Tous les
+    posts »/« Sans collection », retrait de la collection courante uniquement dans une vraie
+    vue collection (2 actions distinctes, « Retirer »/« Supprimer »), suppression réelle
+    toujours possible via un second bouton
+  - Collections sous Note en mode édition : chips retirables horizontales
+    (`PostFieldsForm` prop `variant: 'chips'`), picker complet ouvert dans une feuille
+    empilée (`stackBehavior="push"`)
+- **Onglet Collections** (Phase 4, remplace `(tabs)/explore.tsx`) : grille de tuiles
+  (`FlashList numColumns={3}`, `src/screens/collections/`), pseudo-dossier « Sans collection »,
+  navigation vers une collection (`src/screens/collection/`, réutilise `PostCard` + `FlashList`
+  filtrés par `collectionId`), recherche sur les noms de collection, création (bouton flottant
+  « + ») et renommage/suppression (appui long → feuille d'actions + `Dialog` de confirmation,
+  composant React Native Reusables ajouté) — tous stylés custom plutôt qu'`Alert.alert`/
+  `@expo/ui` (natifs, jugés visuellement décalés du reste de l'app)
 - **Écran de sauvegarde d'un post** (`src/screens/save-post/`) : reçoit un partage, propose les
   collections en cases à cocher (création à la volée via un bouton dédié), un champ note, puis
   enregistre et referme l'app vers l'app d'origine (`BackHandler.exitApp()`) après une
@@ -75,6 +97,25 @@ fonctionnalité produit n'est implémentée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Corrigé
 
+- **Trois bugs de réactivité `useLiveQuery`** (`drizzle-orm/expo-sqlite`, `src/db/posts.ts`) :
+  la fonction n'écoute que la table du `.from()` racine d'une requête, jamais les tables
+  jointes (`node_modules/drizzle-orm/expo-sqlite/query.js`). `savePost`,
+  `removePostFromCollection` et `softDeletePost` ne touchaient qu'une table jointe sans toucher
+  la table racine des requêtes affectées (listes de posts `.from(posts)`, compteur de posts par
+  collection `.from(collections)`) — corrigé en leur faisant aussi toucher `updated_at` sur la
+  table racine manquante
+- **Grille Collections à 2 colonnes avec espace vide** au lieu de 3 : Yoga arrondit chaque
+  tuile indépendamment au pixel natif, la somme de 3 tuiles arrondies vers le haut pouvait
+  dépasser la largeur disponible de moins d'1px et faire passer la 3ᵉ à la ligne suivante
+  (`flex-wrap` + taille calculée non entière). Corrigé en passant la grille à `FlashList
+  numColumns={3}` (`src/screens/collections/tile-size.ts`), qui décide seul du nombre de
+  colonnes indépendamment de la taille des tuiles — élimine la classe de bug plutôt que de
+  la contourner ; testé (`tile-size.test.ts`)
+- **`npm test` n'exécutait pas les fichiers de test à plus d'un niveau sous `src/`** :
+  `"node --test src/**/*.test.ts"` dépend de l'expansion du glob par le shell, qui ne
+  descend qu'un niveau sans `globstar` bash (off par défaut) — `tile-size.test.ts` n'était
+  jamais lancé, silencieusement. Remplacé par `"node --test"` seul (découverte récursive
+  native de Node, indépendante du shell)
 - `useColorScheme()` pouvait renvoyer `null` ou `'unspecified'` : le `?? 'light'` du layout
   racine ne retombait pas sur un thème valide dans ces cas
 

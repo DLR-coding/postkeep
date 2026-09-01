@@ -6,94 +6,7 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 30 août 2026
-
----
-
-## 🔴 Bloquant — Phase 3 (consultation)
-
-Objectif : retrouver et rouvrir ce qu'on a sauvegardé. Sans ça, la phase 2 ne sert à rien. Voir
-[ROADMAP.md](./ROADMAP.md#phase-3--consultation) pour le détail et les points d'attention.
-
-- [ ] **Liste des posts** avec `@shopify/flash-list` (**pas** `FlatList` — les listes seront
-      longues)
-- [ ] **Carte de post** : plateforme (déduite de l'URL, cf. `src/lib/share-url.ts`), note,
-      collection(s), date
-- [ ] **Ouverture** : appui sur la carte → `Linking.openURL()` → l'OS ouvre l'app d'origine
-      (pas de WebView, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §6)
-- [ ] **Suppression logique** (`deleted_at`, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4
-      « Deux niveaux de suppression ») : le balayage supprime le post dans « Tous les posts »,
-      mais l'ôte seulement de la collection courante dans une vue collection — libellés
-      distincts obligatoires (« Supprimer » vs « Retirer de … »), suppression définitive
-      depuis une vue collection réservée à un chemin explicite
-- [ ] **État vide** soigné — c'est le premier écran que verra un nouvel utilisateur
-- [ ] **Valider sur appareil** : voir tous ses posts, en rouvrir un dans son app d'origine, en
-      supprimer un et qu'il ne revienne pas après redémarrage (critère de fin de phase)
-
-### Finitions issues du brainstorm UI/UX (30 août 2026)
-
-- [x] **Troncature des badges de collection sur `PostCard`** : afficher les 3 premiers noms de
-      collection, badge `+N` (ou `…`) si le post en a plus — validé sur appareil
-- [x] **Fusionner la sheet de détail (`PostDetailSheet`) et l'écran d'édition** en un seul
-      composant plein écran morphant, à la place de la route séparée `post/[id]/edit` — pattern
-      « Now Playing » (Spotify/Apple Podcasts/Gmail compose) : un seul geste continu, pas de
-      navigation — validé sur appareil (30 août 2026), y compris clavier sur le textarea Note et
-      sur la recherche du picker de collections en plein écran (risque initial levé)
-  - [x] `backgroundComponent` custom : rayon des coins interpolé sur `animatedIndex` (24px au
-        snapPoint 50 % → 0 au snapPoint plein écran) — validé sur appareil. Interpolation correcte
-        mais **invisible** : `card` et `background` sont la même couleur dans `THEME` (light et
-        dark), donc le coin arrondi se fond avec l'écran faute de contraste ou de backdrop —
-        cosmétique, pas un bug
-  - [x] `handleComponent` custom : opacité de la poignée de drag interpolée à 0 en approchant du
-        plein écran — validé sur appareil
-  - [x] `topInset={0}` au snapPoint plein écran, pour couvrir aussi la zone sous la status bar —
-        validé sur appareil
-  - [x] `enablePanDownToClose` désactivé une fois au snapPoint plein écran ; le drag reste libre
-        dans les deux sens entre 50 % et 100 % — validé sur appareil
-  - [x] Bouton retour (geste iOS / bouton hardware Android) au snapPoint plein écran → re-snap à
-        50 % (aperçu), **pas** de fermeture directe ; bouton « X » → fermeture complète explicite
-        dans les deux cas (50 % ou 100 %) — validé sur appareil
-- [x] **Collections sous « Note » dans l'écran d'édition** : liste horizontale scrollable de chips
-      retirables (icône ✕ par chip), **remplace** le sélecteur actuel (grille de pills + recherche
-      + création) pour ce mode uniquement — le formulaire de première sauvegarde
-      (`src/screens/save-post/form.tsx`) garde son UI actuelle inchangée. Une chip finale « + »
-      ouvre le picker complet (recherche + création) dans une feuille empilée
-      (`CollectionPickerSheet`, second `BottomSheetModal`). `PostFieldsForm` a gagné un prop
-      `variant: 'picker' | 'chips'` — validé sur appareil
-
-### Bugs de réactivité `useLiveQuery` — corrigés le 31 août 2026
-
-`drizzle-orm/expo-sqlite`'s `useLiveQuery` n'écoute que la table du `.from()` racine
-d'une requête (`node_modules/drizzle-orm/expo-sqlite/query.js`), jamais les tables
-jointes. Trois écritures qui ne touchaient qu'une table jointe sans toucher la table
-racine des requêtes concernées ont été corrigées en les faisant aussi toucher
-`updated_at` sur la table racine manquante :
-
-- [x] `removePostFromCollection` (`src/db/posts.ts`) : ne touchait que `post_collections`
-      → n'actualisait ni les listes de posts (`.from(posts)`) ni le compteur de posts par
-      collection (`.from(collections)`). Touche maintenant aussi `posts.updated_at` et
-      `collections.updated_at`
-- [x] `savePost` (`src/db/posts.ts`) : le diff des rangements touchait `post_collections`
-      sans toucher `collections` → compteur de posts par collection pas actualisé à
-      l'ajout/retrait via le formulaire de sauvegarde. Touche maintenant
-      `collections.updated_at` pour chaque collection dont le rangement a changé
-- [x] `softDeletePost` (`src/db/posts.ts`) : ne touchait que `posts` → compteur de posts
-      par collection pas actualisé à la suppression totale d'un post rangé dans une ou
-      plusieurs collections. Touche maintenant `collections.updated_at` pour chacune de
-      ses collections actives
-
-### Améliorations UI repérées pendant les tests du 31 août 2026
-
-- [ ] **Écran d'édition plein écran — réagencer** : collections en pastilles sur 2 lignes
-      scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
-      Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
-      seulement la fin quand la note est longue
-- [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
-      pleine largeur « + Nouvelle collection » par une icône « + » seule, positionnée à droite de
-      la barre de recherche
-- [ ] **Dialog de confirmation de suppression d'un post (mode édition)** : remplacer l'`Alert.alert`
-      natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
-      fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
+Dernière mise à jour : 1er septembre 2026
 
 ---
 
@@ -102,7 +15,9 @@ racine des requêtes concernées ont été corrigées en les faisant aussi touch
 Objectif : rester utilisable au-delà de quelques dizaines de posts. Voir
 [ROADMAP.md](./ROADMAP.md#phase-4--organisation) pour le détail. Le schéma (`collections` +
 `post_collections`, many-à-many) supporte déjà tout ce qui suit sans migration —
-[ARCHITECTURE.md](./ARCHITECTURE.md) §4.
+[ARCHITECTURE.md](./ARCHITECTURE.md) §4. ROADMAP.md définit trois objectifs pour cette phase :
+gestion des collections, filtre par collection, et recherche locale — les deux premiers sont
+faits, il ne reste que la recherche pour clore la phase.
 
 - [x] **Nouveau tab « Collections »** : remplace `(tabs)/explore.tsx` (boilerplate Expo par
       défaut, jamais retouché) plutôt que d'ajouter un 3ᵉ onglet. Grille de tuiles façon
@@ -129,9 +44,13 @@ Objectif : rester utilisable au-delà de quelques dizaines de posts. Voir
       rien à changer côté requêtes posts — validé sur appareil (31 août 2026). Confirmation de
       suppression en `Dialog` séparé (`@/components/ui/dialog`, ajouté via React Native Reusables)
       plutôt qu'un état de plus dans la feuille
-- [ ] **Nouvelles requêtes** dans `src/db/collections.ts` : liste des collections actives + compte
+- [x] **Nouvelles requêtes** dans `src/db/collections.ts` : liste des collections actives + compte
       de posts par collection ; posts filtrés par `collectionId` (variante d'`activePostsQuery`)
-      — codé, à valider sur appareil (module natif `expo-sqlite`, non exécutable hors runtime)
+      — validé sur appareil (exercées tout au long des tests Collections ci-dessus)
+- [ ] **Recherche locale** sur les notes et les URL des posts (cf.
+      [ROADMAP.md](./ROADMAP.md#phase-4--organisation)) — distincte de la recherche déjà codée
+      dans l'onglet Collections (`src/screens/collections/index.tsx`), qui ne filtre que les
+      noms de collections. Dernier item de la phase : à coder et valider avant de la clore
 
 ---
 
@@ -177,9 +96,28 @@ terrain de test.
 - [ ] **Ajouter un dépôt distant** — le projet est en local uniquement (`git remote -v` est vide),
       donc aucune sauvegarde hors de cette machine
 - [x] **Mettre en place des tests** — `node --test` (natif Node 24, zéro dépendance), `npm test`.
-      Premier module couvert : l'analyse d'URL (`src/lib/share-url.ts`). Les fonctions
-      d'accès base (`src/db/`) restent non testées automatiquement — module natif
-      `expo-sqlite`, injouable hors runtime Expo
+      Modules couverts : l'analyse d'URL (`src/lib/share-url.ts`), le calcul de taille de tuile
+      de la grille Collections (`src/screens/collections/tile-size.ts`). Les fonctions d'accès
+      base (`src/db/`) restent non testées automatiquement — module natif `expo-sqlite`,
+      injouable hors runtime Expo
+  - ⚠️ **Bug corrigé (1er septembre 2026)** : `"test": "node --test src/**/*.test.ts"` dépendait
+    de l'expansion du glob par le shell — sans `globstar` bash (off par défaut), `**` ne
+    descend qu'un niveau, donc `src/screens/collections/tile-size.test.ts` (deux niveaux sous
+    `src/`) n'était jamais exécuté par `npm test`, silencieusement. Remplacé par `"node --test"`
+    seul : la découverte récursive native de Node ne dépend pas du shell
+
+### Améliorations UI en attente (repérées le 31 août 2026)
+
+- [ ] **Écran d'édition plein écran — réagencer** : collections en pastilles sur 2 lignes
+      scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
+      Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
+      seulement la fin quand la note est longue
+- [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
+      pleine largeur « + Nouvelle collection » par une icône « + » seule, positionnée à droite de
+      la barre de recherche
+- [ ] **Dialog de confirmation de suppression d'un post (mode édition)** : remplacer l'`Alert.alert`
+      natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
+      fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
 
 ---
 
@@ -219,6 +157,44 @@ post déjà présent rouvert plutôt que dupliqué.
 ---
 
 ## ✅ Terminé
+
+<details>
+<summary>Phase 3 — Consultation (1er septembre 2026)</summary>
+
+- [x] **Liste des posts** (`@shopify/flash-list`, `(tabs)/index.tsx`), **carte de post**
+      (plateforme déduite de l'URL, note, badges de collection tronqués à 3 + `+N`, date —
+      `src/components/post-card.tsx`), **état vide** soigné
+- [x] **Ouverture** (`Linking.openURL()`, pas de WebView) via le bouton « Ouvrir dans X » de la
+      sheet d'aperçu — le tap sur la carte ouvre l'aperçu plutôt que d'ouvrir directement
+      (déviation volontaire de ROADMAP.md, actée pendant la fusion sheet/édition ci-dessous)
+- [x] **Suppression logique à deux niveaux** (`deleted_at`) : le balayage supprime réellement
+      dans « Tous les posts »/« Sans collection », mais ne fait que retirer le post de la
+      collection courante dans une vraie vue collection (2 boutons distincts, « Retirer » orange
+      / « Supprimer » rouge) — suppression réelle toujours possible depuis une vue collection via
+      le second bouton
+- [x] **Fusion de la sheet de détail et de l'écran d'édition** en un seul composant plein écran
+      morphant (pattern « Now Playing », `src/components/post-detail-sheet.tsx`), à la place de
+      la route séparée `post/[id]/edit` : `backgroundComponent`/`handleComponent` custom animés
+      sur `animatedIndex`, `topInset={0}`, `enablePanDownToClose` désactivé en plein écran,
+      bouton retour Android re-snap à 50 % plutôt que fermeture. Clavier validé
+      (`BottomSheetTextInput` + `keyboardBehavior="fillParent"`) sur le textarea Note et la
+      recherche du picker de collections en plein écran — risque initial (raison d'être de
+      l'ancienne séparation sheet/écran) levé après vérification Context7 de
+      `@gorhom/bottom-sheet` v5.2.6
+- [x] **Collections sous « Note » en mode édition** : chips retirables horizontales
+      (`PostFieldsForm` prop `variant: 'picker' | 'chips'`), chip finale « + » ouvrant le picker
+      complet dans une feuille empilée (`CollectionPickerSheet`, `stackBehavior="push"`)
+- [x] **Bugs de réactivité `useLiveQuery` corrigés** : `drizzle-orm/expo-sqlite` n'écoute que la
+      table du `.from()` racine d'une requête, jamais les tables jointes
+      (`node_modules/drizzle-orm/expo-sqlite/query.js`) — `savePost`, `removePostFromCollection`
+      et `softDeletePost` (`src/db/posts.ts`) touchent maintenant aussi `updated_at` sur les
+      tables racines des requêtes affectées (`posts`, `collections`) en plus de la table qu'ils
+      modifient réellement
+- [x] **Validé sur appareil réel** (1er septembre 2026) : voir tous ses posts, en rouvrir un dans
+      son app d'origine, en supprimer un et qu'il ne revienne pas après redémarrage — critère de
+      fin de phase atteint
+
+</details>
 
 <details>
 <summary>Phase 2 — Capture (25 août 2026)</summary>

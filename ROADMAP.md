@@ -16,8 +16,8 @@ pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvr
 | 0 | Initialisation technique | ✅ Terminée |
 | 1 | Fondation données | ✅ Terminée |
 | 2 | Capture — recevoir et sauvegarder un post | ✅ Terminée |
-| 3 | Consultation — retrouver et rouvrir un post | ⏳ **En cours** |
-| 4 | Organisation — chercher et filtrer | ⬜ |
+| 3 | Consultation — retrouver et rouvrir un post | ✅ Terminée |
+| 4 | Organisation — chercher et filtrer | ⏳ **En cours** |
 | 5 | Rétention — rappels et triage | ⬜ |
 | 6 | Distribution — APK public | ⬜ |
 | V1.5 | Synchronisation multi-appareils | 🔒 Verrouillée jusqu'à la fin de V1 |
@@ -102,7 +102,7 @@ quitter le parcours.
 
 ---
 
-## Phase 3 — Consultation ⏳
+## Phase 3 — Consultation ✅
 
 **Objectif** : retrouver et rouvrir ce qu'on a sauvegardé. Sans ça, la phase 2 ne sert à rien.
 
@@ -123,7 +123,7 @@ après redémarrage.
 
 ---
 
-## Phase 4 — Organisation
+## Phase 4 — Organisation ⏳
 
 **Objectif** : rester utilisable au-delà de quelques dizaines de posts.
 

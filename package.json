@@ -70,7 +70,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node --test src/**/*.test.ts"
+    "test": "node --test"
   },
   "private": true
 }
