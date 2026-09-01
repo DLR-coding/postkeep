@@ -6,7 +6,7 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 25 août 2026
+Dernière mise à jour : 30 août 2026
 
 ---
 
@@ -29,6 +29,109 @@ Objectif : retrouver et rouvrir ce qu'on a sauvegardé. Sans ça, la phase 2 ne 
 - [ ] **État vide** soigné — c'est le premier écran que verra un nouvel utilisateur
 - [ ] **Valider sur appareil** : voir tous ses posts, en rouvrir un dans son app d'origine, en
       supprimer un et qu'il ne revienne pas après redémarrage (critère de fin de phase)
+
+### Finitions issues du brainstorm UI/UX (30 août 2026)
+
+- [x] **Troncature des badges de collection sur `PostCard`** : afficher les 3 premiers noms de
+      collection, badge `+N` (ou `…`) si le post en a plus — validé sur appareil
+- [x] **Fusionner la sheet de détail (`PostDetailSheet`) et l'écran d'édition** en un seul
+      composant plein écran morphant, à la place de la route séparée `post/[id]/edit` — pattern
+      « Now Playing » (Spotify/Apple Podcasts/Gmail compose) : un seul geste continu, pas de
+      navigation — validé sur appareil (30 août 2026), y compris clavier sur le textarea Note et
+      sur la recherche du picker de collections en plein écran (risque initial levé)
+  - [x] `backgroundComponent` custom : rayon des coins interpolé sur `animatedIndex` (24px au
+        snapPoint 50 % → 0 au snapPoint plein écran) — validé sur appareil. Interpolation correcte
+        mais **invisible** : `card` et `background` sont la même couleur dans `THEME` (light et
+        dark), donc le coin arrondi se fond avec l'écran faute de contraste ou de backdrop —
+        cosmétique, pas un bug
+  - [x] `handleComponent` custom : opacité de la poignée de drag interpolée à 0 en approchant du
+        plein écran — validé sur appareil
+  - [x] `topInset={0}` au snapPoint plein écran, pour couvrir aussi la zone sous la status bar —
+        validé sur appareil
+  - [x] `enablePanDownToClose` désactivé une fois au snapPoint plein écran ; le drag reste libre
+        dans les deux sens entre 50 % et 100 % — validé sur appareil
+  - [x] Bouton retour (geste iOS / bouton hardware Android) au snapPoint plein écran → re-snap à
+        50 % (aperçu), **pas** de fermeture directe ; bouton « X » → fermeture complète explicite
+        dans les deux cas (50 % ou 100 %) — validé sur appareil
+- [x] **Collections sous « Note » dans l'écran d'édition** : liste horizontale scrollable de chips
+      retirables (icône ✕ par chip), **remplace** le sélecteur actuel (grille de pills + recherche
+      + création) pour ce mode uniquement — le formulaire de première sauvegarde
+      (`src/screens/save-post/form.tsx`) garde son UI actuelle inchangée. Une chip finale « + »
+      ouvre le picker complet (recherche + création) dans une feuille empilée
+      (`CollectionPickerSheet`, second `BottomSheetModal`). `PostFieldsForm` a gagné un prop
+      `variant: 'picker' | 'chips'` — validé sur appareil
+
+### Bugs de réactivité `useLiveQuery` — corrigés le 31 août 2026
+
+`drizzle-orm/expo-sqlite`'s `useLiveQuery` n'écoute que la table du `.from()` racine
+d'une requête (`node_modules/drizzle-orm/expo-sqlite/query.js`), jamais les tables
+jointes. Trois écritures qui ne touchaient qu'une table jointe sans toucher la table
+racine des requêtes concernées ont été corrigées en les faisant aussi toucher
+`updated_at` sur la table racine manquante :
+
+- [x] `removePostFromCollection` (`src/db/posts.ts`) : ne touchait que `post_collections`
+      → n'actualisait ni les listes de posts (`.from(posts)`) ni le compteur de posts par
+      collection (`.from(collections)`). Touche maintenant aussi `posts.updated_at` et
+      `collections.updated_at`
+- [x] `savePost` (`src/db/posts.ts`) : le diff des rangements touchait `post_collections`
+      sans toucher `collections` → compteur de posts par collection pas actualisé à
+      l'ajout/retrait via le formulaire de sauvegarde. Touche maintenant
+      `collections.updated_at` pour chaque collection dont le rangement a changé
+- [x] `softDeletePost` (`src/db/posts.ts`) : ne touchait que `posts` → compteur de posts
+      par collection pas actualisé à la suppression totale d'un post rangé dans une ou
+      plusieurs collections. Touche maintenant `collections.updated_at` pour chacune de
+      ses collections actives
+
+### Améliorations UI repérées pendant les tests du 31 août 2026
+
+- [ ] **Écran d'édition plein écran — réagencer** : collections en pastilles sur 2 lignes
+      scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
+      Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
+      seulement la fin quand la note est longue
+- [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
+      pleine largeur « + Nouvelle collection » par une icône « + » seule, positionnée à droite de
+      la barre de recherche
+- [ ] **Dialog de confirmation de suppression d'un post (mode édition)** : remplacer l'`Alert.alert`
+      natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
+      fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
+
+---
+
+## 🔴 Bloquant — Phase 4 (organisation)
+
+Objectif : rester utilisable au-delà de quelques dizaines de posts. Voir
+[ROADMAP.md](./ROADMAP.md#phase-4--organisation) pour le détail. Le schéma (`collections` +
+`post_collections`, many-à-many) supporte déjà tout ce qui suit sans migration —
+[ARCHITECTURE.md](./ARCHITECTURE.md) §4.
+
+- [x] **Nouveau tab « Collections »** : remplace `(tabs)/explore.tsx` (boilerplate Expo par
+      défaut, jamais retouché) plutôt que d'ajouter un 3ᵉ onglet. Grille de tuiles façon
+      Fichiers/Finder — icône dossier + nom + badge nombre de posts — validé sur appareil
+      (`src/screens/collections/`), grille à 3 colonnes exactes
+- [x] **Pseudo-dossier « Sans collection »** dans la grille : filtre les posts dont
+      `collectionNames.length === 0` (sinon invisibles depuis cet onglet) — virtuel, aucune ligne
+      en base — validé sur appareil
+- [x] **Navigation vers une collection** : `router.push('/collection/[id]')`, un vrai écran natif
+      (pas une sheet — contrairement au détail d'un post, c'est une navigation « je descends d'un
+      niveau »). Réutilise `PostCard` + `FlashList` comme `(tabs)/index.tsx`, filtré par
+      `collectionId` — le détail d'un post y fonctionne sans code spécifique, via le store
+      Zustand global `usePostDetailStore` déjà déclenché par `PostCard` — validé sur appareil
+      (`src/screens/collection/`)
+- [x] **Créer une collection** : bouton flottant « + » (redesign en cours de session, remplace la
+      tuile « + » initialement prévue) → feuille de création (`createCollection`,
+      `src/db/collections.ts`) — validé sur appareil (31 août 2026), y compris après correction
+      d'un bug de clavier qui ne se fermait pas après création (`Keyboard.dismiss()` manquant
+      avant `sheetRef.current?.dismiss()`)
+- [x] **Renommer / supprimer une collection** : appui long → feuille d'actions custom (pas
+      `Alert.alert`, pas de swipe comme sur `PostCard` — pas de sens de balayage naturel sur une
+      grille de tuiles). Suppression = soft-delete (`deleted_at`) ; les jointures existantes
+      (`activePostsQuery`, `src/db/posts.ts`) filtrent déjà `collections.deleted_at IS NULL`, donc
+      rien à changer côté requêtes posts — validé sur appareil (31 août 2026). Confirmation de
+      suppression en `Dialog` séparé (`@/components/ui/dialog`, ajouté via React Native Reusables)
+      plutôt qu'un état de plus dans la feuille
+- [ ] **Nouvelles requêtes** dans `src/db/collections.ts` : liste des collections actives + compte
+      de posts par collection ; posts filtrés par `collectionId` (variante d'`activePostsQuery`)
+      — codé, à valider sur appareil (module natif `expo-sqlite`, non exécutable hors runtime)
 
 ---
 

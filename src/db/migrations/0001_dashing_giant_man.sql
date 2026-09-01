@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD `opened_at` integer;

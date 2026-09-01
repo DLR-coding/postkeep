@@ -35,6 +35,9 @@ export const posts = sqliteTable('posts', {
   // détection de doublon fonctionne malgré les paramètres de tracking.
   url: text('url'),
   note: text('note'),
+  // Rempli à la première ouverture (Linking.openURL réussi). Sert de base aux
+  // rappels de la phase 5 — TODO.md §Questions ouvertes, fréquence non tranchée.
+  openedAt: integer('opened_at', { mode: 'timestamp_ms' }),
 });
 
 /**

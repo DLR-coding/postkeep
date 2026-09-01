@@ -6,6 +6,7 @@
     "@expo/ui": "~57.0.13",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@rn-primitives/checkbox": "^1.5.2",
+    "@rn-primitives/dialog": "^1.5.2",
     "@rn-primitives/label": "^1.5.2",
     "@rn-primitives/portal": "^1.5.3",
     "@rn-primitives/slot": "^1.5.2",
