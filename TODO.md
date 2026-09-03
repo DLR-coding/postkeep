@@ -6,51 +6,7 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 1er septembre 2026
-
----
-
-## 🔴 Bloquant — Phase 4 (organisation)
-
-Objectif : rester utilisable au-delà de quelques dizaines de posts. Voir
-[ROADMAP.md](./ROADMAP.md#phase-4--organisation) pour le détail. Le schéma (`collections` +
-`post_collections`, many-à-many) supporte déjà tout ce qui suit sans migration —
-[ARCHITECTURE.md](./ARCHITECTURE.md) §4. ROADMAP.md définit trois objectifs pour cette phase :
-gestion des collections, filtre par collection, et recherche locale — les deux premiers sont
-faits, il ne reste que la recherche pour clore la phase.
-
-- [x] **Nouveau tab « Collections »** : remplace `(tabs)/explore.tsx` (boilerplate Expo par
-      défaut, jamais retouché) plutôt que d'ajouter un 3ᵉ onglet. Grille de tuiles façon
-      Fichiers/Finder — icône dossier + nom + badge nombre de posts — validé sur appareil
-      (`src/screens/collections/`), grille à 3 colonnes exactes
-- [x] **Pseudo-dossier « Sans collection »** dans la grille : filtre les posts dont
-      `collectionNames.length === 0` (sinon invisibles depuis cet onglet) — virtuel, aucune ligne
-      en base — validé sur appareil
-- [x] **Navigation vers une collection** : `router.push('/collection/[id]')`, un vrai écran natif
-      (pas une sheet — contrairement au détail d'un post, c'est une navigation « je descends d'un
-      niveau »). Réutilise `PostCard` + `FlashList` comme `(tabs)/index.tsx`, filtré par
-      `collectionId` — le détail d'un post y fonctionne sans code spécifique, via le store
-      Zustand global `usePostDetailStore` déjà déclenché par `PostCard` — validé sur appareil
-      (`src/screens/collection/`)
-- [x] **Créer une collection** : bouton flottant « + » (redesign en cours de session, remplace la
-      tuile « + » initialement prévue) → feuille de création (`createCollection`,
-      `src/db/collections.ts`) — validé sur appareil (31 août 2026), y compris après correction
-      d'un bug de clavier qui ne se fermait pas après création (`Keyboard.dismiss()` manquant
-      avant `sheetRef.current?.dismiss()`)
-- [x] **Renommer / supprimer une collection** : appui long → feuille d'actions custom (pas
-      `Alert.alert`, pas de swipe comme sur `PostCard` — pas de sens de balayage naturel sur une
-      grille de tuiles). Suppression = soft-delete (`deleted_at`) ; les jointures existantes
-      (`activePostsQuery`, `src/db/posts.ts`) filtrent déjà `collections.deleted_at IS NULL`, donc
-      rien à changer côté requêtes posts — validé sur appareil (31 août 2026). Confirmation de
-      suppression en `Dialog` séparé (`@/components/ui/dialog`, ajouté via React Native Reusables)
-      plutôt qu'un état de plus dans la feuille
-- [x] **Nouvelles requêtes** dans `src/db/collections.ts` : liste des collections actives + compte
-      de posts par collection ; posts filtrés par `collectionId` (variante d'`activePostsQuery`)
-      — validé sur appareil (exercées tout au long des tests Collections ci-dessus)
-- [ ] **Recherche locale** sur les notes et les URL des posts (cf.
-      [ROADMAP.md](./ROADMAP.md#phase-4--organisation)) — distincte de la recherche déjà codée
-      dans l'onglet Collections (`src/screens/collections/index.tsx`), qui ne filtre que les
-      noms de collections. Dernier item de la phase : à coder et valider avant de la clore
+Dernière mise à jour : 3 septembre 2026
 
 ---
 
@@ -157,6 +113,49 @@ post déjà présent rouvert plutôt que dupliqué.
 ---
 
 ## ✅ Terminé
+
+<details>
+<summary>Phase 4 — Organisation (3 septembre 2026)</summary>
+
+- [x] **Nouveau tab « Collections »** : remplace `(tabs)/explore.tsx` (boilerplate Expo par
+      défaut, jamais retouché) plutôt que d'ajouter un 3ᵉ onglet. Grille de tuiles façon
+      Fichiers/Finder — icône dossier + nom + badge nombre de posts — validé sur appareil
+      (`src/screens/collections/`), grille à 3 colonnes exactes
+- [x] **Pseudo-dossier « Sans collection »** dans la grille : filtre les posts dont
+      `collectionNames.length === 0` (sinon invisibles depuis cet onglet) — virtuel, aucune ligne
+      en base — validé sur appareil
+- [x] **Navigation vers une collection** : `router.push('/collection/[id]')`, un vrai écran natif
+      (pas une sheet — contrairement au détail d'un post, c'est une navigation « je descends d'un
+      niveau »). Réutilise `PostCard` + `FlashList` comme `(tabs)/index.tsx`, filtré par
+      `collectionId` — le détail d'un post y fonctionne sans code spécifique, via le store
+      Zustand global `usePostDetailStore` déjà déclenché par `PostCard` — validé sur appareil
+      (`src/screens/collection/`)
+- [x] **Créer une collection** : bouton flottant « + » (redesign en cours de session, remplace la
+      tuile « + » initialement prévue) → feuille de création (`createCollection`,
+      `src/db/collections.ts`) — validé sur appareil (31 août 2026), y compris après correction
+      d'un bug de clavier qui ne se fermait pas après création (`Keyboard.dismiss()` manquant
+      avant `sheetRef.current?.dismiss()`)
+- [x] **Renommer / supprimer une collection** : appui long → feuille d'actions custom (pas
+      `Alert.alert`, pas de swipe comme sur `PostCard` — pas de sens de balayage naturel sur une
+      grille de tuiles). Suppression = soft-delete (`deleted_at`) ; les jointures existantes
+      (`activePostsQuery`, `src/db/posts.ts`) filtrent déjà `collections.deleted_at IS NULL`, donc
+      rien à changer côté requêtes posts — validé sur appareil (31 août 2026). Confirmation de
+      suppression en `Dialog` séparé (`@/components/ui/dialog`, ajouté via React Native Reusables)
+      plutôt qu'un état de plus dans la feuille
+- [x] **Nouvelles requêtes** dans `src/db/collections.ts` : liste des collections actives + compte
+      de posts par collection ; posts filtrés par `collectionId` (variante d'`activePostsQuery`)
+      — validé sur appareil (exercées tout au long des tests Collections ci-dessus)
+- [x] **Recherche locale** sur les notes et les URL des posts — barre de recherche dans l'onglet
+      « Tous les posts » (`src/app/(tabs)/index.tsx`), filtre en mémoire sur `note`/`url`
+      (`includes` insensible à la casse), même style que la barre de l'onglet Collections mais
+      indépendante — celle-ci ne filtre que les noms de collections
+      (`src/screens/collections/index.tsx`). État de filtre en `useState` local (pas de Zustand :
+      pas besoin de survivre à un changement d'onglet, cohérent avec le choix déjà fait sur la
+      recherche Collections)
+- [x] **Validé sur appareil réel** (3 septembre 2026) : critère de fin de phase atteint (voir
+      [ROADMAP.md](./ROADMAP.md#phase-4--organisation))
+
+</details>
 
 <details>
 <summary>Phase 3 — Consultation (1er septembre 2026)</summary>

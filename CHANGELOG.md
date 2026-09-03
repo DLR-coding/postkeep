@@ -42,6 +42,9 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
   « + ») et renommage/suppression (appui long → feuille d'actions + `Dialog` de confirmation,
   composant React Native Reusables ajouté) — tous stylés custom plutôt qu'`Alert.alert`/
   `@expo/ui` (natifs, jugés visuellement décalés du reste de l'app)
+- **Recherche locale sur les posts** (Phase 4, dernier item) : barre de recherche dans l'onglet
+  « Tous les posts » (`src/app/(tabs)/index.tsx`), filtre en mémoire sur `note`/`url` — distincte
+  de la recherche par nom de collection de l'onglet Collections
 - **Écran de sauvegarde d'un post** (`src/screens/save-post/`) : reçoit un partage, propose les
   collections en cases à cocher (création à la volée via un bouton dédié), un champ note, puis
   enregistre et referme l'app vers l'app d'origine (`BackHandler.exitApp()`) après une

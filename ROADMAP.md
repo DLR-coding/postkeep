@@ -123,7 +123,7 @@ après redémarrage.
 
 ---
 
-## Phase 4 — Organisation ⏳
+## Phase 4 — Organisation ✅
 
 **Objectif** : rester utilisable au-delà de quelques dizaines de posts.
 
