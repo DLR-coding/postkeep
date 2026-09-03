@@ -13,7 +13,6 @@ import Toast from 'react-native-toast-message';
 
 import { PortalHost } from '@rn-primitives/portal';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { PostDetailSheet } from '@/components/post-detail-sheet';
 import { db } from '@/db';
 import migrations from '@/db/migrations/migrations';
@@ -74,13 +73,18 @@ export default function RootLayout() {
   const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const { success, error } = useMigrations(db, migrations);
 
+  useEffect(() => {
+    if (success || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [success, error]);
+
   return (
     <KeyboardProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ShareIntentProvider options={{ debug: __DEV__ }}>
           <ThemeProvider value={NAV_THEME[colorScheme]}>
             <BottomSheetModalProvider>
-              <AnimatedSplashOverlay />
               {/* Le partage n'est routé qu'une fois les migrations passées : l'écran de
                   sauvegarde lit les collections dès son montage. */}
               {success && <ShareIntentRedirect />}

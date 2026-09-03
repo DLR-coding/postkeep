@@ -10,74 +10,7 @@ Dernière mise à jour : 3 septembre 2026
 
 ---
 
-## 🟠 Important — à faire avant la fin de la V1
-
-### Nettoyage du template de démonstration
-
-Le projet contient encore le contenu d'exemple de `create-expo-app`. À supprimer au moment
-où les vrais écrans les remplacent (phases 2-3), **pas avant** — ils servent encore de
-terrain de test.
-
-- [ ] Supprimer l'onglet `explore.tsx` et son contenu de démonstration
-- [ ] Supprimer/remplacer `src/components/` : `animated-icon*`, `hint-row`, `web-badge`,
-      `external-link`, `themed-text`, `themed-view`
-- [ ] Reconfigurer `src/components/app-tabs.tsx` (onglets « Home »/« Explore » actuels)
-- [ ] Nettoyer `assets/images/` : `react-logo*`, `expo-badge*`, `expo-logo`, `logo-glow`,
-      `tutorial-web`, `tabIcons/`
-- [x] Remplacer l'écran de test `src/app/shareintent.tsx` par le vrai écran de sauvegarde
-- [x] Supprimer `DatabaseSmokeTest` de `src/app/(tabs)/index.tsx` (banc d'essai de la phase 1)
-- [ ] Supprimer l'animation de démarrage Expo (`AnimatedSplashOverlay`)
-  - 📝 C'est la cause du micro-saccade au lancement signalé en test : deux animations
-    indépendantes de 600 ms qui s'enchaînent sans être synchronisées. Comportement du
-    template, pas un bug du projet.
-
-### Dette de configuration
-
-- [ ] **Deux fichiers de thème** : `src/constants/theme.ts` (template) et `src/lib/theme.ts`
-      (React Native Reusables) — deux sources de vérité pour les couleurs. Garder celui de
-      RNR, migrer ce qui sert encore, supprimer l'autre
-- [ ] **Deux `global.css`** : celui de la racine (NativeWind, actif) et `src/global.css`
-      (template, 4 variables de police web). Vérifier si le second sert encore
-- [ ] **Décider du sort de `DESIGN.md`** — c'est la charte du *site marketing* d'Expo, pas
-      un système de design d'application mobile. Soit en extraire une palette pour PostKeep,
-      soit le supprimer
-- [ ] **Convention `src/screens/`** : la créer au premier écran qui dépasse ~80 lignes
-      (cf. [CONTRIBUTING.md](./CONTRIBUTING.md) §3)
-
-### Outillage
-
-- [x] **Configurer ESLint** — `eslint.config.js` généré par `expo lint` (`eslint-config-expo`).
-      ⚠️ `npm run lint` (`expo lint`) échoue avec « Cannot find module 'eslint' » — bug de
-      résolution dans `@expo/cli`, contourner avec `npx eslint .` en attendant
-- [ ] **Ajouter un dépôt distant** — le projet est en local uniquement (`git remote -v` est vide),
-      donc aucune sauvegarde hors de cette machine
-- [x] **Mettre en place des tests** — `node --test` (natif Node 24, zéro dépendance), `npm test`.
-      Modules couverts : l'analyse d'URL (`src/lib/share-url.ts`), le calcul de taille de tuile
-      de la grille Collections (`src/screens/collections/tile-size.ts`). Les fonctions d'accès
-      base (`src/db/`) restent non testées automatiquement — module natif `expo-sqlite`,
-      injouable hors runtime Expo
-  - ⚠️ **Bug corrigé (1er septembre 2026)** : `"test": "node --test src/**/*.test.ts"` dépendait
-    de l'expansion du glob par le shell — sans `globstar` bash (off par défaut), `**` ne
-    descend qu'un niveau, donc `src/screens/collections/tile-size.test.ts` (deux niveaux sous
-    `src/`) n'était jamais exécuté par `npm test`, silencieusement. Remplacé par `"node --test"`
-    seul : la découverte récursive native de Node ne dépend pas du shell
-
-### Améliorations UI en attente (repérées le 31 août 2026)
-
-- [ ] **Écran d'édition plein écran — réagencer** : collections en pastilles sur 2 lignes
-      scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
-      Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
-      seulement la fin quand la note est longue
-- [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
-      pleine largeur « + Nouvelle collection » par une icône « + » seule, positionnée à droite de
-      la barre de recherche
-- [ ] **Dialog de confirmation de suppression d'un post (mode édition)** : remplacer l'`Alert.alert`
-      natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
-      fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
-
----
-
-## 🟡 Avant distribution — Phase 6
+## 🟡 Phase 6 — Distribution
 
 - [ ] **`eas.json` : ajouter `"buildType": "apk"` au profil `production`**
   - Actuellement il produit un **AAB** (format Play Store), qui **n'est pas installable
@@ -92,11 +25,26 @@ terrain de test.
 
 ---
 
+## 🟢 Phase 7 — Polish UI/UX (repérées le 31 août 2026)
+
+- [ ] **Écran d'édition plein écran — réagencer** : collections en pastilles sur 2 lignes
+      scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
+      Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
+      seulement la fin quand la note est longue
+- [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
+      pleine largeur « + Nouvelle collection » par une icône « + » seule, positionnée à droite de
+      la barre de recherche
+- [ ] **Dialog de confirmation de suppression d'un post (mode édition)** : remplacer l'`Alert.alert`
+      natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
+      fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
+
+---
+
 ## 🔵 Questions ouvertes — à trancher avant de coder la fonctionnalité concernée
 
 Ce ne sont pas des tâches mais des décisions produit qui bloqueront le code le moment venu.
 
-- [ ] **Rappels** : à quelle fréquence, et selon quel critère de pertinence ? (Phase 5)
+- [ ] **Rappels** : à quelle fréquence, et selon quel critère de pertinence ? (V1.5 — Rétention)
   - Volontairement non tranché : la réponse dépend d'un usage réel qui n'existe pas encore.
     Rien à prévoir dans le schéma — la colonne `opened_at` s'ajoutera en phase 3, au moment
     où l'ouverture d'un post est codée
@@ -113,6 +61,32 @@ post déjà présent rouvert plutôt que dupliqué.
 ---
 
 ## ✅ Terminé
+
+<details>
+<summary>Phase 5 — Nettoyage template & dette technique (3 septembre 2026)</summary>
+
+- [x] **Contenu de démonstration supprimé** : composants template (`animated-icon*` +
+      `.web.tsx`/`.module.css`, `hint-row`, `web-badge`, `external-link`, `themed-text`,
+      `themed-view`, `app-tabs.web.tsx` — variante web, hors périmètre — `ui/collapsible.tsx`,
+      mort depuis la suppression d'`explore.tsx` en phase 4), assets (`react-logo*`,
+      `expo-badge*`, `expo-logo`, `logo-glow`, `tutorial-web`), animation de démarrage
+      `AnimatedSplashOverlay` (remplacée par `SplashScreen.hideAsync()` standard une fois les
+      migrations résolues, `src/app/_layout.tsx`) — c'était la cause du micro-saccade au
+      lancement signalé en test (deux animations de 600 ms désynchronisées, comportement du
+      template)
+  - `assets/images/tabIcons/home.png` + `collections.png` **conservés** : pas des reliquats,
+    ce sont les vraies icônes (maison, dossier) de la tab bar actuelle, encore utilisées par
+    `app-tabs.tsx`
+- [x] **Dette de configuration épongée** : `src/constants/theme.ts` supprimé après migration de
+      son dernier appelant (`app-tabs.tsx`) vers `src/lib/theme.ts` (React Native Reusables,
+      seule source de vérité restante) ; `src/global.css` supprimé avec lui (n'était importé
+      que par ce fichier) ; `DESIGN.md` supprimé (charte du site marketing d'Expo, aucune
+      référence dans le code) ; convention `src/screens/` déjà en place depuis les phases 2-4
+- [x] **Dépôt distant** : déjà en place (`origin` → `github.com/DLR-coding/postkeep.git`)
+- [x] **Validé sur appareil réel** (3 septembre 2026) : tab bar, splash, cycle share→save —
+      critère de fin de phase atteint (voir [ROADMAP.md](./ROADMAP.md#phase-5--nettoyage-template--dette-technique))
+
+</details>
 
 <details>
 <summary>Phase 4 — Organisation (3 septembre 2026)</summary>

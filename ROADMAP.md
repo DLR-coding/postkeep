@@ -17,10 +17,11 @@ pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvr
 | 1 | Fondation données | ✅ Terminée |
 | 2 | Capture — recevoir et sauvegarder un post | ✅ Terminée |
 | 3 | Consultation — retrouver et rouvrir un post | ✅ Terminée |
-| 4 | Organisation — chercher et filtrer | ⏳ **En cours** |
-| 5 | Rétention — rappels et triage | ⬜ |
+| 4 | Organisation — chercher et filtrer | ✅ Terminée |
+| 5 | Nettoyage — retirer le template, éponger la dette | ✅ Terminée |
 | 6 | Distribution — APK public | ⬜ |
-| V1.5 | Synchronisation multi-appareils | 🔒 Verrouillée jusqu'à la fin de V1 |
+| 7 | Polish — améliorations UI/UX en attente | ⬜ |
+| V1.5 | Rétention + synchronisation multi-appareils | 🔒 Verrouillée jusqu'à la fin de V1 |
 
 ---
 
@@ -145,20 +146,29 @@ il va dans Zustand, jamais en base.
 
 ---
 
-## Phase 5 — Rétention
+## Phase 5 — Nettoyage template & dette technique ✅
 
-**Objectif** : que l'app soit relancée, au lieu de devenir un nouveau cimetière de liens —
-le problème même qu'elle prétend résoudre.
+**Objectif** : ne plus livrer un projet qui ressemble au template `create-expo-app`, et
+solder la dette accumulée pendant les phases 2-4, avant de packager une distribution
+publique.
 
 ### Contenu
 
-1. **Rappels locaux** (`expo-notifications`) — sans backend, tout est planifié sur l'appareil
-2. **Mode triage** : parcourir les posts jamais rouverts, un par un, pour les classer ou les jeter
-3. **Statistiques légères** : combien de posts en attente, depuis quand
+1. **Retirer le contenu de démonstration** : onglet `explore.tsx`, composants template
+   (`animated-icon*`, `hint-row`, `web-badge`, `external-link`, `themed-text`,
+   `themed-view`), assets (`react-logo*`, `expo-badge*`, `expo-logo`, `logo-glow`,
+   `tutorial-web`, `tabIcons/`), animation de démarrage `AnimatedSplashOverlay`
+2. **Éponger la dette de configuration** : un seul fichier de thème (garder celui de React
+   Native Reusables), un seul `global.css`, trancher le sort de `DESIGN.md`, créer
+   `src/screens/` au premier écran qui le justifie
+3. **Ajouter un dépôt distant** — le projet n'a aujourd'hui aucune sauvegarde hors machine
+
+Détail des tâches : [TODO.md](./TODO.md)
 
 ### Critère de fin
 
-Recevoir un rappel pertinent et pouvoir trier dix posts en moins d'une minute.
+Plus aucune trace du template Expo par défaut (composants, assets, animation de démarrage),
+une seule source de vérité pour le thème, et le dépôt poussé sur un remote.
 
 ---
 
@@ -181,9 +191,42 @@ Un tiers installe l'app depuis GitHub et sauvegarde un post, sans aide.
 
 ---
 
-## V1.5 — Synchronisation 🔒
+## Phase 7 — Polish UI/UX ⬜
+
+**Objectif** : corriger les frictions d'interface repérées pendant les tests des phases
+précédentes, avant de considérer la V1 close.
+
+### Contenu
+
+1. Réagencer l'écran d'édition plein écran (collections en haut, note qui scroll seule)
+2. `CollectionPickerSheet` : bouton « + » en icône plutôt qu'en pleine largeur
+3. Dialog de confirmation de suppression d'un post custom (au lieu de l'`Alert.alert`
+   natif) — même traitement que celui déjà fait sur les collections
+
+Détail des tâches : [TODO.md](./TODO.md)
+
+### Critère de fin
+
+Les trois frictions repérées le 31 août 2026 sont corrigées et validées sur appareil.
+
+---
+
+## V1.5 — Rétention & synchronisation 🔒
 
 **Ne rien installer de tout ça avant la fin de la V1.**
+
+### Rétention
+
+**Objectif** : que l'app soit relancée, au lieu de devenir un nouveau cimetière de liens —
+le problème même qu'elle prétend résoudre.
+
+1. **Rappels locaux** (`expo-notifications`) — sans backend, tout est planifié sur l'appareil
+2. **Mode triage** : parcourir les posts jamais rouverts, un par un, pour les classer ou les jeter
+3. **Statistiques légères** : combien de posts en attente, depuis quand
+
+Critère de fin : recevoir un rappel pertinent et pouvoir trier dix posts en moins d'une minute.
+
+### Synchronisation
 
 ```
 Supabase                     Postgres + authentification + RLS
