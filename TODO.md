@@ -22,7 +22,8 @@ Dernière mise à jour : 4 septembre 2026
       [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0)
       (4 septembre 2026)
 - [ ] **Critère de fin de phase** : un tiers installe l'app depuis la release et sauvegarde un
-      post sans aide — pas encore testé par quelqu'un d'autre que Dylan
+      post sans aide — **reporté après la phase 7** (4 septembre 2026) : app pas encore jugée
+      assez polie pour être exposée à quelqu'un d'autre
 
 ---
 

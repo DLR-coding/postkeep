@@ -189,6 +189,12 @@ une seule source de vérité pour le thème, et le dépôt poussé sur un remote
 
 Un tiers installe l'app depuis GitHub et sauvegarde un post, sans aide.
 
+> **Reporté après la phase 7** : contenu de la phase livré (build APK, branding, version,
+> [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0),
+> instructions d'installation), mais ce test volontairement pas encore fait — l'app n'est pas
+> jugée assez polie pour l'exposer à quelqu'un d'autre. Phase 6 ne se ferme (✅ dans le tableau
+> ci-dessus) qu'une fois ce test passé, après la phase 7.
+
 ---
 
 ## Phase 7 — Polish UI/UX ⬜
@@ -208,6 +214,9 @@ Détail des tâches : [TODO.md](./TODO.md)
 ### Critère de fin
 
 Les trois frictions repérées le 31 août 2026 sont corrigées et validées sur appareil.
+
+Une fois cette phase close, reprendre le critère de fin de la phase 6 (test d'installation par
+un tiers), en attente depuis le 4 septembre 2026.
 
 ---
 
