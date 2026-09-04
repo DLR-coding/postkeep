@@ -6,22 +6,23 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 3 septembre 2026
+Dernière mise à jour : 4 septembre 2026
 
 ---
 
 ## 🟡 Phase 6 — Distribution
 
-- [ ] **`eas.json` : ajouter `"buildType": "apk"` au profil `production`**
-  - Actuellement il produit un **AAB** (format Play Store), qui **n'est pas installable
-    directement** depuis un lien ou une GitHub Release
-- [ ] **Numéro de version** : `app.json` et `package.json` sont à `1.0.0`, valeur par défaut
-      du template. Adopter un vrai schéma (`0.1.0` pour une pré-version ?)
-- [ ] **Nom affiché** : `app.json` a `"name": "postkeep"` en minuscules — vérifier le rendu
-      sous l'icône Android
-- [ ] **Icône et écran de démarrage définitifs** — actuellement ceux d'Expo
-      (`backgroundColor: "#208AEF"`, le bleu Expo)
-- [ ] Rédiger les instructions d'installation (autoriser les sources inconnues sur Android)
+- [x] **`eas.json` : ajouter `"buildType": "apk"` au profil `production`** (4 septembre 2026)
+- [x] **Numéro de version** : `0.1.0` dans `app.json` et `package.json` (4 septembre 2026)
+- [x] **Nom affiché** : `"PostKeep"` dans `app.json` (4 septembre 2026)
+- [ ] **Icône et écran de démarrage définitifs** — placeholder posé (glyphe bookmark, fond
+      indigo `#6366F1`) le temps qu'une vraie direction artistique soit tranchée ; toujours pas
+      les visuels finaux
+- [x] Instructions d'installation — dans les notes de la
+      [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0)
+      (4 septembre 2026)
+- [ ] **Critère de fin de phase** : un tiers installe l'app depuis la release et sauvegarde un
+      post sans aide — pas encore testé par quelqu'un d'autre que Dylan
 
 ---
 
