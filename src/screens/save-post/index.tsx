@@ -73,7 +73,7 @@ export function SavePost() {
             resetShareIntent();
             router.replace('/');
           }}>
-          <Text>Retour</Text>
+          <Text>Back</Text>
         </Button>
       </View>
     );

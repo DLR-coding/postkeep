@@ -21,9 +21,9 @@ function EmptyState() {
       <View className="h-20 w-20 items-center justify-center rounded-full bg-muted">
         <Icon as={Bookmark} size={32} color={colors.mutedForeground} />
       </View>
-      <Text className="text-center text-xl font-semibold">Rien à afficher pour l&apos;instant</Text>
+      <Text className="text-center text-xl font-semibold">Nothing to show yet</Text>
       <Text variant="muted" className="text-center">
-        Partagez un post depuis Instagram, TikTok, X ou Threads pour le retrouver ici.
+        Share a post from Instagram, TikTok, X or Threads to find it here.
       </Text>
     </Animated.View>
   );
@@ -48,7 +48,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-5 pb-2 pt-4 text-3xl font-bold">Tous les posts</Text>
+      <Text className="px-5 pb-2 pt-4 text-3xl font-bold">All posts</Text>
 
       {posts.length > 0 && (
         <View className="mx-5 mb-3 flex-row items-center gap-2 rounded-xl border border-border bg-card px-3">
@@ -56,12 +56,12 @@ export default function HomeScreen() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Rechercher une note ou une URL…"
+            placeholder="Search a note or a URL…"
             placeholderTextColor={colors.mutedForeground}
             className="flex-1 py-2.5 text-base text-foreground"
           />
           {query.length > 0 && (
-            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Effacer la recherche">
+            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
               <Icon as={X} size={16} color={colors.mutedForeground} />
             </Pressable>
           )}
@@ -77,7 +77,7 @@ export default function HomeScreen() {
           nothingFound ? (
             <View className="flex-1 items-center justify-center px-8 py-16">
               <Text variant="muted" className="text-center">
-                Aucun post ne correspond.
+                No matching post.
               </Text>
             </View>
           ) : (

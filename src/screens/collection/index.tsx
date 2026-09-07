@@ -29,7 +29,7 @@ export function CollectionScreen() {
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center px-8 py-16">
             <Text variant="muted" className="text-center">
-              Aucun post ici pour l&apos;instant.
+              No posts here yet.
             </Text>
           </View>
         }

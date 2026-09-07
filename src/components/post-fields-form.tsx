@@ -1,4 +1,4 @@
-import { type RefObject, useRef, useState } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
@@ -78,7 +78,7 @@ function CollectionPicker({
         <BottomSheetTextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Rechercher une collection…"
+          placeholder="Search for a collection…"
           placeholderTextColor={colors.mutedForeground}
           style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
         />
@@ -112,7 +112,7 @@ function CollectionPicker({
         })}
         {visible.length === 0 && (
           <Text variant="muted" className="text-sm">
-            Aucune collection ne correspond.
+            No matching collection.
           </Text>
         )}
       </View>
@@ -127,14 +127,14 @@ function CollectionPicker({
               if (nameError) setNameError(null);
             }}
             onSubmitEditing={handleCreateCollection}
-            placeholder="Nom de la collection"
+            placeholder="Collection name"
             placeholderTextColor={colors.mutedForeground}
             style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
           />
           {nameError && <Text className="text-destructive">{nameError}</Text>}
           <View className="flex-row gap-2">
             <Button size="sm" onPress={handleCreateCollection}>
-              <Text>Ajouter</Text>
+              <Text>Add</Text>
             </Button>
             <Button
               size="sm"
@@ -144,7 +144,7 @@ function CollectionPicker({
                 setNewCollectionName('');
                 setNameError(null);
               }}>
-              <Text>Annuler</Text>
+              <Text>Cancel</Text>
             </Button>
           </View>
         </View>
@@ -158,8 +158,8 @@ function CollectionPicker({
           }}>
           <Text>
             {query && visible.length === 0
-              ? `+ Créer « ${search.trim()} »`
-              : '+ Nouvelle collection'}
+              ? `+ Create "${search.trim()}"`
+              : '+ New collection'}
           </Text>
         </Button>
       )}
@@ -204,9 +204,12 @@ function CollectionPickerSheet({
   );
 }
 
-/** Liste horizontale de chips retirables pour les collections sélectionnées —
- *  remplace la grille de pills dans l'écran d'édition (`variant="chips"`). La
- *  chip finale « + » ouvre le picker complet dans `CollectionPickerSheet`. */
+/** Grille de chips retirables pour les collections sélectionnées, repliée sur
+ *  2 lignes fixes puis scrollable à l'horizontal au-delà (les chips
+ *  remplissent les 2 lignes d'une colonne avant d'ouvrir la suivante à
+ *  droite) — remplace la grille de pills dans l'écran d'édition
+ *  (`variant="chips"`). La chip finale « + » ouvre le picker complet dans
+ *  `CollectionPickerSheet`. */
 function CollectionChips({
   field,
   collections,
@@ -220,7 +223,11 @@ function CollectionChips({
 
   return (
     <>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+      <ScrollView
+        horizontal
+        style={styles.chipsScroll}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipsWrap}>
         {selected.map((collection) => (
           <View
             key={collection.id}
@@ -230,14 +237,14 @@ function CollectionChips({
             <Pressable
               onPress={() => field.onChange(field.value.filter((id) => id !== collection.id))}
               hitSlop={8}
-              accessibilityLabel={`Retirer ${collection.name}`}>
+              accessibilityLabel={`Remove ${collection.name}`}>
               <Icon as={X} size={12} color={colors.mutedForeground} />
             </Pressable>
           </View>
         ))}
         <Pressable
           onPress={() => pickerRef.current?.present()}
-          accessibilityLabel="Ajouter une collection"
+          accessibilityLabel="Add a collection"
           className="items-center justify-center rounded-full px-3 py-1.5"
           style={{ backgroundColor: colors.muted }}>
           <Icon as={Plus} size={14} color={colors.mutedForeground} />
@@ -262,12 +269,29 @@ export function PostFieldsForm({
   variant?: 'picker' | 'chips';
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  const [noteInputHeight, setNoteInputHeight] = useState(0);
+  // ponytail: debug temporaire pour instrumenter le bug de hauteur de la Note
+  // (chaque valeur vient d'un `onLayout`/`onContentSizeChange` distinct pour
+  // localiser où la taille du texte contamine la chaîne flex) — à retirer une
+  // fois le vrai fix posé.
+  const [debug, setDebug] = useState({ outer: 0, collections: 0, noteBlock: 0, noteWrapper: 0, content: 0 });
+  // ponytail: doublon Metro du bandeau à l'écran, pour ne rien perdre si le
+  // bandeau est masqué par le clavier — à retirer avec le reste du debug.
+  useEffect(() => {
+    console.log('[note-debug]', debug);
+  }, [debug]);
   const { data: collections } = useLiveQuery(
     db.select().from(schema.collections).where(isNull(schema.collections.deletedAt))
   );
 
   const collectionsBlock = (
-    <View className="mt-6 gap-3">
+    <View
+      className="mt-6 gap-3"
+      onLayout={(e) => {
+        const height = e.nativeEvent?.layout?.height;
+        if (height == null) return;
+        setDebug((d) => ({ ...d, collections: height }));
+      }}>
       <Text variant="large">Collections</Text>
       <Controller
         control={control}
@@ -284,33 +308,91 @@ export function PostFieldsForm({
   );
 
   const noteBlock = (
-    <View className="mt-6 gap-3">
+    <View
+      className={variant === 'chips' ? 'mt-6 min-h-0 flex-1 gap-3' : 'mt-6 gap-3'}
+      onLayout={(e) => {
+        const height = e.nativeEvent?.layout?.height;
+        if (height == null) return;
+        setDebug((d) => ({ ...d, noteBlock: height }));
+      }}>
       <Text variant="large">Note</Text>
       <Controller
         control={control}
         name="note"
-        render={({ field }) => (
-          <BottomSheetTextInput
-            value={field.value}
-            onChangeText={field.onChange}
-            multiline
-            numberOfLines={4}
-            placeholder="Ajouter une note…"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, styles.textarea, { borderColor: colors.border, color: colors.foreground }]}
-          />
-        )}
+        render={({ field }) => {
+          const input = (
+            <BottomSheetTextInput
+              value={field.value}
+              onChangeText={field.onChange}
+              onContentSizeChange={(e) => {
+                const height = e.nativeEvent?.contentSize?.height;
+                if (height == null) return;
+                setDebug((d) => ({ ...d, content: height }));
+              }}
+              multiline
+              numberOfLines={variant === 'chips' ? undefined : 4}
+              placeholder="Add a note…"
+              placeholderTextColor={colors.mutedForeground}
+              style={[
+                styles.input,
+                // Une fois mesurée (ci-dessous), la hauteur est fixée en dur
+                // plutôt que par flex : sur Android, un `TextInput` multiline
+                // ignore la hauteur résolue par `flexGrow`/`flexBasis` et
+                // grandit avec son contenu au lieu de scroller en interne.
+                variant === 'chips'
+                  ? noteInputHeight
+                    ? { height: noteInputHeight, textAlignVertical: 'top' }
+                    : styles.textareaFlex
+                  : styles.textarea,
+                { borderColor: colors.border, color: colors.foreground },
+              ]}
+            />
+          );
+          return variant === 'chips' ? (
+            <View
+              className="min-h-0 flex-1"
+              onLayout={(e) => {
+                const height = e.nativeEvent?.layout?.height;
+                if (height == null) return;
+                setNoteInputHeight(height);
+                setDebug((d) => ({ ...d, noteWrapper: height }));
+              }}>
+              {input}
+            </View>
+          ) : (
+            input
+          );
+        }}
       />
     </View>
   );
 
-  // Collections sous Note en mode édition (chips) ; ordre inchangé pour la
-  // première sauvegarde (picker), dont l'UI ne doit pas bouger.
+  // Collections en haut / Note en dessous en mode édition (chips), Note prend
+  // le reste de l'espace (`flex-1`) pour scroller elle-même plutôt que la page
+  // entière ; ordre inchangé pour la première sauvegarde (picker), dont l'UI
+  // ne doit pas bouger. `min-h-0` partout dans la chaîne : par défaut un enfant
+  // flex ne rétrécit pas sous la taille de son contenu (`minHeight: auto` côté
+  // Yoga, comme en CSS), ce qui empêchait la Note de céder sa place réelle.
   return variant === 'chips' ? (
-    <>
-      {noteBlock}
+    <View
+      className="min-h-0 flex-1"
+      onLayout={(e) => {
+        const height = e.nativeEvent?.layout?.height;
+        if (height == null) return;
+        setDebug((d) => ({ ...d, outer: height }));
+      }}>
+      {/* ponytail: overlay de debug temporaire, à retirer avec le reste de
+          l'instrumentation une fois la vraie fuite localisée. */}
+      <View pointerEvents="none" style={styles.debugOverlay}>
+        <Text style={styles.debugText}>
+          outer={debug.outer.toFixed(0)} collections={debug.collections.toFixed(0)}{'\n'}
+          noteBlock={debug.noteBlock.toFixed(0)} noteWrapper={debug.noteWrapper.toFixed(0)}{'\n'}
+          content={debug.content.toFixed(0)}
+        </Text>
+      </View>
       {collectionsBlock}
-    </>
+      {noteBlock}
+    </View>
   ) : (
     <>
       {collectionsBlock}
@@ -318,6 +400,11 @@ export function PostFieldsForm({
     </>
   );
 }
+
+// ~2 lignes de chips (hauteur ~32px chacune + gap) — hauteur fixe (pas
+// `maxHeight`) : un `flexWrap: 'wrap'` en colonne a besoin d'une taille de
+// l'axe croisé définie pour savoir quand ouvrir une nouvelle colonne.
+const CHIPS_HEIGHT = 76;
 
 const styles = StyleSheet.create({
   input: {
@@ -330,7 +417,20 @@ const styles = StyleSheet.create({
     minHeight: 96,
     textAlignVertical: 'top',
   },
-  chipsRow: {
+  textareaFlex: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minHeight: 0,
+    textAlignVertical: 'top',
+  },
+  chipsScroll: {
+    height: CHIPS_HEIGHT,
+  },
+  chipsWrap: {
+    flexDirection: 'column',
+    flexWrap: 'wrap',
+    height: CHIPS_HEIGHT,
     gap: 8,
     paddingVertical: 2,
   },
@@ -338,5 +438,20 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 48,
     gap: 12,
+  },
+  // ponytail: debug temporaire (cf. plus haut), à retirer avec le reste.
+  debugOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    backgroundColor: 'rgba(255,0,0,0.85)',
+    padding: 4,
+  },
+  debugText: {
+    color: 'white',
+    fontSize: 10,
+    fontFamily: 'monospace',
   },
 });

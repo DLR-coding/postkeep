@@ -56,7 +56,7 @@ function MigrationGate({ error }: { error?: Error }) {
       {error ? (
         <>
           <Text style={[styles.gateTitle, { color: colors.destructive }]}>
-            La base de données n’a pas pu démarrer
+            The database could not start
           </Text>
           <Text style={[styles.gateDetail, { color: colors.mutedForeground }]}>
             {error.message}

@@ -50,10 +50,10 @@ export function PostCard({ item, collectionId }: { item: PostListItem; collectio
 
   const handleRemoveFromCollection = useCallback(() => {
     if (!collectionId) return;
-    Alert.alert('Retirer ce post de la collection ?', 'Il reste dans « Tous les posts ».', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert('Remove this post from the collection?', 'It stays in "All posts".', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Retirer',
+        text: 'Remove',
         style: 'destructive',
         onPress: () => {
           removePostFromCollection(item.id, collectionId);
@@ -64,10 +64,10 @@ export function PostCard({ item, collectionId }: { item: PostListItem; collectio
   }, [item.id, collectionId]);
 
   const handleDelete = useCallback(() => {
-    Alert.alert('Supprimer ce post ?', 'Il disparaîtra de PostKeep.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert('Delete this post?', 'It will disappear from PostKeep.', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: 'Delete',
         style: 'destructive',
         onPress: () => {
           softDeletePost(item.id);
@@ -94,14 +94,14 @@ export function PostCard({ item, collectionId }: { item: PostListItem; collectio
                 onPress={handleRemoveFromCollection}
                 icon={FolderMinus}
                 colorClassName="bg-amber-500"
-                accessibilityLabel="Retirer de la collection"
+                accessibilityLabel="Remove from collection"
               />
             )}
             <SwipeAction
               onPress={handleDelete}
               icon={Trash2}
               colorClassName="bg-destructive"
-              accessibilityLabel="Supprimer"
+              accessibilityLabel="Delete"
             />
           </View>
         )}

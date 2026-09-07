@@ -123,7 +123,7 @@ function CollectionActionsSheet({
   const handleDelete = () => {
     softDeleteCollection(collection.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Toast.show({ type: 'success', text1: 'Collection supprimée', visibilityTime: 1500 });
+    Toast.show({ type: 'success', text1: 'Collection deleted', visibilityTime: 1500 });
     setConfirmOpen(false);
   };
 
@@ -141,7 +141,7 @@ function CollectionActionsSheet({
         <BottomSheetView className="gap-1 px-4 pb-8 pt-2">
           {mode === 'rename' && (
             <View className="gap-3 px-2 py-3">
-              <Text variant="large">Renommer</Text>
+              <Text variant="large">Rename</Text>
               <BottomSheetTextInput
                 autoFocus
                 value={name}
@@ -160,10 +160,10 @@ function CollectionActionsSheet({
                     Keyboard.dismiss();
                     setMode('menu');
                   }}>
-                  <Text>Annuler</Text>
+                  <Text>Cancel</Text>
                 </Button>
                 <Button className="flex-1" onPress={submitRename}>
-                  <Text>Renommer</Text>
+                  <Text>Rename</Text>
                 </Button>
               </View>
             </View>
@@ -181,7 +181,7 @@ function CollectionActionsSheet({
                 }}
                 className="flex-row items-center gap-3 rounded-xl px-3 py-3 active:bg-muted">
                 <Icon as={Pencil} size={20} color={colors.foreground} />
-                <Text className="text-base">Renommer</Text>
+                <Text className="text-base">Rename</Text>
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -191,7 +191,7 @@ function CollectionActionsSheet({
                 className="flex-row items-center gap-3 rounded-xl px-3 py-3 active:bg-muted">
                 <Icon as={Trash2} size={20} color={colors.destructive} />
                 <Text className="text-base" style={{ color: colors.destructive }}>
-                  Supprimer
+                  Delete
                 </Text>
               </Pressable>
             </>
@@ -202,15 +202,15 @@ function CollectionActionsSheet({
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Supprimer « {collection.name} » ?</DialogTitle>
-            <DialogDescription>Les posts qu’elle contient ne sont pas supprimés.</DialogDescription>
+            <DialogTitle>{`Delete "${collection.name}"?`}</DialogTitle>
+            <DialogDescription>The posts it contains are not deleted.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onPress={() => setConfirmOpen(false)}>
-              <Text>Annuler</Text>
+              <Text>Cancel</Text>
             </Button>
             <Button variant="destructive" onPress={handleDelete}>
-              <Text>Supprimer</Text>
+              <Text>Delete</Text>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -279,14 +279,14 @@ function CreateCollectionSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMo
       handleIndicatorStyle={{ backgroundColor: colors.mutedForeground }}>
       <BottomSheetView className="gap-3 px-4 pb-8 pt-2">
         <Text variant="large" className="px-2 pb-1 pt-1">
-          Nouvelle collection
+          New collection
         </Text>
         <BottomSheetTextInput
           autoFocus
           value={name}
           onChangeText={setName}
           onSubmitEditing={submitCreate}
-          placeholder="Nom"
+          placeholder="Name"
           placeholderTextColor={colors.mutedForeground}
           style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
         />
@@ -298,10 +298,10 @@ function CreateCollectionSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMo
               Keyboard.dismiss();
               sheetRef.current?.dismiss();
             }}>
-            <Text>Annuler</Text>
+            <Text>Cancel</Text>
           </Button>
           <Button className="flex-1" onPress={submitCreate}>
-            <Text>Créer</Text>
+            <Text>Create</Text>
           </Button>
         </View>
       </BottomSheetView>
@@ -328,7 +328,7 @@ export function CollectionsScreen() {
     ? collections.filter((collection) => collection.name.toLowerCase().includes(normalizedQuery))
     : collections;
   const showUncategorized =
-    uncategorizedCount > 0 && (!normalizedQuery || 'sans collection'.includes(normalizedQuery));
+    uncategorizedCount > 0 && (!normalizedQuery || 'no collection'.includes(normalizedQuery));
   const nothingFound = !!normalizedQuery && !showUncategorized && filteredCollections.length === 0;
 
   const gridItems: GridItem[] = [
@@ -345,12 +345,12 @@ export function CollectionsScreen() {
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Rechercher une collection…"
+          placeholder="Search for a collection…"
           placeholderTextColor={colors.mutedForeground}
           className="flex-1 py-2.5 text-base text-foreground"
         />
         {query.length > 0 && (
-          <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Effacer la recherche">
+          <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
             <Icon as={X} size={16} color={colors.mutedForeground} />
           </Pressable>
         )}
@@ -365,11 +365,11 @@ export function CollectionsScreen() {
             <CollectionTile
               size={tileSize}
               onPress={() =>
-                router.push({ pathname: '/collection/[id]', params: { id: UNCATEGORIZED_ID, name: 'Sans collection' } })
+                router.push({ pathname: '/collection/[id]', params: { id: UNCATEGORIZED_ID, name: 'No collection' } })
               }>
               <Icon as={FolderX} size={28} color={colors.mutedForeground} />
               <Text numberOfLines={1} className="text-sm font-medium">
-                Sans collection
+                No collection
               </Text>
               <Text variant="muted" className="text-xs">
                 {item.count} post{item.count > 1 ? 's' : ''}
@@ -383,7 +383,7 @@ export function CollectionsScreen() {
           nothingFound
             ? () => (
                 <Text variant="muted" className="px-2 text-center">
-                  Aucune collection ne correspond.
+                  No matching collection.
                 </Text>
               )
             : undefined
@@ -393,7 +393,7 @@ export function CollectionsScreen() {
 
       <Pressable
         onPress={() => createSheetRef.current?.present()}
-        accessibilityLabel="Nouvelle collection"
+        accessibilityLabel="New collection"
         className="absolute h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/30 active:scale-95"
         style={{ right: 20, bottom: insets.bottom + 20 }}>
         <Icon as={Plus} size={26} color={colors.primaryForeground} />

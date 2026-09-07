@@ -43,7 +43,7 @@ export function SavePostForm({
       // la confirmation avant que PostKeep ne quitte l'app.
       Toast.show({
         type: 'success',
-        text1: 'Enregistré',
+        text1: 'Saved',
         visibilityTime: 1200,
         onHide: () => {
           resetShareIntent();
@@ -82,7 +82,7 @@ export function SavePostForm({
             </Text>
           </View>
           <View className="flex-1">
-            <Text variant="small">{platform?.label ?? 'Lien non reconnu'}</Text>
+            <Text variant="small">{platform?.label ?? 'Unrecognized link'}</Text>
             {analyzed?.url && (
               <Text variant="muted" numberOfLines={1}>
                 {analyzed.url}
@@ -94,7 +94,7 @@ export function SavePostForm({
         <PostFieldsForm control={control} />
 
         <Button className="mt-6" onPress={handleSubmit(onSubmit)}>
-          <Text>Enregistrer</Text>
+          <Text>Save</Text>
         </Button>
       </BottomSheetScrollView>
     </BottomSheet>

@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, BackHandler, Linking, Pressable, useColorScheme, View } from 'react-native';
+import {
+  Alert,
+  BackHandler,
+  Keyboard,
+  Linking,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import {
   BottomSheetFooter,
   BottomSheetModal,
   BottomSheetScrollView,
+  BottomSheetView,
   type BottomSheetBackgroundProps,
   type BottomSheetFooterProps,
   type BottomSheetHandleProps,
@@ -120,6 +130,10 @@ export function PostDetailSheet() {
   const sheetRef = useRef<BottomSheetModal>(null);
   const [index, setIndex] = useState(PREVIEW_INDEX);
   const [isDeleting, setIsDeleting] = useState(false);
+  // `BottomSheetView` (contenu non-scrollable de l'édition, cf. plus bas) n'a
+  // pas l'ajustement automatique de marge qu'offre `enableFooterMarginAdjustment`
+  // sur les composants scrollables — mesuré via `onLayout` sur le footer.
+  const [footerHeight, setFooterHeight] = useState(0);
 
   // Repart de l'aperçu à chaque nouveau post ouvert (y compris en passant
   // directement d'un post à un autre sans fermer la feuille entre les deux) —
@@ -206,10 +220,10 @@ export function PostDetailSheet() {
 
   const handleDelete = useCallback(() => {
     if (!postId) return;
-    Alert.alert('Supprimer ce post ?', 'Il disparaîtra de PostKeep.', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert('Delete this post?', 'It will disappear from PostKeep.', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: 'Delete',
         style: 'destructive',
         onPress: () => {
           setIsDeleting(true);
@@ -226,6 +240,10 @@ export function PostDetailSheet() {
   }, []);
 
   const handleDismiss = useCallback(() => {
+    // Point de passage unique pour toute fermeture (Enregistrer, Supprimer,
+    // pan-down, bouton retour) — le clavier ne se ferme pas tout seul quand
+    // la feuille est retirée programmatiquement pendant l'édition.
+    Keyboard.dismiss();
     usePostDetailStore.getState().close();
     setIsDeleting(false);
     setFrozenPost(null);
@@ -245,7 +263,8 @@ export function PostDetailSheet() {
         <BottomSheetFooter {...footerProps}>
           <View
             className="gap-2 border-t border-border bg-card px-6 pt-3"
-            style={{ paddingBottom: insets.bottom + 12 }}>
+            style={{ paddingBottom: insets.bottom + 12 }}
+            onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}>
             <Animated.View
               key={index}
               entering={FadeIn.duration(150)}
@@ -254,11 +273,11 @@ export function PostDetailSheet() {
               {index === EDIT_INDEX ? (
                 <>
                   <Button className="flex-1" onPress={onSave}>
-                    <Text>Enregistrer</Text>
+                    <Text>Save</Text>
                   </Button>
                   <Button variant="destructive" onPress={handleDelete}>
                     <Icon as={Trash2} className="text-white" size={16} />
-                    <Text>Supprimer</Text>
+                    <Text>Delete</Text>
                   </Button>
                 </>
               ) : (
@@ -267,7 +286,7 @@ export function PostDetailSheet() {
                   style={meta ? { backgroundColor: meta.color } : undefined}
                   onPress={handleOpen}>
                   <Text style={meta ? { color: '#fff' } : undefined}>
-                    Ouvrir dans {meta?.label ?? "l'app d'origine"}
+                    Open in {meta?.label ?? 'the original app'}
                   </Text>
                 </Button>
               )}
@@ -292,28 +311,46 @@ export function PostDetailSheet() {
       footerComponent={renderFooter}
       backgroundComponent={AnimatedBackground}
       handleComponent={AnimatedHandle}>
-      <BottomSheetScrollView
-        contentContainerStyle={{ padding: 24 }}
-        enableFooterMarginAdjustment
-        keyboardShouldPersistTaps="handled">
-        <View className="flex-row justify-end">
-          <Pressable onPress={() => sheetRef.current?.dismiss()} hitSlop={8} accessibilityLabel="Fermer">
-            <Icon as={X} size={20} color={colors.mutedForeground} />
-          </Pressable>
-        </View>
-
-        {!displayedPost ? (
-          <Text variant="muted">Ce post n&apos;existe plus.</Text>
-        ) : index === EDIT_INDEX ? (
-          <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
+      {displayedPost && index === EDIT_INDEX ? (
+        // Vue non-scrollable en plein écran : seule la Note défile (dans
+        // `PostFieldsForm`, hauteur mesurée puis fixée en dur sur le
+        // `TextInput` — Android ignore la hauteur résolue par flexGrow pour
+        // un `TextInput` multiline et le laisse grandir avec son contenu).
+        // La page elle-même ne doit pas défiler : Collections doit rester
+        // visible pendant qu'on lit/édite la fin d'une longue note.
+        <BottomSheetView
+          style={[styles.editContent, { paddingBottom: footerHeight }]}>
+          <View className="flex-row justify-end">
+            <Pressable onPress={() => sheetRef.current?.dismiss()} hitSlop={8} accessibilityLabel="Close">
+              <Icon as={X} size={20} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
+          <Animated.View
+            style={styles.editContentGrow}
+            entering={FadeIn.duration(180)}
+            exiting={FadeOut.duration(120)}>
             <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} />
             <PostFieldsForm control={control} variant="chips" />
           </Animated.View>
-        ) : (
-          <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
-            <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} />
+        </BottomSheetView>
+      ) : (
+        <BottomSheetScrollView
+          contentContainerStyle={styles.previewContent}
+          enableFooterMarginAdjustment
+          keyboardShouldPersistTaps="handled">
+          <View className="flex-row justify-end">
+            <Pressable onPress={() => sheetRef.current?.dismiss()} hitSlop={8} accessibilityLabel="Close">
+              <Icon as={X} size={20} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
 
-            {!!displayedPost.note && (
+          {!displayedPost ? (
+            <Text variant="muted">This post no longer exists.</Text>
+          ) : (
+            <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
+              <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} />
+
+              {!!displayedPost.note && (
               <View className="mt-6 gap-2">
                 <Text variant="large">Note</Text>
                 <View className="rounded-xl bg-muted p-3.5" style={{ borderCurve: 'continuous' }}>
@@ -340,7 +377,7 @@ export function PostDetailSheet() {
             )}
 
             <Text variant="muted" className="mt-8 text-xs">
-              Modifié le {dateFormatter.format(displayedPost.updatedAt)}
+              Edited on {dateFormatter.format(displayedPost.updatedAt)}
             </Text>
 
             <View className="mt-6 flex-row items-center justify-center gap-1 opacity-60">
@@ -349,9 +386,28 @@ export function PostDetailSheet() {
                 Tirer vers le haut pour modifier
               </Text>
             </View>
-          </Animated.View>
-        )}
-      </BottomSheetScrollView>
+            </Animated.View>
+          )}
+        </BottomSheetScrollView>
+      )}
     </BottomSheetModal>
   );
 }
+
+const styles = StyleSheet.create({
+  previewContent: {
+    padding: 24,
+  },
+  editContent: {
+    flex: 1,
+    minHeight: 0,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  editContentGrow: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minHeight: 0,
+  },
+});
