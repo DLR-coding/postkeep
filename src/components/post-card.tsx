@@ -3,6 +3,7 @@ import { Alert, Pressable, useColorScheme, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { FolderMinus, Trash2 } from 'lucide-react-native';
 
 import { Icon } from '@/components/ui/icon';
@@ -110,24 +111,35 @@ export function PostCard({ item, collectionId }: { item: PostListItem; collectio
           onPress={() => usePostDetailStore.getState().open(item.id)}
           className="flex-row gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm shadow-black/5"
           style={({ pressed }) => (pressed ? { transform: [{ scale: 0.98 }] } : undefined)}>
-          <View
-            className="h-11 w-11 items-center justify-center rounded-full shadow-sm shadow-black/10"
-            style={{ backgroundColor: meta?.color ?? colors.muted }}>
-            <Text className="text-sm font-bold" style={{ color: meta ? '#fff' : colors.mutedForeground }}>
-              {meta?.badge ?? '?'}
-            </Text>
-          </View>
+          {/* Thumbnail or platform badge */}
+          {item.thumbnailUrl ? (
+            <Image
+              source={{ uri: item.thumbnailUrl }}
+              className="h-16 w-16 rounded-xl"
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <View
+              className="h-11 w-11 items-center justify-center rounded-full shadow-sm shadow-black/10"
+              style={{ backgroundColor: meta?.color ?? colors.muted }}>
+              <Text className="text-sm font-bold" style={{ color: meta ? '#fff' : colors.mutedForeground }}>
+                {meta?.badge ?? '?'}
+              </Text>
+            </View>
+          )}
 
           <View className="flex-1 gap-1.5">
             <View className="flex-row items-center justify-between gap-2">
-              <Text className="font-semibold">{meta?.label ?? 'Texte'}</Text>
+              <Text className="font-semibold">{meta?.label ?? 'Text'}</Text>
               <Text variant="muted" className="text-xs">
                 {dateFormatter.format(item.updatedAt)}
               </Text>
             </View>
-            {!!item.note && (
+            {/* Caption (from oEmbed) or note, whichever is available */}
+            {!!(item.caption || item.note) && (
               <Text className="text-sm leading-5" numberOfLines={2}>
-                {item.note}
+                {item.caption || item.note}
               </Text>
             )}
             {item.collectionNames.length > 0 && (

@@ -15,6 +15,13 @@
       "when": 1787997803710,
       "tag": "0001_dashing_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794248679987,
+      "tag": "0002_adorable_morbius",
+      "breakpoints": true
     }
   ]
 }

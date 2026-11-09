@@ -13,9 +13,9 @@ const PLATFORM_HOSTS: Record<Platform, string[]> = {
   threads: ['threads.net', 'threads.com'],
 };
 
-/** Aperçu = logo de plateforme déduit de l'URL, pas de métadonnées récupérées
- *  (ARCHITECTURE.md §6). En l'absence d'icône de marque dans les dépendances du
- *  projet, un badge coloré + libellé tient lieu de logo pour la V1. */
+/** Aperçu de repli quand aucune miniature n'a pu être récupérée (ARCHITECTURE.md
+ *  §6). En l'absence d'icône de marque dans les dépendances du projet, un badge
+ *  coloré + libellé tient lieu de logo pour la V1. */
 export const PLATFORM_META: Record<Platform, { label: string; badge: string; color: string }> = {
   instagram: { label: 'Instagram', badge: 'IG', color: '#E4405F' },
   tiktok: { label: 'TikTok', badge: 'TT', color: '#010101' },

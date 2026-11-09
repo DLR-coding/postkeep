@@ -201,6 +201,11 @@ export type SavePostInput = {
   url: string | null;
   note: string | null;
   collectionIds: string[];
+  /** Métadonnées récupérées au partage (`src/lib/oembed.ts`). `undefined` = garder
+   *  la valeur en base : Drizzle ignore les clés `undefined` dans `.set()`, donc
+   *  l'édition depuis la feuille de détail n'efface pas ce qui a été récupéré. */
+  caption?: string | null;
+  thumbnailUrl?: string | null;
 };
 
 /**
@@ -216,11 +221,17 @@ export type SavePostInput = {
 export function savePost(input: SavePostInput): string {
   return db.transaction((tx) => {
     let postId = input.id;
+    const postData = {
+      url: input.url,
+      note: input.note,
+      caption: input.caption,
+      thumbnailUrl: input.thumbnailUrl,
+    };
     if (postId) {
-      tx.update(posts).set({ url: input.url, note: input.note }).where(eq(posts.id, postId)).run();
+      tx.update(posts).set(postData).where(eq(posts.id, postId)).run();
     } else {
       postId = newId();
-      tx.insert(posts).values({ id: postId, url: input.url, note: input.note }).run();
+      tx.insert(posts).values({ id: postId, ...postData }).run();
     }
 
     const existingRows = tx.select().from(postCollections).where(eq(postCollections.postId, postId)).all();

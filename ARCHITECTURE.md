@@ -173,15 +173,31 @@ l'état **réseau** (synchronisation en cours, erreurs de connexion, conflits).
 
 ---
 
-## 6. Pas de WebView, pas de récupération de métadonnées en V1
+## 6. Pas de WebView ; métadonnées récupérées côté appareil, au mieux
 
 - **Ouvrir un post** → `Linking.openURL()` → le système ouvre Instagram/TikTok directement
-- **Aperçu d'un post** → logo de la plateforme, déduit de l'URL (pas d'image récupérée)
-- La récupération des métadonnées Open Graph (titre, image) est en réserve, **pas en V1**
+- **Aperçu d'un post** → miniature + caption d'origine quand on a pu les récupérer, sinon
+  logo de la plateforme déduit de l'URL
+- **Récupération** (`src/lib/oembed.ts`) : une seule fois, au partage, **depuis l'appareil**
+  — balises `og:*` de la page pour TikTok/Instagram, oEmbed `publish.x.com` pour X, rien
+  pour Threads. Délai max 5 s ; un échec n'empêche jamais la sauvegarde. Résultat stocké
+  dans `posts.caption` / `posts.thumbnail_url`, jamais redemandé à l'affichage
 
-**Pourquoi** : une WebView embarquée est lourde, fragile face aux changements des sites, et
-souvent bloquée par les plateformes. Récupérer des métadonnées demande du réseau, donc casse
-la promesse hors-ligne, et souvent un proxy serveur, donc casse la contrainte de coût zéro.
+**Pourquoi** : une WebView embarquée est lourde, fragile et souvent bloquée. Pour les
+métadonnées, décision du 9 novembre 2026 (revient sur « pas en V1 ») : elles ont été jugées
+nécessaires pour retrouver un post dans la liste. Elles restent un bonus — la sauvegarde
+marche hors ligne, l'aperçu se dégrade simplement en logo.
+
+**Pas de serveur** : essayé le 9 novembre 2026 via une Supabase Edge Function — TikTok,
+Instagram et X renvoient tous des réponses vides aux IP de datacenter. Les contourner
+demande des proxys résidentiels (ce que vendent Apify & co, ~1,5 $/1000 posts Instagram),
+donc casse la contrainte de coût zéro. Pari actuel : les IP mobiles passent.
+
+**Limites connues** :
+- L'oEmbed TikTok ne renvoie plus `title` ni `thumbnail_url` (constaté le 9 novembre 2026)
+- Les URL de miniature des CDN TikTok/Instagram sont signées et **expirent** (heures à
+  jours) : une miniature ancienne finit en image cassée. La parade serait de télécharger
+  l'image dans le stockage de l'appareil au moment du partage — pas fait
 
 ---
 

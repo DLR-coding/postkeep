@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { BackHandler, StyleSheet, useColorScheme, View } from 'react-native';
 import { useShareIntentContext } from 'expo-share-intent';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -11,6 +11,7 @@ import { Text } from '@/components/ui/text';
 import { PostFieldsForm, type PostFormValues } from '@/components/post-fields-form';
 import { savePost } from '@/db/posts';
 import { PLATFORM_META, type AnalyzedUrl } from '@/lib/share-url';
+import { fetchOEmbed } from '@/lib/oembed';
 import { THEME } from '@/lib/theme';
 
 import type { Prefill } from './index';
@@ -28,14 +29,27 @@ export function SavePostForm({
   const { control, handleSubmit } = useForm<PostFormValues>({
     defaultValues: { note: prefill.note, collectionIds: prefill.collectionIds },
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   const onSubmit = useCallback(
-    (values: PostFormValues) => {
+    async (values: PostFormValues) => {
+      setIsSaving(true);
+      // Fetch oEmbed metadata for supported platforms (TikTok, X).
+      // Runs in parallel with the haptic feedback — if it fails, we still save.
+      const oembedPromise = analyzed?.url
+        ? fetchOEmbed(analyzed.url, analyzed.platform)
+        : Promise.resolve({ caption: null, thumbnailUrl: null });
+
+      const oembed = await oembedPromise;
       savePost({
         id: prefill.postId,
         url: analyzed?.url ?? null,
         note: values.note.trim() || null,
         collectionIds: values.collectionIds,
+        // Échec de récupération (null) → undefined : un re-partage raté n'efface
+        // pas les métadonnées d'un post déjà enregistré.
+        caption: oembed.caption ?? undefined,
+        thumbnailUrl: oembed.thumbnailUrl ?? undefined,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // `resetShareIntent()` déclenche `hasShareIntent: false` chez le parent,
@@ -51,7 +65,7 @@ export function SavePostForm({
         },
       });
     },
-    [analyzed?.url, prefill.postId, resetShareIntent]
+    [analyzed, prefill.postId, resetShareIntent]
   );
 
   const platform = analyzed?.platform ? PLATFORM_META[analyzed.platform] : null;
@@ -93,8 +107,8 @@ export function SavePostForm({
 
         <PostFieldsForm control={control} />
 
-        <Button className="mt-6" onPress={handleSubmit(onSubmit)}>
-          <Text>Save</Text>
+        <Button className="mt-6" onPress={handleSubmit(onSubmit)} disabled={isSaving}>
+          <Text>{isSaving ? 'Saving...' : 'Save'}</Text>
         </Button>
       </BottomSheetScrollView>
     </BottomSheet>

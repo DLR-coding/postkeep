@@ -35,6 +35,11 @@ export const posts = sqliteTable('posts', {
   // détection de doublon fonctionne malgré les paramètres de tracking.
   url: text('url'),
   note: text('note'),
+  // oEmbed metadata fetched at save time (TikTok, X). Instagram/Threads don't
+  // provide these via oEmbed anymore. Caption is the original post text;
+  // thumbnailUrl is a signed URL that may expire after a few days.
+  caption: text('caption'),
+  thumbnailUrl: text('thumbnail_url'),
   // Rempli à la première ouverture (Linking.openURL réussi). Sert de base aux
   // rappels de la phase 5 — TODO.md §Questions ouvertes, fréquence non tranchée.
   openedAt: integer('opened_at', { mode: 'timestamp_ms' }),
