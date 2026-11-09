@@ -272,12 +272,21 @@ export function PostDetailSheet() {
               className="flex-row gap-2">
               {index === EDIT_INDEX ? (
                 <>
+                  {!!displayedPost.url && (
+                    <Button
+                      variant="outline"
+                      style={meta ? { borderColor: meta.color } : undefined}
+                      onPress={handleOpen}>
+                      <Text style={meta ? { color: meta.color } : undefined}>
+                        Open
+                      </Text>
+                    </Button>
+                  )}
                   <Button className="flex-1" onPress={onSave}>
                     <Text>Save</Text>
                   </Button>
                   <Button variant="destructive" onPress={handleDelete}>
                     <Icon as={Trash2} className="text-white" size={16} />
-                    <Text>Delete</Text>
                   </Button>
                 </>
               ) : (
