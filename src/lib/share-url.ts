@@ -40,12 +40,18 @@ export function detectPlatform(url: string): Platform | null {
   return (entry?.[0] as Platform) ?? null;
 }
 
-/** Retire query et fragment (ARCHITECTURE.md §4) — Instagram régénère `?igsh=…`
- *  à chaque partage, sans ça deux partages du même post ne se ressemblent jamais. */
-export function normalizeUrl(url: string): string | null {
+/** Retire query et fragment pour les plateformes connues (ARCHITECTURE.md §4) —
+ *  Instagram régénère `?igsh=…` à chaque partage, TikTok ajoute des paramètres de
+ *  tracking, etc. Sans ça, deux partages du même post ne se ressemblent jamais.
+ *  Pour les autres URLs (YouTube, articles, etc.), on garde la query car elle peut
+ *  être essentielle (ex: `?v=VIDEO_ID` sur YouTube). */
+export function normalizeUrl(url: string, platform: Platform | null): string | null {
   try {
     const parsed = new URL(url);
-    parsed.search = '';
+    // Ne supprimer la query que pour les plateformes où elle n'est que du tracking
+    if (platform) {
+      parsed.search = '';
+    }
     parsed.hash = '';
     return parsed.toString();
   } catch {
@@ -62,7 +68,9 @@ export type AnalyzedUrl = {
  *  brut sans lien exploitable, auquel cas il n'y a rien à analyser. */
 export function analyzeSharedUrl(rawUrl: string | null | undefined): AnalyzedUrl | null {
   if (!rawUrl) return null;
-  const url = normalizeUrl(rawUrl);
+  // Détecter la plateforme d'abord pour savoir si on doit nettoyer la query
+  const platform = detectPlatform(rawUrl);
+  const url = normalizeUrl(rawUrl, platform);
   if (!url) return null;
-  return { url, platform: detectPlatform(url) };
+  return { url, platform };
 }

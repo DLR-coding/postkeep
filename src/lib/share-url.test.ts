@@ -16,15 +16,22 @@ test('detectPlatform renvoie null pour un domaine inconnu ou une URL invalide', 
   assert.equal(detectPlatform('pas une url'), null);
 });
 
-test('normalizeUrl retire query et fragment', () => {
+test('normalizeUrl retire query et fragment pour les plateformes connues', () => {
   assert.equal(
-    normalizeUrl('https://www.instagram.com/reel/abc/?igsh=xyz123#comments'),
+    normalizeUrl('https://www.instagram.com/reel/abc/?igsh=xyz123#comments', 'instagram'),
     'https://www.instagram.com/reel/abc/'
   );
 });
 
+test('normalizeUrl garde la query pour les URLs inconnues (ex: YouTube)', () => {
+  assert.equal(
+    normalizeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ#t=30', null),
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+  );
+});
+
 test('normalizeUrl renvoie null pour une URL invalide', () => {
-  assert.equal(normalizeUrl('pas une url'), null);
+  assert.equal(normalizeUrl('pas une url', null), null);
 });
 
 test('analyzeSharedUrl combine normalisation et détection', () => {
