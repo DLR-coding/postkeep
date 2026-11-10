@@ -276,9 +276,13 @@ function CollectionChips({
 export function PostFieldsForm({
   control,
   variant = 'picker',
+  hideCollections = false,
 }: {
   control: Control<PostFormValues>;
   variant?: 'picker' | 'chips';
+  /** Édition clavier ouvert : la note reprend la place des collections (sinon il ne
+   *  lui reste rien entre l'en-tête et le pied remonté au-dessus du clavier). */
+  hideCollections?: boolean;
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const [noteInputHeight, setNoteInputHeight] = useState(0);
@@ -359,7 +363,7 @@ export function PostFieldsForm({
   // Yoga, comme en CSS), ce qui empêchait la Note de céder sa place réelle.
   return variant === 'chips' ? (
     <View className="min-h-0 flex-1">
-      {collectionsBlock}
+      {!hideCollections && collectionsBlock}
       {noteBlock}
     </View>
   ) : (

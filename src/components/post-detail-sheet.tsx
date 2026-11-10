@@ -28,6 +28,7 @@ import Animated, {
   FadeIn,
   FadeOut,
   interpolate,
+  useAnimatedKeyboard,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { ChevronUp, Trash2, X } from 'lucide-react-native';
@@ -112,6 +113,22 @@ export function PostDetailSheet() {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  // Hauteur du contenu d'édition : bornée explicitement (dans `BottomSheetView`,
+  // `flex: 1` ne l'est pas et le conteneur grandissait avec la note), moins la poignée
+  // effacée et moins le clavier, au-dessus duquel le pied remonte.
+  const keyboard = useAnimatedKeyboard();
+  const editHeightStyle = useAnimatedStyle(() => ({
+    height: windowHeight - HANDLE_HEIGHT - keyboard.height.value,
+  }));
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
   const sheetRef = useRef<BottomSheetModal>(null);
   const [index, setIndex] = useState(PREVIEW_INDEX);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -332,8 +349,8 @@ export function PostDetailSheet() {
         // un `TextInput` multiline et le laisse grandir avec son contenu).
         // La page elle-même ne doit pas défiler : Collections doit rester
         // visible pendant qu'on lit/édite la fin d'une longue note.
-        <BottomSheetView
-          style={[styles.editContent, { height: windowHeight - HANDLE_HEIGHT, paddingBottom: footerHeight }]}>
+        <BottomSheetView>
+          <Animated.View style={[styles.editContent, { paddingBottom: footerHeight }, editHeightStyle]}>
           <View className="flex-row justify-end">
             <Pressable onPress={() => sheetRef.current?.dismiss()} hitSlop={8} accessibilityLabel="Close">
               <Icon as={X} size={20} color={colors.mutedForeground} />
@@ -343,6 +360,9 @@ export function PostDetailSheet() {
             style={styles.editContentGrow}
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}>
+            {/* Clavier ouvert : en-tête et collections repliés, la note prend la place
+                (sinon 0 dp entre l'en-tête et le pied remonté, mesuré sur un S23). */}
+            {!keyboardOpen && (
             <View className="flex-row items-center gap-2.5">
               <PostThumb post={displayedPost} width={34} />
               <View className="min-w-0 flex-1">
@@ -353,7 +373,9 @@ export function PostDetailSheet() {
                 </Text>
               </View>
             </View>
-            <PostFieldsForm control={control} variant="chips" />
+            )}
+            <PostFieldsForm control={control} variant="chips" hideCollections={keyboardOpen} />
+          </Animated.View>
           </Animated.View>
         </BottomSheetView>
       ) : (
