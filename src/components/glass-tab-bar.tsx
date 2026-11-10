@@ -3,6 +3,7 @@ import { Pressable, TextInput, useColorScheme, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import { Folder, List, Search, X } from 'lucide-react-native';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/ui/icon';
@@ -56,6 +57,11 @@ export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<View | null>
   const router = useRouter();
   const onCollections = usePathname().startsWith('/collections');
   const { query, setQuery, clear } = useNavSearchStore();
+  const keyboard = useAnimatedKeyboard();
+  const restingBottom = BAR_BOTTOM_MARGIN + insets.bottom;
+  const followKeyboard = useAnimatedStyle(() => ({
+    transform: [{ translateY: -Math.max(0, keyboard.height.value + 8 - restingBottom) }],
+  }));
 
   const go = (path: '/' | '/collections') => {
     if ((path === '/collections') === onCollections) return;
@@ -64,10 +70,23 @@ export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<View | null>
   };
 
   return (
-    <View
+    // Suit le clavier : en edge-to-edge la fenêtre n'est pas redimensionnée, la barre
+    // restait sous le clavier. 8 px au-dessus du clavier, dont la hauteur inclut déjà
+    // la barre système.
+    <Animated.View
       pointerEvents="box-none"
-      className="absolute flex-row items-center gap-2"
-      style={{ left: SIDE_MARGIN, right: SIDE_MARGIN, bottom: BAR_BOTTOM_MARGIN + insets.bottom }}>
+      style={[
+        {
+          position: 'absolute',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          left: SIDE_MARGIN,
+          right: SIDE_MARGIN,
+          bottom: BAR_BOTTOM_MARGIN + insets.bottom,
+        },
+        followKeyboard,
+      ]}>
       <Glass blurTarget={blurTarget} className="flex-1">
         <View className="flex-1 flex-row items-center gap-2 px-4" style={{ height: BAR_HEIGHT }}>
           <Icon as={Search} size={18} color={colors.mutedForeground} />
@@ -108,6 +127,6 @@ export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<View | null>
           ))}
         </View>
       </Glass>
-    </View>
+    </Animated.View>
   );
 }
