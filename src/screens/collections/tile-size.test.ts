@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 
 import { computeTileSize, GRID_PADDING, NUM_COLUMNS, TILE_MARGIN } from './tile-size.ts';
 
-test('computeTileSize fills the row exactly (3 tiles + margins never exceed available width)', () => {
+test('la grille a 2 colonnes (dossiers larges)', () => {
+  assert.equal(NUM_COLUMNS, 2);
+});
+
+test('computeTileSize fills the row exactly (2 tiles + margins never exceed available width)', () => {
   for (const width of [320, 340, 360, 375, 390, 412, 428]) {
     const size = computeTileSize(width);
     const contentPadding = GRID_PADDING - TILE_MARGIN;

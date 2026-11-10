@@ -1,4 +1,4 @@
-const NUM_COLUMNS = 3;
+const NUM_COLUMNS = 2;
 const TILE_MARGIN = 6; // gap-3 (12px) réparti à 6px de chaque côté de chaque tuile
 const GRID_PADDING = 16; // padding visuel visé en bord d'écran
 

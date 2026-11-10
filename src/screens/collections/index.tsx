@@ -9,13 +9,12 @@ import {
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Folder, FolderX, Pencil, Plus, Search, Trash2, X } from 'lucide-react-native';
-import { type ReactNode, type RefObject, useCallback, useRef, useState } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react-native';
+import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   Pressable,
   StyleSheet,
-  TextInput,
   useColorScheme,
   useWindowDimensions,
   View,
@@ -32,10 +31,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { TAB_BAR_CLEARANCE } from '@/components/glass-tab-bar';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import {
   activeCollectionsQuery,
+  collectionPreviewRowsQuery,
   type CollectionWithCount,
   createCollection,
   groupCollectionRows,
@@ -43,37 +44,19 @@ import {
   softDeleteCollection,
   uncategorizedPostsCountQuery,
 } from '@/db/collections';
+import { buildCollectionPreviews, type CollectionPreview, UNCATEGORIZED_KEY } from '@/lib/collection-previews';
+import { filterCollectionsByName, matchesText } from '@/lib/post-filters';
 import { THEME } from '@/lib/theme';
+import { useNavSearchStore } from '@/stores/nav-search-store';
 
+import { CollectionFolder } from './folder';
 import { computeTileSize, GRID_PADDING, NUM_COLUMNS, TILE_MARGIN } from './tile-size';
 
-const UNCATEGORIZED_ID = 'none';
+const UNCATEGORIZED_ID = UNCATEGORIZED_KEY;
 
 function useTileSize() {
   const { width } = useWindowDimensions();
   return computeTileSize(width);
-}
-
-function CollectionTile({
-  size,
-  onPress,
-  onLongPress,
-  children,
-}: {
-  size: number;
-  onPress: () => void;
-  onLongPress?: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
-      className="items-center justify-center gap-1.5 rounded-2xl border border-border bg-card p-2 active:scale-95"
-      style={{ width: size, height: size, margin: TILE_MARGIN }}>
-      {children}
-    </Pressable>
-  );
 }
 
 type ActionsSheetMode = 'menu' | 'rename';
@@ -219,28 +202,31 @@ function CollectionActionsSheet({
   );
 }
 
-function CollectionCard({ collection, size }: { collection: CollectionWithCount; size: number }) {
-  const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
+function CollectionCard({
+  collection,
+  size,
+  preview,
+}: {
+  collection: CollectionWithCount;
+  size: number;
+  preview: CollectionPreview | undefined;
+}) {
   const router = useRouter();
   const sheetRef = useRef<BottomSheetModal>(null);
 
   return (
     <>
-      <CollectionTile
+      <CollectionFolder
+        name={collection.name}
+        count={collection.postCount}
+        preview={preview}
         size={size}
         onPress={() => router.push({ pathname: '/collection/[id]', params: { id: collection.id, name: collection.name } })}
         onLongPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           sheetRef.current?.present();
-        }}>
-        <Icon as={Folder} size={28} color={colors.primary} />
-        <Text numberOfLines={1} className="text-sm font-medium">
-          {collection.name}
-        </Text>
-        <Text variant="muted" className="text-xs">
-          {collection.postCount} post{collection.postCount > 1 ? 's' : ''}
-        </Text>
-      </CollectionTile>
+        }}
+      />
       <CollectionActionsSheet sheetRef={sheetRef} collection={collection} />
     </>
   );
@@ -321,15 +307,14 @@ export function CollectionsScreen() {
   const collections = groupCollectionRows(collectionRows);
   const { data: uncategorizedRows } = useLiveQuery(uncategorizedPostsCountQuery());
   const uncategorizedCount = uncategorizedRows[0]?.count ?? 0;
+  const { data: previewRows } = useLiveQuery(collectionPreviewRowsQuery());
+  const previews = useMemo(() => buildCollectionPreviews(previewRows), [previewRows]);
+  const totalPosts = useMemo(() => new Set(previewRows.map((row) => row.postId)).size, [previewRows]);
 
-  const [query, setQuery] = useState('');
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredCollections = normalizedQuery
-    ? collections.filter((collection) => collection.name.toLowerCase().includes(normalizedQuery))
-    : collections;
-  const showUncategorized =
-    uncategorizedCount > 0 && (!normalizedQuery || 'no collection'.includes(normalizedQuery));
-  const nothingFound = !!normalizedQuery && !showUncategorized && filteredCollections.length === 0;
+  const query = useNavSearchStore((s) => s.query).trim();
+  const filteredCollections = filterCollectionsByName(collections, query);
+  const showUncategorized = uncategorizedCount > 0 && (!query || matchesText('No collection', query));
+  const nothingFound = !!query && !showUncategorized && filteredCollections.length === 0;
 
   const gridItems: GridItem[] = [
     ...(showUncategorized ? [{ type: 'uncategorized' as const, count: uncategorizedCount }] : []),
@@ -338,47 +323,46 @@ export function CollectionsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-5 pb-2 pt-4 text-3xl font-bold">Collections</Text>
-
-      <View className="flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 mx-5 mb-3">
-        <Icon as={Search} size={18} color={colors.mutedForeground} />
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search for a collection…"
-          placeholderTextColor={colors.mutedForeground}
-          className="flex-1 py-2.5 text-base text-foreground"
-        />
-        {query.length > 0 && (
-          <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
-            <Icon as={X} size={16} color={colors.mutedForeground} />
-          </Pressable>
-        )}
+      <View className="flex-row items-center justify-between px-5 pb-1 pt-4">
+        <Text className="text-3xl font-bold">Collections</Text>
+        <Pressable
+          onPress={() => createSheetRef.current?.present()}
+          accessibilityLabel="New collection"
+          className="h-10 w-10 items-center justify-center rounded-full bg-primary active:scale-95">
+          <Icon as={Plus} size={20} color={colors.primaryForeground} />
+        </Pressable>
       </View>
+      <Text variant="muted" className="px-5 pb-3 text-xs">
+        {collections.length} collection{collections.length === 1 ? '' : 's'} · {totalPosts} post
+        {totalPosts === 1 ? '' : 's'}
+      </Text>
 
       <FlashList<GridItem>
         data={gridItems}
         numColumns={NUM_COLUMNS}
         keyExtractor={(item) => (item.type === 'uncategorized' ? UNCATEGORIZED_ID : item.collection.id)}
-        renderItem={({ item }) =>
-          item.type === 'uncategorized' ? (
-            <CollectionTile
-              size={tileSize}
-              onPress={() =>
-                router.push({ pathname: '/collection/[id]', params: { id: UNCATEGORIZED_ID, name: 'No collection' } })
-              }>
-              <Icon as={FolderX} size={28} color={colors.mutedForeground} />
-              <Text numberOfLines={1} className="text-sm font-medium">
-                No collection
-              </Text>
-              <Text variant="muted" className="text-xs">
-                {item.count} post{item.count > 1 ? 's' : ''}
-              </Text>
-            </CollectionTile>
-          ) : (
-            <CollectionCard collection={item.collection} size={tileSize} />
-          )
-        }
+        renderItem={({ item }) => (
+          <View style={{ margin: TILE_MARGIN }}>
+            {item.type === 'uncategorized' ? (
+              <CollectionFolder
+                name="No collection"
+                count={item.count}
+                preview={previews.get(UNCATEGORIZED_KEY)}
+                virtual
+                size={tileSize}
+                onPress={() =>
+                  router.push({ pathname: '/collection/[id]', params: { id: UNCATEGORIZED_ID, name: 'No collection' } })
+                }
+              />
+            ) : (
+              <CollectionCard
+                collection={item.collection}
+                size={tileSize}
+                preview={previews.get(item.collection.id)}
+              />
+            )}
+          </View>
+        )}
         ListEmptyComponent={
           nothingFound
             ? () => (
@@ -388,16 +372,12 @@ export function CollectionsScreen() {
               )
             : undefined
         }
-        contentContainerStyle={{ padding: GRID_PADDING - TILE_MARGIN }}
+        contentContainerStyle={{
+          padding: GRID_PADDING - TILE_MARGIN,
+          paddingBottom: TAB_BAR_CLEARANCE + insets.bottom + 16,
+        }}
       />
 
-      <Pressable
-        onPress={() => createSheetRef.current?.present()}
-        accessibilityLabel="New collection"
-        className="absolute h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-black/30 active:scale-95"
-        style={{ right: 20, bottom: insets.bottom + 20 }}>
-        <Icon as={Plus} size={26} color={colors.primaryForeground} />
-      </Pressable>
       <CreateCollectionSheet sheetRef={createSheetRef} />
     </SafeAreaView>
   );
