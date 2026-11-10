@@ -277,12 +277,17 @@ export function PostFieldsForm({
   control,
   variant = 'picker',
   hideCollections = false,
+  onNoteFocusChange,
 }: {
   control: Control<PostFormValues>;
   variant?: 'picker' | 'chips';
   /** Édition clavier ouvert : la note reprend la place des collections (sinon il ne
    *  lui reste rien entre l'en-tête et le pied remonté au-dessus du clavier). */
   hideCollections?: boolean;
+  /** Focus du champ Note : la feuille de détail ne replie l'en-tête et les collections
+   *  que pour la note — pas pour un autre champ (recherche ou création dans
+   *  `CollectionPickerSheet`, qui serait démontée avec les collections). */
+  onNoteFocusChange?: (focused: boolean) => void;
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const [noteInputHeight, setNoteInputHeight] = useState(0);
@@ -317,6 +322,8 @@ export function PostFieldsForm({
           const input = (
             <BottomSheetTextInput
               value={field.value}
+              onFocus={() => onNoteFocusChange?.(true)}
+              onBlur={() => onNoteFocusChange?.(false)}
               onChangeText={field.onChange}
               multiline
               numberOfLines={variant === 'chips' ? undefined : 4}

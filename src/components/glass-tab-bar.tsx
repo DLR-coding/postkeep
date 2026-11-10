@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import { useEffect, type RefObject } from 'react';
 import { Pressable, TextInput, useColorScheme, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
@@ -63,9 +63,14 @@ export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<View | null>
     transform: [{ translateY: -Math.max(0, keyboard.height.value + 8 - restingBottom) }],
   }));
 
+  // Tout changement d'onglet vide la recherche, y compris par le retour Android
+  // (spec, objectif 5) — pas seulement les ronds de la barre.
+  useEffect(() => {
+    clear();
+  }, [onCollections, clear]);
+
   const go = (path: '/' | '/collections') => {
     if ((path === '/collections') === onCollections) return;
-    clear();
     router.navigate(path);
   };
 

@@ -67,6 +67,9 @@ export default function HomeScreen() {
       )}
 
       <FlashList<PostListItem>
+        // Glisser la liste ferme le clavier : sans ça, pendant une recherche, les
+        // derniers résultats restent sous le clavier et la barre (edge-to-edge).
+        keyboardDismissMode="on-drag"
         data={filteredPosts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard item={item} highlightQuery={query} />}

@@ -121,6 +121,8 @@ export function PostDetailSheet() {
     height: windowHeight - HANDLE_HEIGHT - keyboard.height.value,
   }));
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [noteFocused, setNoteFocused] = useState(false);
+  const typingNote = keyboardOpen && noteFocused;
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
     const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
@@ -360,9 +362,9 @@ export function PostDetailSheet() {
             style={styles.editContentGrow}
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}>
-            {/* Clavier ouvert : en-tête et collections repliés, la note prend la place
+            {/* Saisie dans la note : en-tête et collections repliés, la note prend la place
                 (sinon 0 dp entre l'en-tête et le pied remonté, mesuré sur un S23). */}
-            {!keyboardOpen && (
+            {!typingNote && (
             <View className="flex-row items-center gap-2.5">
               <PostThumb post={displayedPost} width={34} />
               <View className="min-w-0 flex-1">
@@ -374,7 +376,12 @@ export function PostDetailSheet() {
               </View>
             </View>
             )}
-            <PostFieldsForm control={control} variant="chips" hideCollections={keyboardOpen} />
+            <PostFieldsForm
+              control={control}
+              variant="chips"
+              hideCollections={typingNote}
+              onNoteFocusChange={setNoteFocused}
+            />
           </Animated.View>
           </Animated.View>
         </BottomSheetView>

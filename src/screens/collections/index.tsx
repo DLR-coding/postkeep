@@ -338,6 +338,9 @@ export function CollectionsScreen() {
       </Text>
 
       <FlashList<GridItem>
+        // Glisser la liste ferme le clavier : sans ça, pendant une recherche, les
+        // derniers résultats restent sous le clavier et la barre (edge-to-edge).
+        keyboardDismissMode="on-drag"
         data={gridItems}
         numColumns={NUM_COLUMNS}
         keyExtractor={(item) => (item.type === 'uncategorized' ? UNCATEGORIZED_ID : item.collection.id)}
