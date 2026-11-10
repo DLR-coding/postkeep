@@ -96,7 +96,7 @@ export default function RootLayout() {
                 {success && <ShareIntentRedirect />}
                 <Stack>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="shareintent" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="shareintent" options={{ presentation: 'modal', headerShown: false }} />
                   <Stack.Screen name="collection/[id]" />
                 </Stack>
                 <PostDetailSheet />

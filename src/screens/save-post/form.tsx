@@ -6,6 +6,8 @@ import { useForm } from 'react-hook-form';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 
+import { PlatformSticker } from '@/components/platform-sticker';
+import { sheetBackgroundStyle } from '@/components/sheet-kit';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { PostFieldsForm, type PostFormValues } from '@/components/post-fields-form';
@@ -103,23 +105,24 @@ export function SavePostForm({
       // chemin d'annulation.
       enablePanDownToClose={false}
       keyboardBehavior="fillParent"
-      backgroundStyle={{ backgroundColor: colors.card }}
+      backgroundStyle={sheetBackgroundStyle(colors)}
       handleIndicatorStyle={{ backgroundColor: colors.mutedForeground }}>
       <BottomSheetScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View className="flex-row items-center gap-3">
-          <View
-            className="h-10 w-10 items-center justify-center rounded-full"
-            style={{ backgroundColor: platform?.color ?? colors.muted }}>
-            <Text
-              className="text-xs font-bold"
-              style={{ color: platform ? '#fff' : colors.mutedForeground }}>
-              {platform?.badge ?? '?'}
-            </Text>
-          </View>
-          <View className="flex-1">
-            <Text variant="small">{platform?.label ?? 'Unrecognized link'}</Text>
+        <Text className="text-xl font-semibold">Save post</Text>
+        <View className="mt-4 flex-row items-center gap-3">
+          {analyzed?.platform ? (
+            <PlatformSticker platform={analyzed.platform} size="md" />
+          ) : (
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-muted">
+              <Text variant="muted" className="font-bold">
+                ?
+              </Text>
+            </View>
+          )}
+          <View className="min-w-0 flex-1">
+            <Text className="text-[15px] font-semibold">{platform?.label ?? 'Unrecognized link'}</Text>
             {analyzed?.url && (
-              <Text variant="muted" numberOfLines={1}>
+              <Text variant="muted" className="text-[11px]" numberOfLines={1}>
                 {analyzed.url}
               </Text>
             )}
@@ -128,8 +131,8 @@ export function SavePostForm({
 
         <PostFieldsForm control={control} />
 
-        <Button className="mt-6" onPress={handleSubmit(onSubmit)} disabled={isSaving}>
-          <Text>{isSaving ? 'Saving...' : 'Save'}</Text>
+        <Button className="mt-6 h-12 rounded-2xl" onPress={handleSubmit(onSubmit)} disabled={isSaving}>
+          <Text className="font-semibold">{isSaving ? 'Saving…' : 'Save'}</Text>
         </Button>
       </BottomSheetScrollView>
     </BottomSheet>

@@ -294,8 +294,8 @@ export function PostFieldsForm({
   );
 
   const collectionsBlock = (
-    <View className={variant === 'chips' ? 'mt-5 gap-1.5' : 'mt-6 gap-3'}>
-      {variant === 'chips' ? <SectionLabel>Collections</SectionLabel> : <Text variant="large">Collections</Text>}
+    <View className={variant === 'chips' ? 'mt-5 gap-1.5' : 'mt-6 gap-2'}>
+      <SectionLabel>Collections</SectionLabel>
       <Controller
         control={control}
         name="collectionIds"
@@ -311,8 +311,8 @@ export function PostFieldsForm({
   );
 
   const noteBlock = (
-    <View className={variant === 'chips' ? 'mt-5 min-h-0 flex-1 gap-1.5' : 'mt-6 gap-3'}>
-      {variant === 'chips' ? <SectionLabel>Note</SectionLabel> : <Text variant="large">Note</Text>}
+    <View className={variant === 'chips' ? 'mt-5 min-h-0 flex-1 gap-1.5' : 'mt-6 gap-2'}>
+      <SectionLabel>Note</SectionLabel>
       <Controller
         control={control}
         name="note"
@@ -339,11 +339,8 @@ export function PostFieldsForm({
                     : styles.textareaFlex
                   : styles.textarea,
                 { borderColor: colors.border, color: colors.foreground },
-                // Édition : même encart que la note de l'aperçu (fond `note`, sans bord).
-                variant === 'chips' && {
-                  ...styles.noteBox,
-                  backgroundColor: colors.note,
-                },
+                // Même encart que la note de l'aperçu (fond `note`, sans bord), partout.
+                { ...styles.noteBox, backgroundColor: colors.note },
               ]}
             />
           );
