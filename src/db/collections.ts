@@ -1,4 +1,4 @@
-import { and, countDistinct, eq, isNull } from 'drizzle-orm';
+import { and, countDistinct, desc, eq, isNull } from 'drizzle-orm';
 
 import { db, newId } from './index';
 import { collections, posts, postCollections, type Collection } from './schema';
@@ -45,6 +45,37 @@ export function groupCollectionRows(
   rows: { collection: Collection; postCount: number }[]
 ): CollectionWithCount[] {
   return rows.map((row) => ({ ...row.collection, postCount: row.postCount }));
+}
+
+/** Lignes post × collection pour les aperçus de dossiers (`buildCollectionPreviews`,
+ *  `src/lib/collection-previews.ts`). `.from(posts)` : `useLiveQuery` n'écoute que la
+ *  table racine (cf. `src/db/posts.ts`), donc un changement de miniature rafraîchit.
+ *  `collectionId` nul = aucune collection active (jointure sur collections actives).
+ *
+ *  ponytail: un post dont toutes les collections sont supprimées compte ici comme
+ *  « Uncategorized », alors que `uncategorizedPostsCountQuery` ne le compte pas
+ *  (elle ne regarde que `post_collections`) — écart d'un compteur, sans effet sur
+ *  les miniatures affichées. */
+export function collectionPreviewRowsQuery() {
+  return db
+    .select({
+      collectionId: collections.id,
+      postId: posts.id,
+      url: posts.url,
+      thumbnailUrl: posts.thumbnailUrl,
+      updatedAt: posts.updatedAt,
+    })
+    .from(posts)
+    .leftJoin(
+      postCollections,
+      and(eq(postCollections.postId, posts.id), isNull(postCollections.deletedAt))
+    )
+    .leftJoin(
+      collections,
+      and(eq(collections.id, postCollections.collectionId), isNull(collections.deletedAt))
+    )
+    .where(isNull(posts.deletedAt))
+    .orderBy(desc(posts.updatedAt));
 }
 
 /** Nombre de posts actifs n'appartenant à aucune collection active — pseudo-
