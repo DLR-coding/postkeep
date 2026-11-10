@@ -9,7 +9,7 @@ import {
 import { Controller, type Control } from 'react-hook-form';
 import { isNull } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
-import { Check, Plus, X } from 'lucide-react-native';
+import { Check, Plus } from 'lucide-react-native';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -204,12 +204,11 @@ function CollectionPickerSheet({
   );
 }
 
-/** Grille de chips retirables pour les collections sélectionnées, repliée sur
- *  2 lignes fixes puis scrollable à l'horizontal au-delà (les chips
- *  remplissent les 2 lignes d'une colonne avant d'ouvrir la suivante à
- *  droite) — remplace la grille de pills dans l'écran d'édition
- *  (`variant="chips"`). La chip finale « + » ouvre le picker complet dans
- *  `CollectionPickerSheet`. */
+/** Toutes les collections en puces à bascule (cochée = pleine avec ✓), repliées sur
+ *  2 lignes fixes puis défilables à l'horizontal (les puces remplissent les 2 lignes
+ *  d'une colonne avant d'ouvrir la suivante) — écran d'édition (`variant="chips"`,
+ *  refonte, maquette 4). La puce « + New » en pointillés ouvre le picker complet
+ *  (recherche + création) dans `CollectionPickerSheet`. */
 function CollectionChips({
   field,
   collections,
@@ -219,7 +218,6 @@ function CollectionChips({
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const pickerRef = useRef<BottomSheetModal>(null);
-  const selected = collections.filter((collection) => field.value.includes(collection.id));
 
   return (
     <>
@@ -228,26 +226,40 @@ function CollectionChips({
         style={styles.chipsScroll}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipsWrap}>
-        {selected.map((collection) => (
-          <View
-            key={collection.id}
-            className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-            style={{ backgroundColor: colors.muted }}>
-            <Text className="text-sm">{collection.name}</Text>
+        {collections.map((collection) => {
+          const checked = field.value.includes(collection.id);
+          return (
             <Pressable
-              onPress={() => field.onChange(field.value.filter((id) => id !== collection.id))}
-              hitSlop={8}
-              accessibilityLabel={`Remove ${collection.name}`}>
-              <Icon as={X} size={12} color={colors.mutedForeground} />
+              key={collection.id}
+              onPress={() =>
+                field.onChange(
+                  checked
+                    ? field.value.filter((id) => id !== collection.id)
+                    : [...field.value, collection.id]
+                )
+              }
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked }}
+              className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
+              style={{ backgroundColor: checked ? colors.primary : colors.chip }}>
+              {checked && <Icon as={Check} size={12} color={colors.primaryForeground} />}
+              <Text
+                className="text-sm"
+                style={{ color: checked ? colors.primaryForeground : colors.chipForeground }}>
+                {collection.name}
+              </Text>
             </Pressable>
-          </View>
-        ))}
+          );
+        })}
         <Pressable
           onPress={() => pickerRef.current?.present()}
-          accessibilityLabel="Add a collection"
-          className="items-center justify-center rounded-full px-3 py-1.5"
-          style={{ backgroundColor: colors.muted }}>
+          accessibilityLabel="New collection"
+          className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
+          style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.folderSheetLine }}>
           <Icon as={Plus} size={14} color={colors.mutedForeground} />
+          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+            New
+          </Text>
         </Pressable>
       </ScrollView>
       <CollectionPickerSheet sheetRef={pickerRef} field={field} collections={collections} />

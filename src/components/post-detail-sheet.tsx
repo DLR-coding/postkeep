@@ -22,7 +22,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
 import * as Haptics from 'expo-haptics';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
-import { Image } from 'expo-image';
 import Animated, {
   Extrapolation,
   FadeIn,
@@ -52,8 +51,6 @@ import { detectPlatform, PLATFORM_META } from '@/lib/share-url';
 import { THEME } from '@/lib/theme';
 import { usePostDetailStore } from '@/stores/post-detail-store';
 
-type Colors = (typeof THEME)['light'];
-type PlatformMeta = (typeof PLATFORM_META)[keyof typeof PLATFORM_META];
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
@@ -93,47 +90,6 @@ function AnimatedHandle({ animatedIndex }: BottomSheetHandleProps) {
           animatedStyle,
         ]}
       />
-    </View>
-  );
-}
-
-function PlatformHeader({
-  url,
-  meta,
-  colors,
-  thumbnailUrl,
-}: {
-  url: string | null;
-  meta: PlatformMeta | null;
-  colors: Colors;
-  thumbnailUrl?: string | null;
-}) {
-  return (
-    <View className="flex-row items-center gap-3">
-      {thumbnailUrl ? (
-        <Image
-          source={{ uri: thumbnailUrl }}
-          className="h-16 w-16 rounded-xl"
-          contentFit="cover"
-          transition={200}
-        />
-      ) : (
-        <View
-          className="h-12 w-12 items-center justify-center rounded-full shadow-sm shadow-black/10"
-          style={{ backgroundColor: meta?.color ?? colors.muted }}>
-          <Text className="text-sm font-bold" style={{ color: meta ? '#fff' : colors.mutedForeground }}>
-            {meta?.badge ?? '?'}
-          </Text>
-        </View>
-      )}
-      <View className="flex-1">
-        <Text className="font-semibold">{meta?.label ?? 'Texte'}</Text>
-        {!!url && (
-          <Text variant="muted" className="text-xs" numberOfLines={1} selectable>
-            {url}
-          </Text>
-        )}
-      </View>
     </View>
   );
 }
@@ -378,7 +334,16 @@ export function PostDetailSheet() {
             style={styles.editContentGrow}
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}>
-            <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} thumbnailUrl={displayedPost.thumbnailUrl} />
+            <View className="flex-row items-center gap-2.5">
+              <PostThumb post={displayedPost} width={34} />
+              <View className="min-w-0 flex-1">
+                <Text className="text-sm font-semibold">{meta?.label ?? 'Text'}</Text>
+                <Text variant="muted" className="text-[11px]" numberOfLines={1}>
+                  Saved {dateFormatter.format(displayedPost.createdAt)}
+                  {displayedPost.url ? ` · ${displayedPost.url.replace(/^https?:\/\/(www\.)?/, '')}` : ''}
+                </Text>
+              </View>
+            </View>
             <PostFieldsForm control={control} variant="chips" />
           </Animated.View>
         </BottomSheetView>
