@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { PostFieldsForm, type PostFormValues } from '@/components/post-fields-form';
 import { savePost } from '@/db/posts';
-import { PLATFORM_META, type AnalyzedUrl } from '@/lib/share-url';
+import { extractCaptionFromText, PLATFORM_META, type AnalyzedUrl } from '@/lib/share-url';
 import { fetchOEmbed } from '@/lib/oembed';
+import { useExtractMetadata } from '@/lib/webview-metadata';
 import { THEME } from '@/lib/theme';
 
 import type { Prefill } from './index';
@@ -19,11 +20,16 @@ import type { Prefill } from './index';
 export function SavePostForm({
   analyzed,
   prefill,
+  sharedText,
+  metaTitle,
 }: {
   analyzed: AnalyzedUrl | null;
   prefill: Prefill;
+  sharedText?: string | null;
+  metaTitle?: string | null;
 }) {
   const { resetShareIntent } = useShareIntentContext();
+  const { extractMetadata } = useExtractMetadata();
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
 
   const { control, handleSubmit } = useForm<PostFormValues>({
@@ -34,13 +40,28 @@ export function SavePostForm({
   const onSubmit = useCallback(
     async (values: PostFormValues) => {
       setIsSaving(true);
-      // Fetch oEmbed metadata for supported platforms (TikTok, X).
-      // Runs in parallel with the haptic feedback — if it fails, we still save.
-      const oembedPromise = analyzed?.url
-        ? fetchOEmbed(analyzed.url, analyzed.platform)
-        : Promise.resolve({ caption: null, thumbnailUrl: null });
 
-      const oembed = await oembedPromise;
+      // Récupération des métadonnées selon la plateforme :
+      // - Instagram/TikTok : WebView (les plateformes rendent les og:* côté client)
+      // - X/Twitter : oEmbed API (fonctionne)
+      // - Autres : pas de récupération
+      let metadata = { caption: null as string | null, thumbnailUrl: null as string | null };
+
+      if (analyzed?.url) {
+        if (analyzed.platform === 'instagram' || analyzed.platform === 'tiktok') {
+          metadata = await extractMetadata(analyzed.url);
+        } else if (analyzed.platform === 'x') {
+          metadata = await fetchOEmbed(analyzed.url, analyzed.platform);
+        }
+      }
+
+      // Caption priority:
+      // 1. Metadata from WebView/oEmbed — most accurate
+      // 2. meta.title from Android EXTRA_TITLE — some apps set this
+      // 3. Caption extracted from shared text (text minus URL)
+      const captionFromText = extractCaptionFromText(sharedText, analyzed?.url);
+      const caption = metadata.caption ?? metaTitle ?? captionFromText ?? undefined;
+
       savePost({
         id: prefill.postId,
         url: analyzed?.url ?? null,
@@ -48,8 +69,8 @@ export function SavePostForm({
         collectionIds: values.collectionIds,
         // Échec de récupération (null) → undefined : un re-partage raté n'efface
         // pas les métadonnées d'un post déjà enregistré.
-        caption: oembed.caption ?? undefined,
-        thumbnailUrl: oembed.thumbnailUrl ?? undefined,
+        caption,
+        thumbnailUrl: metadata.thumbnailUrl ?? undefined,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // `resetShareIntent()` déclenche `hasShareIntent: false` chez le parent,
@@ -65,7 +86,7 @@ export function SavePostForm({
         },
       });
     },
-    [analyzed, prefill.postId, resetShareIntent]
+    [analyzed, prefill.postId, resetShareIntent, sharedText, metaTitle, extractMetadata]
   );
 
   const platform = analyzed?.platform ? PLATFORM_META[analyzed.platform] : null;

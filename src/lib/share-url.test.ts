@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { analyzeSharedUrl, detectPlatform, normalizeUrl } from './share-url.ts';
+import { analyzeSharedUrl, detectPlatform, extractCaptionFromText, normalizeUrl } from './share-url.ts';
 
 test('detectPlatform reconnaît les quatre plateformes', () => {
   assert.equal(detectPlatform('https://www.instagram.com/reel/abc/'), 'instagram');
@@ -44,4 +44,37 @@ test('analyzeSharedUrl combine normalisation et détection', () => {
 test('analyzeSharedUrl renvoie null sans lien exploitable (texte brut)', () => {
   assert.equal(analyzeSharedUrl(null), null);
   assert.equal(analyzeSharedUrl(undefined), null);
+});
+
+test('extractCaptionFromText extrait la légende en retirant l\'URL', () => {
+  // Caption before URL
+  assert.equal(
+    extractCaptionFromText('Check out this recipe! https://instagram.com/reel/abc', 'https://instagram.com/reel/abc'),
+    'Check out this recipe!'
+  );
+
+  // Caption after URL
+  assert.equal(
+    extractCaptionFromText('https://tiktok.com/video/123 Amazing tutorial', 'https://tiktok.com/video/123'),
+    'Amazing tutorial'
+  );
+
+  // Multi-line caption
+  assert.equal(
+    extractCaptionFromText('First line\nSecond line\nhttps://instagram.com/reel/abc', 'https://instagram.com/reel/abc'),
+    'First line\nSecond line'
+  );
+});
+
+test('extractCaptionFromText renvoie null si pas de texte au-delà de l\'URL', () => {
+  assert.equal(extractCaptionFromText('https://instagram.com/reel/abc', 'https://instagram.com/reel/abc'), null);
+  assert.equal(extractCaptionFromText(null, null), null);
+  assert.equal(extractCaptionFromText('', null), null);
+});
+
+test('extractCaptionFromText gère les URLs de tracking supplémentaires', () => {
+  assert.equal(
+    extractCaptionFromText('Great content! https://instagram.com/reel/abc https://tracking.link/xyz', 'https://instagram.com/reel/abc'),
+    'Great content!'
+  );
 });

@@ -84,5 +84,12 @@ export function SavePost() {
     return null;
   }
 
-  return <SavePostForm analyzed={analyzed} prefill={prefill} />;
+  return (
+    <SavePostForm
+      analyzed={analyzed}
+      prefill={prefill}
+      sharedText={shareIntent.text}
+      metaTitle={shareIntent.meta?.title}
+    />
+  );
 }

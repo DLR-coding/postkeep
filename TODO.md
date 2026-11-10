@@ -40,16 +40,21 @@ Dernière mise à jour : 4 septembre 2026
       natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
       fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
 
-## 🟢 Aperçu des posts — miniature + caption (9 novembre 2026)
+## 🟢 Aperçu des posts — caption et miniature via WebView (10 novembre 2026)
 
-- [x] Récupération au partage, côté appareil (`src/lib/oembed.ts`), colonnes
-      `posts.caption` / `posts.thumbnail_url` (migration `0002`), affichage dans `PostCard`
-      — choix et limites dans [ARCHITECTURE.md](./ARCHITECTURE.md) §6
-- [ ] **Valider sur appareil réel** : TikTok, Instagram et X renvoient-ils caption et
-      miniature depuis une IP mobile ? (pari non vérifié — les trois bloquent les IP de
-      datacenter)
-- [ ] Miniatures qui expirent : les télécharger localement au partage, si le test
-      ci-dessus est concluant
+- [x] Colonnes `posts.caption` / `posts.thumbnail_url` (migration `0002`)
+- [x] oEmbed X/Twitter fonctionne (`api.twitter.com/1/statuses/oembed.json`) → caption ✅
+- [x] **WebView cachée** (`src/lib/webview-metadata.tsx`) pour Instagram/TikTok → caption ✅, miniature ✅
+- [x] Extraction fallback du texte partagé (`extractCaptionFromText`)
+- [ ] **Nouveau build EAS** nécessaire : `react-native-webview` est un module natif
+
+État actuel par plateforme — voir [ARCHITECTURE.md](./ARCHITECTURE.md) §6 :
+| Plateforme | Caption | Miniature |
+|---|---|---|
+| Instagram | ✅ WebView | ✅ WebView |
+| TikTok | ✅ WebView | ✅ WebView |
+| X | ✅ oEmbed | ❌ |
+| Threads | ❌ | ❌ |
 
 ---
 

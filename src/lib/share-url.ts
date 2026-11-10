@@ -64,6 +64,38 @@ export type AnalyzedUrl = {
   platform: Platform | null;
 };
 
+/**
+ * Extract caption from the shared text by removing the URL.
+ * Instagram/TikTok often send "Caption text\nhttps://..." or just the URL.
+ * Returns null if there's no meaningful text beyond the URL.
+ */
+export function extractCaptionFromText(
+  text: string | null | undefined,
+  webUrl: string | null | undefined
+): string | null {
+  if (!text) return null;
+
+  // Remove the URL from the text
+  let caption = text;
+  if (webUrl) {
+    caption = caption.replace(webUrl, '').trim();
+  }
+
+  // Also remove any other URLs that might be in the text (tracking links, etc.)
+  caption = caption
+    .replace(/https?:\/\/[^\s]+/gi, '')
+    .trim();
+
+  // Clean up multiple newlines/spaces
+  caption = caption
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+
+  // Return null if empty or too short to be meaningful
+  return caption.length > 0 ? caption : null;
+}
+
 /** `rawUrl` vient de `shareIntent.webUrl` — `null` si le partage était du texte
  *  brut sans lien exploitable, auquel cas il n'y a rien à analyser. */
 export function analyzeSharedUrl(rawUrl: string | null | undefined): AnalyzedUrl | null {

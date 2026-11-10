@@ -17,6 +17,7 @@ import { PostDetailSheet } from '@/components/post-detail-sheet';
 import { db } from '@/db';
 import migrations from '@/db/migrations/migrations';
 import { NAV_THEME, THEME } from '@/lib/theme';
+import { MetadataExtractorProvider } from '@/lib/webview-metadata';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -85,18 +86,20 @@ export default function RootLayout() {
         <ShareIntentProvider options={{ debug: __DEV__ }}>
           <ThemeProvider value={NAV_THEME[colorScheme]}>
             <BottomSheetModalProvider>
-              {/* Le partage n'est routé qu'une fois les migrations passées : l'écran de
-                  sauvegarde lit les collections dès son montage. */}
-              {success && <ShareIntentRedirect />}
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="shareintent" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="collection/[id]" />
-              </Stack>
-              <PostDetailSheet />
-              {!success && <MigrationGate error={error} />}
-              <PortalHost />
-              <Toast />
+              <MetadataExtractorProvider>
+                {/* Le partage n'est routé qu'une fois les migrations passées : l'écran de
+                    sauvegarde lit les collections dès son montage. */}
+                {success && <ShareIntentRedirect />}
+                <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="shareintent" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="collection/[id]" />
+                </Stack>
+                <PostDetailSheet />
+                {!success && <MigrationGate error={error} />}
+                <PortalHost />
+                <Toast />
+              </MetadataExtractorProvider>
             </BottomSheetModalProvider>
           </ThemeProvider>
         </ShareIntentProvider>

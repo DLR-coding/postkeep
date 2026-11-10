@@ -75,10 +75,13 @@ async function scrapeMetaTags(url: string): Promise<OEmbedResult> {
 
 /**
  * X/Twitter oEmbed — returns tweet text in an HTML blockquote.
+ * Uses the legacy API endpoint which still works as of November 2026.
  */
 async function fetchTwitter(url: string): Promise<OEmbedResult> {
   try {
-    const res = await fetchWithTimeout(`https://publish.x.com/oembed?url=${encodeURIComponent(url)}`);
+    const res = await fetchWithTimeout(
+      `https://api.twitter.com/1/statuses/oembed.json?url=${encodeURIComponent(url)}`
+    );
     if (!res.ok) return EMPTY;
 
     const data = await res.json();
@@ -102,15 +105,22 @@ async function fetchTwitter(url: string): Promise<OEmbedResult> {
 
 /**
  * Fetches oEmbed metadata for the given URL and platform.
- * Runs client-side — mobile IPs are generally not blocked.
+ *
+ * Platform support as of November 2026:
+ * - X/Twitter: oEmbed API works, returns tweet text (no thumbnail)
+ * - Instagram/TikTok: DISABLED — these platforms don't serve og:* tags to
+ *   mobile user agents, so scraping returns nothing. The 5s timeout was
+ *   wasted on every save. Caption must come from the share intent text instead.
+ * - Threads: Never supported
  */
 export async function fetchOEmbed(url: string, platform: Platform | null): Promise<OEmbedResult> {
   switch (platform) {
-    case 'tiktok':
-    case 'instagram':
-      return scrapeMetaTags(url);
     case 'x':
       return fetchTwitter(url);
+    // Instagram/TikTok scraping disabled — returns empty after 5s timeout.
+    // Caption extraction from share intent text is handled in save-post/form.tsx.
+    case 'tiktok':
+    case 'instagram':
     default:
       return EMPTY;
   }

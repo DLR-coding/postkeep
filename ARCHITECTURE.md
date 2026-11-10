@@ -173,31 +173,45 @@ l'état **réseau** (synchronisation en cours, erreurs de connexion, conflits).
 
 ---
 
-## 6. Pas de WebView ; métadonnées récupérées côté appareil, au mieux
+## 6. Métadonnées récupérées via WebView cachée
 
 - **Ouvrir un post** → `Linking.openURL()` → le système ouvre Instagram/TikTok directement
-- **Aperçu d'un post** → miniature + caption d'origine quand on a pu les récupérer, sinon
-  logo de la plateforme déduit de l'URL
-- **Récupération** (`src/lib/oembed.ts`) : une seule fois, au partage, **depuis l'appareil**
-  — balises `og:*` de la page pour TikTok/Instagram, oEmbed `publish.x.com` pour X, rien
-  pour Threads. Délai max 5 s ; un échec n'empêche jamais la sauvegarde. Résultat stocké
-  dans `posts.caption` / `posts.thumbnail_url`, jamais redemandé à l'affichage
+- **Aperçu d'un post** → miniature + caption quand disponibles, sinon badge de plateforme
+- **Récupération** : une seule fois, au partage. Un échec n'empêche jamais la sauvegarde.
+  Résultat stocké dans `posts.caption` / `posts.thumbnail_url`
 
-**Pourquoi** : une WebView embarquée est lourde, fragile et souvent bloquée. Pour les
-métadonnées, décision du 9 novembre 2026 (revient sur « pas en V1 ») : elles ont été jugées
-nécessaires pour retrouver un post dans la liste. Elles restent un bonus — la sauvegarde
-marche hors ligne, l'aperçu se dégrade simplement en logo.
+### État de la récupération par plateforme (novembre 2026)
 
-**Pas de serveur** : essayé le 9 novembre 2026 via une Supabase Edge Function — TikTok,
-Instagram et X renvoient tous des réponses vides aux IP de datacenter. Les contourner
-demande des proxys résidentiels (ce que vendent Apify & co, ~1,5 $/1000 posts Instagram),
-donc casse la contrainte de coût zéro. Pari actuel : les IP mobiles passent.
+| Plateforme | Caption | Miniature | Méthode |
+|---|---|---|---|
+| **Instagram** | ✅ | ✅ | WebView (`src/lib/webview-metadata.tsx`) |
+| **TikTok** | ✅ | ✅ | WebView (`src/lib/webview-metadata.tsx`) |
+| **X (Twitter)** | ✅ | ❌ | oEmbed API (`api.twitter.com/1/statuses/oembed.json`) |
+| **Threads** | ❌ | ❌ | Jamais supporté |
 
-**Limites connues** :
-- L'oEmbed TikTok ne renvoie plus `title` ni `thumbnail_url` (constaté le 9 novembre 2026)
-- Les URL de miniature des CDN TikTok/Instagram sont signées et **expirent** (heures à
-  jours) : une miniature ancienne finit en image cassée. La parade serait de télécharger
-  l'image dans le stockage de l'appareil au moment du partage — pas fait
+### Pourquoi une WebView ?
+
+Instagram et TikTok ne servent pas les balises `og:*` dans le HTML initial — elles sont
+rendues côté client via JavaScript. Un simple `fetch()` ne voit rien.
+
+**Approches testées et abandonnées :**
+1. **oEmbed officiel** — ne renvoie plus les métadonnées
+2. **Scraping HTML statique** — les og: tags ne sont pas dans le HTML initial
+3. **Supabase Edge Function** — IP de datacenter bloquées
+4. **Share intent Android** — Instagram/TikTok n'envoient que l'URL brute
+
+**Solution retenue** : `react-native-webview` en mode invisible (positionné hors écran).
+La page est chargée, le JavaScript s'exécute, puis un script injecté extrait les og: tags
+et renvoie le résultat via `postMessage`. Timeout de 10 secondes.
+
+Architecture :
+```
+MetadataExtractorProvider (dans _layout.tsx)
+  └─ WebView invisible (créée à la demande)
+       ├─ charge l'URL
+       ├─ onLoadEnd → injecte le JS d'extraction
+       └─ postMessage → retourne { caption, thumbnailUrl }
+```
 
 ---
 

@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm } from 'react-hook-form';
 import * as Haptics from 'expo-haptics';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
+import { Image } from 'expo-image';
 import Animated, {
   Extrapolation,
   FadeIn,
@@ -93,16 +94,35 @@ function AnimatedHandle({ animatedIndex }: BottomSheetHandleProps) {
   );
 }
 
-function PlatformHeader({ url, meta, colors }: { url: string | null; meta: PlatformMeta | null; colors: Colors }) {
+function PlatformHeader({
+  url,
+  meta,
+  colors,
+  thumbnailUrl,
+}: {
+  url: string | null;
+  meta: PlatformMeta | null;
+  colors: Colors;
+  thumbnailUrl?: string | null;
+}) {
   return (
     <View className="flex-row items-center gap-3">
-      <View
-        className="h-12 w-12 items-center justify-center rounded-full shadow-sm shadow-black/10"
-        style={{ backgroundColor: meta?.color ?? colors.muted }}>
-        <Text className="text-sm font-bold" style={{ color: meta ? '#fff' : colors.mutedForeground }}>
-          {meta?.badge ?? '?'}
-        </Text>
-      </View>
+      {thumbnailUrl ? (
+        <Image
+          source={{ uri: thumbnailUrl }}
+          className="h-16 w-16 rounded-xl"
+          contentFit="cover"
+          transition={200}
+        />
+      ) : (
+        <View
+          className="h-12 w-12 items-center justify-center rounded-full shadow-sm shadow-black/10"
+          style={{ backgroundColor: meta?.color ?? colors.muted }}>
+          <Text className="text-sm font-bold" style={{ color: meta ? '#fff' : colors.mutedForeground }}>
+            {meta?.badge ?? '?'}
+          </Text>
+        </View>
+      )}
       <View className="flex-1">
         <Text className="font-semibold">{meta?.label ?? 'Texte'}</Text>
         {!!url && (
@@ -338,7 +358,7 @@ export function PostDetailSheet() {
             style={styles.editContentGrow}
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}>
-            <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} />
+            <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} thumbnailUrl={displayedPost.thumbnailUrl} />
             <PostFieldsForm control={control} variant="chips" />
           </Animated.View>
         </BottomSheetView>
@@ -357,18 +377,27 @@ export function PostDetailSheet() {
             <Text variant="muted">This post no longer exists.</Text>
           ) : (
             <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
-              <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} />
+              <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} thumbnailUrl={displayedPost.thumbnailUrl} />
 
-              {!!displayedPost.note && (
-              <View className="mt-6 gap-2">
-                <Text variant="large">Note</Text>
-                <View className="rounded-xl bg-muted p-3.5" style={{ borderCurve: 'continuous' }}>
+              {!!displayedPost.caption && (
+                <View className="mt-6 gap-2">
+                  <Text variant="large">Caption</Text>
                   <Text selectable className="text-sm leading-5">
-                    {displayedPost.note}
+                    {displayedPost.caption}
                   </Text>
                 </View>
-              </View>
-            )}
+              )}
+
+              {!!displayedPost.note && (
+                <View className="mt-6 gap-2">
+                  <Text variant="large">Note</Text>
+                  <View className="rounded-xl bg-muted p-3.5" style={{ borderCurve: 'continuous' }}>
+                    <Text selectable className="text-sm leading-5">
+                      {displayedPost.note}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
             {displayedPost.collectionNames.length > 0 && (
               <View className="mt-6 gap-2">
