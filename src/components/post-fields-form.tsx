@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type RefObject, useRef, useState } from 'react';
 import { Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
@@ -282,28 +282,12 @@ export function PostFieldsForm({
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const [noteInputHeight, setNoteInputHeight] = useState(0);
-  // ponytail: debug temporaire pour instrumenter le bug de hauteur de la Note
-  // (chaque valeur vient d'un `onLayout`/`onContentSizeChange` distinct pour
-  // localiser où la taille du texte contamine la chaîne flex) — à retirer une
-  // fois le vrai fix posé.
-  const [debug, setDebug] = useState({ outer: 0, collections: 0, noteBlock: 0, noteWrapper: 0, content: 0 });
-  // ponytail: doublon Metro du bandeau à l'écran, pour ne rien perdre si le
-  // bandeau est masqué par le clavier — à retirer avec le reste du debug.
-  useEffect(() => {
-    console.log('[note-debug]', debug);
-  }, [debug]);
   const { data: collections } = useLiveQuery(
     db.select().from(schema.collections).where(isNull(schema.collections.deletedAt))
   );
 
   const collectionsBlock = (
-    <View
-      className="mt-6 gap-3"
-      onLayout={(e) => {
-        const height = e.nativeEvent?.layout?.height;
-        if (height == null) return;
-        setDebug((d) => ({ ...d, collections: height }));
-      }}>
+    <View className="mt-6 gap-3">
       <Text variant="large">Collections</Text>
       <Controller
         control={control}
@@ -320,13 +304,7 @@ export function PostFieldsForm({
   );
 
   const noteBlock = (
-    <View
-      className={variant === 'chips' ? 'mt-6 min-h-0 flex-1 gap-3' : 'mt-6 gap-3'}
-      onLayout={(e) => {
-        const height = e.nativeEvent?.layout?.height;
-        if (height == null) return;
-        setDebug((d) => ({ ...d, noteBlock: height }));
-      }}>
+    <View className={variant === 'chips' ? 'mt-6 min-h-0 flex-1 gap-3' : 'mt-6 gap-3'}>
       <Text variant="large">Note</Text>
       <Controller
         control={control}
@@ -336,11 +314,6 @@ export function PostFieldsForm({
             <BottomSheetTextInput
               value={field.value}
               onChangeText={field.onChange}
-              onContentSizeChange={(e) => {
-                const height = e.nativeEvent?.contentSize?.height;
-                if (height == null) return;
-                setDebug((d) => ({ ...d, content: height }));
-              }}
               multiline
               numberOfLines={variant === 'chips' ? undefined : 4}
               placeholder="Add a note…"
@@ -367,7 +340,6 @@ export function PostFieldsForm({
                 const height = e.nativeEvent?.layout?.height;
                 if (height == null) return;
                 setNoteInputHeight(height);
-                setDebug((d) => ({ ...d, noteWrapper: height }));
               }}>
               {input}
             </View>
@@ -386,22 +358,7 @@ export function PostFieldsForm({
   // flex ne rétrécit pas sous la taille de son contenu (`minHeight: auto` côté
   // Yoga, comme en CSS), ce qui empêchait la Note de céder sa place réelle.
   return variant === 'chips' ? (
-    <View
-      className="min-h-0 flex-1"
-      onLayout={(e) => {
-        const height = e.nativeEvent?.layout?.height;
-        if (height == null) return;
-        setDebug((d) => ({ ...d, outer: height }));
-      }}>
-      {/* ponytail: overlay de debug temporaire, à retirer avec le reste de
-          l'instrumentation une fois la vraie fuite localisée. */}
-      <View pointerEvents="none" style={styles.debugOverlay}>
-        <Text style={styles.debugText}>
-          outer={debug.outer.toFixed(0)} collections={debug.collections.toFixed(0)}{'\n'}
-          noteBlock={debug.noteBlock.toFixed(0)} noteWrapper={debug.noteWrapper.toFixed(0)}{'\n'}
-          content={debug.content.toFixed(0)}
-        </Text>
-      </View>
+    <View className="min-h-0 flex-1">
       {collectionsBlock}
       {noteBlock}
     </View>
@@ -450,20 +407,5 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 48,
     gap: 12,
-  },
-  // ponytail: debug temporaire (cf. plus haut), à retirer avec le reste.
-  debugOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 999,
-    backgroundColor: 'rgba(255,0,0,0.85)',
-    padding: 4,
-  },
-  debugText: {
-    color: 'white',
-    fontSize: 10,
-    fontFamily: 'monospace',
   },
 });

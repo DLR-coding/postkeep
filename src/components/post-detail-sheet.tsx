@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   useColorScheme,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
@@ -58,6 +59,10 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   year: 'numeric',
 });
 
+/** Hauteur réservée par la poignée en haut de la feuille, même effacée en plein écran
+ *  (opacité 0) : à retirer de la hauteur disponible pour le contenu d'édition. */
+const HANDLE_HEIGHT = 28;
+
 const PREVIEW_INDEX = 0;
 const EDIT_INDEX = 1;
 
@@ -83,7 +88,7 @@ function AnimatedHandle({ animatedIndex }: BottomSheetHandleProps) {
     opacity: interpolate(animatedIndex.value, [PREVIEW_INDEX, EDIT_INDEX], [1, 0], Extrapolation.CLAMP),
   }));
   return (
-    <View className="items-center py-3">
+    <View className="items-center justify-center" style={{ height: HANDLE_HEIGHT }}>
       <Animated.View
         style={[
           { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.mutedForeground },
@@ -106,6 +111,7 @@ export function PostDetailSheet() {
   const postId = usePostDetailStore((s) => s.postId);
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [index, setIndex] = useState(PREVIEW_INDEX);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -289,7 +295,7 @@ export function PostDetailSheet() {
                     className="w-full"
                     style={{ backgroundColor: platform === 'instagram' ? 'transparent' : (meta?.color ?? undefined) }}
                     onPress={handleOpen}>
-                    <Text style={meta ? { color: '#fff' } : undefined}>
+                    <Text className={meta ? 'text-white' : undefined}>
                       Open in {meta?.label ?? 'the original app'}
                     </Text>
                   </Button>
@@ -310,6 +316,9 @@ export function PostDetailSheet() {
       topInset={0}
       enableDynamicSizing={false}
       enablePanDownToClose={index !== EDIT_INDEX}
+      // En édition, un glissé dans la note doit la faire défiler, pas replier la feuille
+      // (fermeture par ✕ ou retour Android).
+      enableContentPanningGesture={index !== EDIT_INDEX}
       keyboardBehavior="fillParent"
       onChange={handleSheetChange}
       onDismiss={handleDismiss}
@@ -324,7 +333,7 @@ export function PostDetailSheet() {
         // La page elle-même ne doit pas défiler : Collections doit rester
         // visible pendant qu'on lit/édite la fin d'une longue note.
         <BottomSheetView
-          style={[styles.editContent, { paddingBottom: footerHeight }]}>
+          style={[styles.editContent, { height: windowHeight - HANDLE_HEIGHT, paddingBottom: footerHeight }]}>
           <View className="flex-row justify-end">
             <Pressable onPress={() => sheetRef.current?.dismiss()} hitSlop={8} accessibilityLabel="Close">
               <Icon as={X} size={20} color={colors.mutedForeground} />

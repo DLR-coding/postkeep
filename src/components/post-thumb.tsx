@@ -1,4 +1,4 @@
-import { useColorScheme, View } from 'react-native';
+import { Text as RNText, useColorScheme, View } from 'react-native';
 import { Image } from 'expo-image';
 import Svg, { Circle, Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
@@ -65,9 +65,11 @@ export function HighlightedText({ text, query, ...rest }: { text: string; query?
     <Text {...rest}>
       {splitHighlight(text, query ?? '').map((seg, i) =>
         seg.match ? (
-          <Text key={i} style={{ backgroundColor: '#ffe58a', color: '#111' }}>
+          // `Text` de React Native, pas celui de l'UI : ce dernier impose sa propre taille
+          // de police au lieu d'hériter de celle du parent (constaté sur appareil).
+          <RNText key={i} style={{ backgroundColor: '#ffe58a', color: '#111' }}>
             {seg.text}
-          </Text>
+          </RNText>
         ) : (
           seg.text
         )
