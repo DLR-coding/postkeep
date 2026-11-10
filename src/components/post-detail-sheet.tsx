@@ -39,7 +39,7 @@ import { PostThumb } from '@/components/post-thumb';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { PostFieldsForm, type PostFormValues } from '@/components/post-fields-form';
+import { PostFieldsForm, SectionLabel, type PostFormValues } from '@/components/post-fields-form';
 import {
   groupPostRows,
   markPostOpened,
@@ -49,7 +49,7 @@ import {
   softDeletePost,
   type PostListItem,
 } from '@/db/posts';
-import { detectPlatform, PLATFORM_META } from '@/lib/share-url';
+import { detectPlatform, PLATFORM_META, type Platform } from '@/lib/share-url';
 import { THEME } from '@/lib/theme';
 import { usePostDetailStore } from '@/stores/post-detail-store';
 
@@ -96,6 +96,76 @@ function AnimatedHandle({ animatedIndex }: BottomSheetHandleProps) {
           animatedStyle,
         ]}
       />
+    </View>
+  );
+}
+
+type PlatformMeta = (typeof PLATFORM_META)[keyof typeof PLATFORM_META];
+
+/** En-tête commun à l'aperçu et à l'édition : grande vignette 9:16, plateforme, URL,
+ *  date. `children` s'insère avant la date (les puces de collection en aperçu ; en
+ *  édition elles sont modifiables plus bas). */
+function PostHero({
+  post,
+  meta,
+  children,
+}: {
+  post: PostListItem;
+  meta: PlatformMeta | null;
+  children?: React.ReactNode;
+}) {
+  return (
+    <View className="flex-row gap-3.5">
+      <PostThumb post={post} width={92} />
+      <View className="min-w-0 flex-1 gap-1.5 pt-1">
+        <Text className="text-[15px] font-semibold">{meta?.label ?? 'Text'}</Text>
+        {!!post.url && (
+          <Text variant="muted" className="text-[11px]" numberOfLines={1} selectable>
+            {post.url}
+          </Text>
+        )}
+        {children}
+        <Text variant="muted" className="text-[11px]">
+          Saved {dateFormatter.format(post.createdAt)}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Bouton « Open » aux couleurs de la plateforme (dégradé SVG pour Instagram), le même
+ *  en aperçu (« Open in Instagram », pleine largeur) et en édition (« Open »). */
+function OpenButton({
+  platform,
+  meta,
+  label,
+  grow,
+  onPress,
+}: {
+  platform: Platform | null;
+  meta: PlatformMeta | null;
+  label: string;
+  grow?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <View className={`overflow-hidden rounded-md ${grow ? 'flex-1' : ''}`}>
+      {platform === 'instagram' && (
+        <Svg width="100%" height="100%" viewBox="0 0 1 1" preserveAspectRatio="none" style={{ position: 'absolute' }}>
+          <LinearGradient id="open-ig" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor="#f7a24a" />
+            <Stop offset="0.55" stopColor="#e4405f" />
+            <Stop offset="1" stopColor="#a33ab9" />
+          </LinearGradient>
+          <Rect width="1" height="1" fill="url(#open-ig)" />
+        </Svg>
+      )}
+      <Button
+        className={grow ? 'w-full' : undefined}
+        style={{ backgroundColor: platform === 'instagram' ? 'transparent' : (meta?.color ?? undefined) }}
+        onPress={onPress}>
+        <Text className={meta ? 'text-white' : undefined}>{label}</Text>
+      </Button>
     </View>
   );
 }
@@ -277,14 +347,7 @@ export function PostDetailSheet() {
               {index === EDIT_INDEX ? (
                 <>
                   {!!displayedPost.url && (
-                    <Button
-                      variant="outline"
-                      style={meta ? { borderColor: meta.color } : undefined}
-                      onPress={handleOpen}>
-                      <Text style={meta ? { color: meta.color } : undefined}>
-                        Open
-                      </Text>
-                    </Button>
+                    <OpenButton platform={platform} meta={meta} label="Open" onPress={handleOpen} />
                   )}
                   <Button className="flex-1" onPress={onSave}>
                     <Text>Save</Text>
@@ -294,31 +357,13 @@ export function PostDetailSheet() {
                   </Button>
                 </>
               ) : (
-                <View className="flex-1 overflow-hidden rounded-md">
-                  {platform === 'instagram' && (
-                    <Svg
-                      width="100%"
-                      height="100%"
-                      viewBox="0 0 1 1"
-                      preserveAspectRatio="none"
-                      style={{ position: 'absolute' }}>
-                      <LinearGradient id="open-ig" x1="0" y1="0" x2="1" y2="0">
-                        <Stop offset="0" stopColor="#f7a24a" />
-                        <Stop offset="0.55" stopColor="#e4405f" />
-                        <Stop offset="1" stopColor="#a33ab9" />
-                      </LinearGradient>
-                      <Rect width="1" height="1" fill="url(#open-ig)" />
-                    </Svg>
-                  )}
-                  <Button
-                    className="w-full"
-                    style={{ backgroundColor: platform === 'instagram' ? 'transparent' : (meta?.color ?? undefined) }}
-                    onPress={handleOpen}>
-                    <Text className={meta ? 'text-white' : undefined}>
-                      Open in {meta?.label ?? 'the original app'}
-                    </Text>
-                  </Button>
-                </View>
+                <OpenButton
+                  platform={platform}
+                  meta={meta}
+                  label={`Open in ${meta?.label ?? 'the original app'}`}
+                  grow
+                  onPress={handleOpen}
+                />
               )}
             </Animated.View>
           </View>
@@ -365,16 +410,7 @@ export function PostDetailSheet() {
             {/* Saisie dans la note : en-tête et collections repliés, la note prend la place
                 (sinon 0 dp entre l'en-tête et le pied remonté, mesuré sur un S23). */}
             {!typingNote && (
-            <View className="flex-row items-center gap-2.5">
-              <PostThumb post={displayedPost} width={34} />
-              <View className="min-w-0 flex-1">
-                <Text className="text-sm font-semibold">{meta?.label ?? 'Text'}</Text>
-                <Text variant="muted" className="text-[11px]" numberOfLines={1}>
-                  Saved {dateFormatter.format(displayedPost.createdAt)}
-                  {displayedPost.url ? ` · ${displayedPost.url.replace(/^https?:\/\/(www\.)?/, '')}` : ''}
-                </Text>
-              </View>
-            </View>
+            <PostHero post={displayedPost} meta={meta} />
             )}
             <PostFieldsForm
               control={control}
@@ -400,36 +436,22 @@ export function PostDetailSheet() {
             <Text variant="muted">This post no longer exists.</Text>
           ) : (
             <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
-              <View className="flex-row gap-3.5">
-                <PostThumb post={displayedPost} width={92} />
-                <View className="min-w-0 flex-1 gap-1.5 pt-1">
-                  <Text className="text-[15px] font-semibold">{meta?.label ?? 'Text'}</Text>
-                  {!!displayedPost.url && (
-                    <Text variant="muted" className="text-[11px]" numberOfLines={1} selectable>
-                      {displayedPost.url}
-                    </Text>
-                  )}
-                  <View className="flex-row flex-wrap gap-1">
-                    {(displayedPost.collectionNames.length > 0
-                      ? displayedPost.collectionNames
-                      : ['No collection']
-                    ).map((name) => (
-                      <View key={name} className="rounded-full bg-chip px-2 py-0.5">
-                        <Text className="text-[11px] text-chip-foreground">{name}</Text>
-                      </View>
-                    ))}
-                  </View>
-                  <Text variant="muted" className="text-[11px]">
-                    Saved {dateFormatter.format(displayedPost.createdAt)}
-                  </Text>
+              <PostHero post={displayedPost} meta={meta}>
+                <View className="flex-row flex-wrap gap-1">
+                  {(displayedPost.collectionNames.length > 0
+                    ? displayedPost.collectionNames
+                    : ['No collection']
+                  ).map((name) => (
+                    <View key={name} className="rounded-full bg-chip px-2 py-0.5">
+                      <Text className="text-[11px] text-chip-foreground">{name}</Text>
+                    </View>
+                  ))}
                 </View>
-              </View>
+              </PostHero>
 
               {!!displayedPost.caption && (
                 <View className="mt-5 gap-1.5">
-                  <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Caption
-                  </Text>
+                  <SectionLabel>Caption</SectionLabel>
                   <Text selectable className="text-[13px] leading-[1.4]">
                     {displayedPost.caption}
                   </Text>
@@ -438,9 +460,7 @@ export function PostDetailSheet() {
 
               {!!displayedPost.note && (
                 <View className="mt-5 gap-1.5">
-                  <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Note
-                  </Text>
+                  <SectionLabel>Note</SectionLabel>
                   <View className="rounded-xl bg-note px-3 py-2.5" style={{ borderCurve: 'continuous' }}>
                     <Text selectable className="text-[13px] leading-[1.4]">
                       {displayedPost.note}

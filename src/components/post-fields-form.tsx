@@ -20,6 +20,16 @@ import { createCollection } from '@/db/collections';
 import type { Collection } from '@/db/schema';
 import { THEME } from '@/lib/theme';
 
+/** Libellé de section de la feuille de détail (« COLLECTIONS », « NOTE », « CAPTION »),
+ *  partagé entre l'aperçu et l'édition pour que les deux vues se ressemblent. */
+export function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {children}
+    </Text>
+  );
+}
+
 const collectionNameSchema = z.string().trim().min(1, 'Nom requis').max(60, 'Nom trop long');
 
 export type PostFormValues = {
@@ -218,6 +228,13 @@ function CollectionChips({
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const pickerRef = useRef<BottomSheetModal>(null);
+  // Collections du post en tête, comme dans l'aperçu. Ordre figé à l'ouverture : les
+  // puces ne doivent pas changer de place pendant qu'on les coche.
+  const [selectedAtOpen] = useState(() => new Set(field.value));
+  const ordered = [
+    ...collections.filter((c) => selectedAtOpen.has(c.id)),
+    ...collections.filter((c) => !selectedAtOpen.has(c.id)),
+  ];
 
   return (
     <>
@@ -226,7 +243,7 @@ function CollectionChips({
         style={styles.chipsScroll}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipsWrap}>
-        {collections.map((collection) => {
+        {ordered.map((collection) => {
           const checked = field.value.includes(collection.id);
           return (
             <Pressable
@@ -296,8 +313,8 @@ export function PostFieldsForm({
   );
 
   const collectionsBlock = (
-    <View className="mt-6 gap-3">
-      <Text variant="large">Collections</Text>
+    <View className={variant === 'chips' ? 'mt-5 gap-1.5' : 'mt-6 gap-3'}>
+      {variant === 'chips' ? <SectionLabel>Collections</SectionLabel> : <Text variant="large">Collections</Text>}
       <Controller
         control={control}
         name="collectionIds"
@@ -313,8 +330,8 @@ export function PostFieldsForm({
   );
 
   const noteBlock = (
-    <View className={variant === 'chips' ? 'mt-6 min-h-0 flex-1 gap-3' : 'mt-6 gap-3'}>
-      <Text variant="large">Note</Text>
+    <View className={variant === 'chips' ? 'mt-5 min-h-0 flex-1 gap-1.5' : 'mt-6 gap-3'}>
+      {variant === 'chips' ? <SectionLabel>Note</SectionLabel> : <Text variant="large">Note</Text>}
       <Controller
         control={control}
         name="note"
@@ -341,6 +358,11 @@ export function PostFieldsForm({
                     : styles.textareaFlex
                   : styles.textarea,
                 { borderColor: colors.border, color: colors.foreground },
+                // Édition : même encart que la note de l'aperçu (fond `note`, sans bord).
+                variant === 'chips' && {
+                  ...styles.noteBox,
+                  backgroundColor: colors.note,
+                },
               ]}
             />
           );
@@ -396,6 +418,14 @@ const styles = StyleSheet.create({
   textarea: {
     minHeight: 96,
     textAlignVertical: 'top',
+  },
+  noteBox: {
+    borderWidth: 0,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    lineHeight: 18,
   },
   textareaFlex: {
     flexGrow: 1,
