@@ -31,7 +31,7 @@ import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { ChevronUp, Trash2, X } from 'lucide-react-native';
+import { ChevronUp, X } from 'lucide-react-native';
 
 import Svg, { LinearGradient, Rect, Stop } from 'react-native-svg';
 
@@ -64,6 +64,12 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
  *  (opacité 0) : à retirer de la hauteur disponible pour le contenu d'édition. */
 const HANDLE_HEIGHT = 28;
 
+/** Système de design de la feuille (références : feuilles et widgets aux coins très
+ *  arrondis) : coins de feuille 28, boutons et puces en pilule de 48 px de haut, champ
+ *  de note arrondi à 16, 16 px d'air minimum entre le contenu et le pied. */
+const SHEET_RADIUS = 28;
+const FOOTER_GAP = 16;
+
 const PREVIEW_INDEX = 0;
 const EDIT_INDEX = 1;
 
@@ -73,7 +79,7 @@ const EDIT_INDEX = 1;
 function AnimatedBackground({ style, animatedIndex }: BottomSheetBackgroundProps) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const animatedStyle = useAnimatedStyle(() => {
-    const radius = interpolate(animatedIndex.value, [PREVIEW_INDEX, EDIT_INDEX], [24, 0], Extrapolation.CLAMP);
+    const radius = interpolate(animatedIndex.value, [PREVIEW_INDEX, EDIT_INDEX], [SHEET_RADIUS, 0], Extrapolation.CLAMP);
     return { borderTopLeftRadius: radius, borderTopRightRadius: radius };
   });
   return (
@@ -149,7 +155,7 @@ function OpenButton({
   onPress: () => void;
 }) {
   return (
-    <View className={`overflow-hidden rounded-md ${grow ? 'flex-1' : ''}`}>
+    <View className={`overflow-hidden rounded-full ${grow ? 'flex-1' : ''}`}>
       {platform === 'instagram' && (
         <Svg width="100%" height="100%" viewBox="0 0 1 1" preserveAspectRatio="none" style={{ position: 'absolute' }}>
           <LinearGradient id="open-ig" x1="0" y1="0" x2="1" y2="0">
@@ -161,7 +167,7 @@ function OpenButton({
         </Svg>
       )}
       <Button
-        className={grow ? 'w-full' : undefined}
+        className={`h-12 rounded-full px-5 ${grow ? 'w-full' : ''}`}
         style={{ backgroundColor: platform === 'instagram' ? 'transparent' : (meta?.color ?? undefined) }}
         onPress={onPress}>
         <Text className={meta ? 'text-white' : undefined}>{label}</Text>
@@ -336,7 +342,7 @@ export function PostDetailSheet() {
       return (
         <BottomSheetFooter {...footerProps}>
           <View
-            className="gap-2 border-t border-border bg-card px-6 pt-3"
+            className="gap-2 bg-card px-6 pt-3"
             style={{ paddingBottom: insets.bottom + 12 }}
             onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}>
             <Animated.View
@@ -346,14 +352,19 @@ export function PostDetailSheet() {
               className="flex-row gap-2">
               {index === EDIT_INDEX ? (
                 <>
+                  <Button
+                    variant="ghost"
+                    className="h-12 rounded-full px-5"
+                    style={{ backgroundColor: colors.destructiveSoft }}
+                    onPress={handleDelete}
+                    accessibilityLabel="Delete">
+                    <Text className="font-semibold text-destructive">Delete</Text>
+                  </Button>
                   {!!displayedPost.url && (
                     <OpenButton platform={platform} meta={meta} label="Open" onPress={handleOpen} />
                   )}
-                  <Button className="flex-1" onPress={onSave}>
-                    <Text>Save</Text>
-                  </Button>
-                  <Button variant="destructive" onPress={handleDelete}>
-                    <Icon as={Trash2} className="text-white" size={16} />
+                  <Button className="h-12 flex-1 rounded-full" onPress={onSave}>
+                    <Text className="font-semibold">Save</Text>
                   </Button>
                 </>
               ) : (
@@ -370,7 +381,7 @@ export function PostDetailSheet() {
         </BottomSheetFooter>
       );
     },
-    [displayedPost, index, insets.bottom, meta, platform, handleOpen, onSave, handleDelete]
+    [displayedPost, index, insets.bottom, meta, platform, colors, handleOpen, onSave, handleDelete]
   );
 
   return (
@@ -397,7 +408,7 @@ export function PostDetailSheet() {
         // La page elle-même ne doit pas défiler : Collections doit rester
         // visible pendant qu'on lit/édite la fin d'une longue note.
         <BottomSheetView>
-          <Animated.View style={[styles.editContent, { paddingBottom: footerHeight }, editHeightStyle]}>
+          <Animated.View style={[styles.editContent, { paddingBottom: footerHeight + FOOTER_GAP }, editHeightStyle]}>
           <View className="flex-row justify-end">
             <Pressable onPress={() => sheetRef.current?.dismiss()} hitSlop={8} accessibilityLabel="Close">
               <Icon as={X} size={20} color={colors.mutedForeground} />

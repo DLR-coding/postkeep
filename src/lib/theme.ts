@@ -39,6 +39,8 @@ export const THEME = {
     chip: '#e6e7eb',
     chipForeground: '#4a4d55',
     pill: '#efeff2',
+    // Fond du bouton « Delete » doux (texte `destructive`), comme les feuilles de référence.
+    destructiveSoft: 'rgba(239, 68, 68, 0.12)',
   },
   dark: {
     background: 'hsl(0 0% 3.9%)',
@@ -78,6 +80,7 @@ export const THEME = {
     chip: '#2a2d35',
     chipForeground: '#b6bbc6',
     pill: '#1f2128',
+    destructiveSoft: 'rgba(239, 68, 68, 0.18)',
   },
 };
 

@@ -93,9 +93,10 @@ export function PostThumb({
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const platform = post.url ? detectPlatform(post.url) : null;
   const height = Math.round((width * 16) / 9);
-  const radius = width * 0.15;
+  // Coins de vignette proportionnels et continus (squircle sur iOS ; Android arrondit).
+  const radius = width * 0.2;
   const vertical = isVerticalVideo(post.url, platform);
-  const frame = { width, height, borderRadius: radius, overflow: 'hidden' as const };
+  const frame = { width, height, borderRadius: radius, borderCurve: 'continuous' as const, overflow: 'hidden' as const };
   const sticker = platform ? (
     <View style={{ position: 'absolute', left: 5, bottom: 5 }}>
       <PlatformSticker platform={platform} size="sm" />
