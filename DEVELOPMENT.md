@@ -66,8 +66,16 @@ Il va chercher le JavaScript à distance, sur le serveur **Metro** qui tourne su
 ## 3. La boucle quotidienne (99 % du temps)
 
 ```bash
-npx expo start --dev-client
+npx expo start --dev-client --tunnel
 ```
+
+`--tunnel` est la commande par défaut sous WSL : en réseau `mirrored`, le pare-feu Hyper-V de
+WSL bloque le port 8081 en entrée, et le QR code « charge » indéfiniment sans `--tunnel`. Ne
+pas lancer Metro avec `CI=1` : le rechargement à chaud est alors désactivé et l'app garde
+l'ancien code sans prévenir.
+
+Alternative par câble USB (plus rapide) : `adb reverse tcp:8081 tcp:8081` (avec l'`adb.exe`
+de Windows), puis dans l'app « Enter URL manually » → `http://localhost:8081`.
 
 Puis sur le téléphone : ouvrir l'app **postkeep**, et se connecter au serveur.
 

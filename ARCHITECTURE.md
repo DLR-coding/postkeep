@@ -221,18 +221,37 @@ Routing par fichiers avec `expo-router`. Structure actuelle :
 
 ```
 src/app/
-├── _layout.tsx          # Layout racine : providers globaux + Stack
+├── _layout.tsx          # Layout racine : providers globaux + Stack + feuille de détail
 ├── +native-intent.tsx   # Redirection des partages entrants (démarrage à froid)
 ├── shareintent.tsx      # Écran de réception d'un partage (modale)
+├── collection/[id].tsx  # Posts d'une collection (écran empilé)
 └── (tabs)/              # Groupe d'onglets
-    ├── _layout.tsx
-    ├── index.tsx
-    └── explore.tsx
+    ├── _layout.tsx      # Onglets JS + barre flottante GlassTabBar
+    ├── index.tsx        # All posts
+    └── collections.tsx  # Collections (dossiers)
 ```
 
-**Le groupe `(tabs)` est nécessaire**, pas cosmétique : les onglets natifs ne peuvent pas
-présenter un écran hors-onglets. Il faut un `Stack` racine qui contienne à la fois le groupe
-d'onglets et l'écran `shareintent` en modale.
+**Le groupe `(tabs)` est nécessaire**, pas cosmétique : il faut un `Stack` racine qui contienne
+à la fois le groupe d'onglets et les écrans hors onglets (`shareintent` en modale,
+`collection/[id]`).
+
+**Barre d'onglets (refonte du 10 novembre 2026)** : `NativeTabs` a été remplacé par les onglets
+JS d'`expo-router` (`expo-router/js-tabs`, `tabBar={() => null}`) et une barre dessinée par
+l'app, `src/components/glass-tab-bar.tsx` (recherche + onglets Posts / Collections). Raisons et
+pièges :
+
+- La barre native ne peut contenir ni champ de recherche ni verre dépoli.
+- Sur Android, `expo-blur` exige que le `BlurView` soit **à côté** de sa cible
+  `BlurTargetView`, pas dedans : la barre est donc rendue en frère du `BlurTargetView` qui
+  enveloppe les onglets, et lit l'onglet actif via `usePathname` (navigation par
+  `router.navigate`).
+- En edge-to-edge la fenêtre n'est pas redimensionnée par le clavier : la barre suit le clavier
+  avec `useAnimatedKeyboard` (Reanimated).
+- Le texte de recherche vit dans un store d'interface (`src/stores/nav-search-store.ts`), vidé à
+  chaque changement d'onglet.
+
+Conception et plan : `docs/superpowers/specs/2026-11-10-refonte-ui-design.md`,
+`docs/superpowers/plans/2026-11-10-refonte-ui.md`.
 
 ### Réception d'un partage : deux chemins distincts
 
@@ -259,6 +278,8 @@ le provider racine, le partage arrive mais rien ne se passe.
 | `expo-share-intent` | 8.0.1 | Version requise pour SDK 57 (le plugin vérifie et refuse un décalage) |
 | `react-native-reanimated` | 4.5.1 | Version fournie par le SDK 57 |
 | `react-native-gesture-handler` | 2.32.0 | Idem |
+| `expo-blur` | ~57.0.3 | Module natif (refonte) : flou de la barre flottante. Sur Android, `BlurTargetView` + `blurTarget`, `blurMethod="dimezisBlurViewSdk31Plus"` |
+| `react-native-webview` | 13.16.1 | Module natif : lecture des balises `og:` d'Instagram/TikTok dans une WebView cachée (`src/lib/webview-metadata.tsx`) |
 
 ⚠️ **La documentation officielle d'Expo recommande NativeWind v5 pour le SDK 57.
 Ne pas la suivre sur ce projet** — elle casse React Native Reusables.

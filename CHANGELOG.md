@@ -19,6 +19,13 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Refonte de l'interface** (10 novembre 2026) : barre de navigation flottante en verre
+  dépoli avec recherche intégrée (`src/components/glass-tab-bar.tsx`, remplace `NativeTabs`),
+  liste All posts en lignes « Fiche » avec vignette 9:16 et vignette de secours aux couleurs
+  de la plateforme, filtres par plateforme, surlignage de la recherche (insensible aux
+  accents), écran Collections en dossiers avec aperçu des miniatures, feuille de détail
+  restylée. Modules natifs ajoutés : `expo-blur`.
+
 - **Consultation des posts sauvegardés** (Phase 3) : liste (`@shopify/flash-list`,
   `(tabs)/index.tsx`), carte de post (`src/components/post-card.tsx` — plateforme, note,
   badges de collection tronqués à 3 + `+N`, date), état vide soigné
@@ -99,6 +106,13 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
   avant le premier rebuild natif pour ne pas consommer un second crédit EAS plus tard
 
 ### Corrigé
+
+- **La note ne défilait pas en mode édition** : le conteneur d'édition (`BottomSheetView`,
+  `flex: 1`) n'avait pas de hauteur bornée et grandissait avec la note ; il prend maintenant
+  la hauteur de la fenêtre moins la poignée et le clavier. Un glissé dans la note ne replie
+  plus la feuille, et l'en-tête et les collections se replient pendant la saisie.
+- **Icônes de la barre d'état invisibles en mode clair** depuis le passage aux onglets JS
+  (`<StatusBar style="auto" />`).
 
 - **Trois bugs de réactivité `useLiveQuery`** (`drizzle-orm/expo-sqlite`, `src/db/posts.ts`) :
   la fonction n'écoute que la table du `.from()` racine d'une requête, jamais les tables

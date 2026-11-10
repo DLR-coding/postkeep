@@ -27,9 +27,22 @@ Dernière mise à jour : 4 septembre 2026
 
 ---
 
+## 🟢 Refonte de l'interface (10 novembre 2026)
+
+Conception : [docs/superpowers/specs/2026-11-10-refonte-ui-design.md](./docs/superpowers/specs/2026-11-10-refonte-ui-design.md)
+
+- [x] Barre flottante en verre dépoli (recherche + onglets), remplace `NativeTabs`
+- [x] All posts en lignes « Fiche » (vignette 9:16, légende, note, collections), filtres par
+      plateforme, recherche avec surlignage
+- [x] Collections en dossiers (miniatures récentes, plateforme dominante, « + » en haut)
+- [x] Feuille de détail restylée ; en édition la note défile seule et reste visible au clavier
+- [x] Vérifié sur appareil (Galaxy S23), clair et sombre
+- [ ] Non testé sur appareil : enregistrer après avoir coché/décoché des collections en
+      édition, « + New » depuis l'édition
+
 ## 🟢 Phase 7 — Polish UI/UX (repérées le 31 août 2026)
 
-- [ ] **Écran d'édition plein écran — réagencer** : collections en pastilles sur 2 lignes
+- [x] **Écran d'édition plein écran — réagencer** (fait dans la refonte, 10 novembre 2026) : collections en pastilles sur 2 lignes
       scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
       Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
       seulement la fin quand la note est longue
