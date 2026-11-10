@@ -9,7 +9,7 @@ import { FolderMinus, Trash2 } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { removePostFromCollection, softDeletePost, type PostListItem } from '@/db/posts';
-import { detectPlatform, PLATFORM_META, type Platform } from '@/lib/share-url';
+import { detectPlatform, isVerticalVideo, PLATFORM_META, type Platform } from '@/lib/share-url';
 import { THEME } from '@/lib/theme';
 import { usePostDetailStore } from '@/stores/post-detail-store';
 
@@ -34,14 +34,6 @@ function SwipeAction({
       <Icon as={icon} className="text-white" size={20} />
     </Pressable>
   );
-}
-
-/** TikTok et Reels Instagram sont des vidéos verticales 9:16. */
-function isVerticalVideo(url: string | null, platform: Platform | null): boolean {
-  if (!url || !platform) return false;
-  if (platform === 'tiktok') return true;
-  if (platform === 'instagram' && url.includes('/reel/')) return true;
-  return false;
 }
 
 /** Badge plateforme avec le style sticker (rotation, bordure, ombre). */

@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { analyzeSharedUrl, detectPlatform, extractCaptionFromText, normalizeUrl } from './share-url.ts';
+import {
+  analyzeSharedUrl,
+  detectPlatform,
+  extractCaptionFromText,
+  isVerticalVideo,
+  normalizeUrl,
+} from './share-url.ts';
 
 test('detectPlatform reconnaît les quatre plateformes', () => {
   assert.equal(detectPlatform('https://www.instagram.com/reel/abc/'), 'instagram');
@@ -77,4 +83,13 @@ test('extractCaptionFromText gère les URLs de tracking supplémentaires', () =>
     extractCaptionFromText('Great content! https://instagram.com/reel/abc https://tracking.link/xyz', 'https://instagram.com/reel/abc'),
     'Great content!'
   );
+});
+
+test('isVerticalVideo : TikTok et Reels seulement', () => {
+  const check = (url: string | null) => isVerticalVideo(url, url ? detectPlatform(url) : null);
+  assert.equal(check('https://www.tiktok.com/@a/video/1'), true);
+  assert.equal(check('https://www.instagram.com/reel/abc/'), true);
+  assert.equal(check('https://www.instagram.com/p/abc/'), false);
+  assert.equal(check('https://x.com/a/status/1'), false);
+  assert.equal(check(null), false);
 });

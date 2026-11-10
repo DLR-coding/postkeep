@@ -59,6 +59,14 @@ export function normalizeUrl(url: string, platform: Platform | null): string | n
   }
 }
 
+/** TikTok et Reels Instagram sont des vidéos verticales 9:16 : vignette et cadre
+ *  en 9:16 sans attendre de connaître la taille réelle de l'image. */
+export function isVerticalVideo(url: string | null, platform: Platform | null): boolean {
+  if (!url || !platform) return false;
+  if (platform === 'tiktok') return true;
+  return platform === 'instagram' && url.includes('/reel/');
+}
+
 export type AnalyzedUrl = {
   url: string;
   platform: Platform | null;
