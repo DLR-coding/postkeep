@@ -32,6 +32,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ChevronUp, Trash2, X } from 'lucide-react-native';
 
+import Svg, { LinearGradient, Rect, Stop } from 'react-native-svg';
+
+import { PostThumb } from '@/components/post-thumb';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -52,7 +55,7 @@ import { usePostDetailStore } from '@/stores/post-detail-store';
 type Colors = (typeof THEME)['light'];
 type PlatformMeta = (typeof PLATFORM_META)[keyof typeof PLATFORM_META];
 
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
@@ -310,21 +313,38 @@ export function PostDetailSheet() {
                   </Button>
                 </>
               ) : (
-                <Button
-                  className="flex-1"
-                  style={meta ? { backgroundColor: meta.color } : undefined}
-                  onPress={handleOpen}>
-                  <Text style={meta ? { color: '#fff' } : undefined}>
-                    Open in {meta?.label ?? 'the original app'}
-                  </Text>
-                </Button>
+                <View className="flex-1 overflow-hidden rounded-md">
+                  {platform === 'instagram' && (
+                    <Svg
+                      width="100%"
+                      height="100%"
+                      viewBox="0 0 1 1"
+                      preserveAspectRatio="none"
+                      style={{ position: 'absolute' }}>
+                      <LinearGradient id="open-ig" x1="0" y1="0" x2="1" y2="0">
+                        <Stop offset="0" stopColor="#f7a24a" />
+                        <Stop offset="0.55" stopColor="#e4405f" />
+                        <Stop offset="1" stopColor="#a33ab9" />
+                      </LinearGradient>
+                      <Rect width="1" height="1" fill="url(#open-ig)" />
+                    </Svg>
+                  )}
+                  <Button
+                    className="w-full"
+                    style={{ backgroundColor: platform === 'instagram' ? 'transparent' : (meta?.color ?? undefined) }}
+                    onPress={handleOpen}>
+                    <Text style={meta ? { color: '#fff' } : undefined}>
+                      Open in {meta?.label ?? 'the original app'}
+                    </Text>
+                  </Button>
+                </View>
               )}
             </Animated.View>
           </View>
         </BottomSheetFooter>
       );
     },
-    [displayedPost, index, insets.bottom, meta, handleOpen, onSave, handleDelete]
+    [displayedPost, index, insets.bottom, meta, platform, handleOpen, onSave, handleDelete]
   );
 
   return (
@@ -377,53 +397,61 @@ export function PostDetailSheet() {
             <Text variant="muted">This post no longer exists.</Text>
           ) : (
             <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
-              <PlatformHeader url={displayedPost.url} meta={meta} colors={colors} thumbnailUrl={displayedPost.thumbnailUrl} />
+              <View className="flex-row gap-3.5">
+                <PostThumb post={displayedPost} width={92} />
+                <View className="min-w-0 flex-1 gap-1.5 pt-1">
+                  <Text className="text-[15px] font-semibold">{meta?.label ?? 'Text'}</Text>
+                  {!!displayedPost.url && (
+                    <Text variant="muted" className="text-[11px]" numberOfLines={1} selectable>
+                      {displayedPost.url}
+                    </Text>
+                  )}
+                  <View className="flex-row flex-wrap gap-1">
+                    {(displayedPost.collectionNames.length > 0
+                      ? displayedPost.collectionNames
+                      : ['No collection']
+                    ).map((name) => (
+                      <View key={name} className="rounded-full bg-chip px-2 py-0.5">
+                        <Text className="text-[11px] text-chip-foreground">{name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <Text variant="muted" className="text-[11px]">
+                    Saved {dateFormatter.format(displayedPost.createdAt)}
+                  </Text>
+                </View>
+              </View>
 
               {!!displayedPost.caption && (
-                <View className="mt-6 gap-2">
-                  <Text variant="large">Caption</Text>
-                  <Text selectable className="text-sm leading-5">
+                <View className="mt-5 gap-1.5">
+                  <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Caption
+                  </Text>
+                  <Text selectable className="text-[13px] leading-[1.4]">
                     {displayedPost.caption}
                   </Text>
                 </View>
               )}
 
               {!!displayedPost.note && (
-                <View className="mt-6 gap-2">
-                  <Text variant="large">Note</Text>
-                  <View className="rounded-xl bg-muted p-3.5" style={{ borderCurve: 'continuous' }}>
-                    <Text selectable className="text-sm leading-5">
+                <View className="mt-5 gap-1.5">
+                  <Text className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Note
+                  </Text>
+                  <View className="rounded-xl bg-note px-3 py-2.5" style={{ borderCurve: 'continuous' }}>
+                    <Text selectable className="text-[13px] leading-[1.4]">
                       {displayedPost.note}
                     </Text>
                   </View>
                 </View>
               )}
 
-            {displayedPost.collectionNames.length > 0 && (
-              <View className="mt-6 gap-2">
-                <Text variant="large">Collections</Text>
-                <View className="flex-row flex-wrap gap-1.5">
-                  {displayedPost.collectionNames.map((name) => (
-                    <View key={name} className="rounded-full bg-muted px-2.5 py-1">
-                      <Text variant="muted" className="text-xs">
-                        {name}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
+              <View className="mt-6 flex-row items-center justify-center gap-1 opacity-60">
+                <Icon as={ChevronUp} size={12} color={colors.mutedForeground} />
+                <Text variant="muted" className="text-xs">
+                  Pull up to edit
+                </Text>
               </View>
-            )}
-
-            <Text variant="muted" className="mt-8 text-xs">
-              Edited on {dateFormatter.format(displayedPost.updatedAt)}
-            </Text>
-
-            <View className="mt-6 flex-row items-center justify-center gap-1 opacity-60">
-              <Icon as={ChevronUp} size={12} color={colors.mutedForeground} />
-              <Text variant="muted" className="text-xs">
-                Tirer vers le haut pour modifier
-              </Text>
-            </View>
             </Animated.View>
           )}
         </BottomSheetScrollView>
