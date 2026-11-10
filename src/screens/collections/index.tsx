@@ -3,7 +3,6 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
   BottomSheetModal,
-  BottomSheetTextInput,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
@@ -14,7 +13,6 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   Pressable,
-  StyleSheet,
   useColorScheme,
   useWindowDimensions,
   View,
@@ -22,7 +20,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
-import { Button } from '@/components/ui/button';
+import { CollectionChip } from '@/components/collection-chip';
+import { sheetBackgroundStyle, SheetActions, SheetField } from '@/components/sheet-kit';
 import {
   Dialog,
   DialogContent,
@@ -116,53 +115,49 @@ function CollectionActionsSheet({
         ref={sheetRef}
         snapPoints={['40%']}
         enableDynamicSizing={false}
-        keyboardBehavior="fillParent"
+        keyboardBehavior="interactive"
         backdropComponent={renderBackdrop}
         onDismiss={() => setMode('menu')}
-        backgroundStyle={{ backgroundColor: colors.card }}
+        backgroundStyle={sheetBackgroundStyle(colors)}
         handleIndicatorStyle={{ backgroundColor: colors.mutedForeground }}>
-        <BottomSheetView className="gap-1 px-4 pb-8 pt-2">
+        <BottomSheetView className="px-6 pb-8 pt-2">
           {mode === 'rename' && (
-            <View className="gap-3 px-2 py-3">
-              <Text variant="large">Rename</Text>
-              <BottomSheetTextInput
+            <View className="gap-4 py-2">
+              <Text className="text-xl font-semibold">Rename</Text>
+              <SheetField
                 autoFocus
                 value={name}
                 onChangeText={setName}
                 onSubmitEditing={submitRename}
                 selectTextOnFocus
-                placeholderTextColor={colors.mutedForeground}
-                style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
               />
-              <View className="flex-row gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onPress={() => {
-                    setName(collection.name);
-                    Keyboard.dismiss();
-                    setMode('menu');
-                  }}>
-                  <Text>Cancel</Text>
-                </Button>
-                <Button className="flex-1" onPress={submitRename}>
-                  <Text>Rename</Text>
-                </Button>
-              </View>
+              <SheetActions
+                onCancel={() => {
+                  setName(collection.name);
+                  Keyboard.dismiss();
+                  setMode('menu');
+                }}
+                confirmLabel="Rename"
+                confirmDisabled={!name.trim()}
+                onConfirm={submitRename}
+              />
             </View>
           )}
 
           {mode === 'menu' && (
             <>
-              <Text variant="large" className="px-2 pb-2 pt-1" numberOfLines={1}>
-                {collection.name}
-              </Text>
+              <View className="flex-row items-center gap-3 pb-3 pt-1">
+                <CollectionChip name={collection.name} size="md" />
+                <Text variant="muted" className="text-sm">
+                  {collection.postCount} post{collection.postCount === 1 ? '' : 's'}
+                </Text>
+              </View>
               <Pressable
                 onPress={() => {
                   setName(collection.name);
                   setMode('rename');
                 }}
-                className="flex-row items-center gap-3 rounded-xl px-3 py-3 active:bg-muted">
+                className="flex-row items-center gap-3 border-b border-border py-4 active:opacity-60">
                 <Icon as={Pencil} size={20} color={colors.foreground} />
                 <Text className="text-base">Rename</Text>
               </Pressable>
@@ -171,7 +166,7 @@ function CollectionActionsSheet({
                   sheetRef.current?.dismiss();
                   setConfirmOpen(true);
                 }}
-                className="flex-row items-center gap-3 rounded-xl px-3 py-3 active:bg-muted">
+                className="flex-row items-center gap-3 py-4 active:opacity-60">
                 <Icon as={Trash2} size={20} color={colors.destructive} />
                 <Text className="text-base" style={{ color: colors.destructive }}>
                   Delete
@@ -189,12 +184,12 @@ function CollectionActionsSheet({
             <DialogDescription>The posts it contains are not deleted.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onPress={() => setConfirmOpen(false)}>
-              <Text>Cancel</Text>
-            </Button>
-            <Button variant="destructive" onPress={handleDelete}>
-              <Text>Delete</Text>
-            </Button>
+            <SheetActions
+              onCancel={() => setConfirmOpen(false)}
+              confirmLabel="Delete"
+              destructive
+              onConfirm={handleDelete}
+            />
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -258,38 +253,33 @@ function CreateCollectionSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMo
       ref={sheetRef}
       snapPoints={['40%']}
       enableDynamicSizing={false}
-      keyboardBehavior="fillParent"
+      keyboardBehavior="interactive"
       backdropComponent={renderBackdrop}
       onDismiss={() => setName('')}
-      backgroundStyle={{ backgroundColor: colors.card }}
+      backgroundStyle={sheetBackgroundStyle(colors)}
       handleIndicatorStyle={{ backgroundColor: colors.mutedForeground }}>
-      <BottomSheetView className="gap-3 px-4 pb-8 pt-2">
-        <Text variant="large" className="px-2 pb-1 pt-1">
-          New collection
-        </Text>
-        <BottomSheetTextInput
-          autoFocus
-          value={name}
-          onChangeText={setName}
-          onSubmitEditing={submitCreate}
-          placeholder="Name"
-          placeholderTextColor={colors.mutedForeground}
-          style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
-        />
-        <View className="flex-row gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onPress={() => {
-              Keyboard.dismiss();
-              sheetRef.current?.dismiss();
-            }}>
-            <Text>Cancel</Text>
-          </Button>
-          <Button className="flex-1" onPress={submitCreate}>
-            <Text>Create</Text>
-          </Button>
+      <BottomSheetView className="gap-4 px-6 pb-8 pt-2">
+        <Text className="text-xl font-semibold">New collection</Text>
+        <SheetField autoFocus value={name} onChangeText={setName} onSubmitEditing={submitCreate} placeholder="Name" />
+        {/* Aperçu de la puce telle qu'elle apparaîtra (teinte calculée depuis le nom). */}
+        <View style={{ minHeight: 32, justifyContent: 'center' }}>
+          {name.trim() ? (
+            <CollectionChip name={name.trim()} size="md" />
+          ) : (
+            <Text variant="muted" className="text-sm">
+              Its colour comes from its name.
+            </Text>
+          )}
         </View>
+        <SheetActions
+          onCancel={() => {
+            Keyboard.dismiss();
+            sheetRef.current?.dismiss();
+          }}
+          confirmLabel="Create"
+          confirmDisabled={!name.trim()}
+          onConfirm={submitCreate}
+        />
       </BottomSheetView>
     </BottomSheetModal>
   );
@@ -385,12 +375,3 @@ export function CollectionsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-});

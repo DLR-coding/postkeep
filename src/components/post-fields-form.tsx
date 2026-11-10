@@ -9,10 +9,11 @@ import {
 import { Controller, type Control } from 'react-hook-form';
 import { isNull } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
-import { Check, Plus } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import { z } from 'zod';
 
 import { CollectionChip } from '@/components/collection-chip';
+import { sheetBackgroundStyle, SheetActions, SheetField } from '@/components/sheet-kit';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -86,12 +87,10 @@ function CollectionPicker({
   return (
     <>
       {collections.length > 6 && (
-        <BottomSheetTextInput
+        <SheetField
           value={search}
           onChangeText={setSearch}
           placeholder="Search for a collection…"
-          placeholderTextColor={colors.mutedForeground}
-          style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
         />
       )}
 
@@ -110,14 +109,8 @@ function CollectionPicker({
               onPress={toggle}
               accessibilityRole="checkbox"
               accessibilityState={{ checked }}
-              className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-              style={{ backgroundColor: checked ? colors.primary : colors.muted }}>
-              {checked && <Icon as={Check} size={12} color={colors.primaryForeground} />}
-              <Text
-                className="text-sm"
-                style={{ color: checked ? colors.primaryForeground : colors.foreground }}>
-                {collection.name}
-              </Text>
+              accessibilityLabel={collection.name}>
+              <CollectionChip name={collection.name} size="md" selected={checked} />
             </Pressable>
           );
         })}
@@ -130,7 +123,7 @@ function CollectionPicker({
 
       {creatingCollection ? (
         <View className="gap-2">
-          <BottomSheetTextInput
+          <SheetField
             autoFocus
             value={newCollectionName}
             onChangeText={(text) => {
@@ -139,30 +132,23 @@ function CollectionPicker({
             }}
             onSubmitEditing={handleCreateCollection}
             placeholder="Collection name"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, { borderColor: colors.border, color: colors.foreground }]}
           />
           {nameError && <Text className="text-destructive">{nameError}</Text>}
-          <View className="flex-row gap-2">
-            <Button size="sm" onPress={handleCreateCollection}>
-              <Text>Add</Text>
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onPress={() => {
-                setCreatingCollection(false);
-                setNewCollectionName('');
-                setNameError(null);
-              }}>
-              <Text>Cancel</Text>
-            </Button>
-          </View>
+          <SheetActions
+            onCancel={() => {
+              setCreatingCollection(false);
+              setNewCollectionName('');
+              setNameError(null);
+            }}
+            confirmLabel="Add"
+            onConfirm={handleCreateCollection}
+          />
         </View>
       ) : (
         <Button
-          variant="outline"
-          size="sm"
+          variant="ghost"
+          className="h-12 rounded-2xl"
+          style={{ backgroundColor: colors.chip }}
           onPress={() => {
             setNewCollectionName(search.trim());
             setCreatingCollection(true);
@@ -205,7 +191,7 @@ function CollectionPickerSheet({
       snapPoints={['60%']}
       enableDynamicSizing={false}
       keyboardBehavior="fillParent"
-      backgroundStyle={{ backgroundColor: colors.card }}
+      backgroundStyle={sheetBackgroundStyle(colors)}
       handleIndicatorStyle={{ backgroundColor: colors.mutedForeground }}>
       <BottomSheetScrollView contentContainerStyle={styles.pickerContent} keyboardShouldPersistTaps="handled">
         <Text variant="large">Collections</Text>
