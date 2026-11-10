@@ -5,9 +5,11 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanim
 import * as Haptics from 'expo-haptics';
 import { FolderMinus, Trash2 } from 'lucide-react-native';
 
+import { CollectionChip } from '@/components/collection-chip';
 import { HighlightedText, PostThumb } from '@/components/post-thumb';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { RADIUS } from '@/lib/design';
 import { removePostFromCollection, softDeletePost, type PostListItem } from '@/db/posts';
 import { detectPlatform, PLATFORM_META } from '@/lib/share-url';
 import { usePostDetailStore } from '@/stores/post-detail-store';
@@ -127,7 +129,7 @@ export function PostCard({
               />
             )}
             {!!item.note && (
-              <View className="rounded-lg bg-note px-2 py-1.5">
+              <View className="bg-surface px-2.5 py-2" style={{ borderRadius: RADIUS.inset }}>
                 <HighlightedText
                   text={`Note  ${item.note}`}
                   query={highlightQuery}
@@ -137,12 +139,10 @@ export function PostCard({
               </View>
             )}
             <View className="flex-row flex-wrap gap-1">
-              {(item.collectionNames.length > 0 ? item.collectionNames : ['No collection']).map(
-                (name) => (
-                  <View key={name} className="rounded-full bg-chip px-2 py-0.5">
-                    <Text className="text-[11px] text-chip-foreground">{name}</Text>
-                  </View>
-                )
+              {item.collectionNames.length > 0 ? (
+                item.collectionNames.map((name) => <CollectionChip key={name} name={name} />)
+              ) : (
+                <CollectionChip name={null} />
               )}
             </View>
           </View>

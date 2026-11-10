@@ -19,6 +19,13 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Système de design** (10 novembre 2026, d'après les références de feuilles, widgets et
+  l'animation « Invite ») : jetons de forme et d'espacement (`src/lib/design.ts` — champs et
+  boutons 16, cartes 24, feuilles 28), fond gris chaud en mode clair avec surfaces blanches,
+  puces de collection avec un rond pastel et l'initiale (teinte stable par nom,
+  `src/lib/collection-tint.ts`), « Saved ✓ » sur le bouton avant la fermeture de la feuille,
+  ✓ animé sur les puces cochées.
+
 - **Refonte de l'interface** (10 novembre 2026) : barre de navigation flottante en verre
   dépoli avec recherche intégrée (`src/components/glass-tab-bar.tsx`, remplace `NativeTabs`),
   liste All posts en lignes « Fiche » avec vignette 9:16 et vignette de secours aux couleurs

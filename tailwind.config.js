@@ -62,6 +62,7 @@ module.exports = {
           foreground: 'var(--chip-foreground)',
         },
         pill: 'var(--pill)',
+        surface: 'var(--surface)',
       },
       borderRadius: {
         lg: 'var(--radius)',

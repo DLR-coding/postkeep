@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { PlatformSticker } from '@/components/platform-sticker';
 import { Text } from '@/components/ui/text';
 import type { CollectionPreview } from '@/lib/collection-previews';
+import { RADIUS } from '@/lib/design';
 import { THEME } from '@/lib/theme';
 
 /** Feuilles qui dépassent du dossier : position horizontale et inclinaison (maquette A). */
@@ -52,7 +53,7 @@ export function CollectionFolder({
             right: 0,
             top: height * 0.14,
             bottom: 0,
-            borderRadius: 16,
+            borderRadius: RADIUS.card,
             backgroundColor: colors.folderBack,
           }}
         />
@@ -104,7 +105,7 @@ export function CollectionFolder({
             right: 0,
             bottom: 0,
             top: height * 0.3,
-            borderRadius: 16,
+            borderRadius: RADIUS.card,
             backgroundColor: colors.folderFront,
             borderWidth: virtual ? 1.5 : 1,
             borderStyle: virtual ? 'dashed' : 'solid',

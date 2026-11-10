@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 40 9% 95.5%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -30,18 +30,20 @@
     --chart-5: 27 87% 67%;
     /* Refonte (docs/superpowers/specs/2026-11-10-refonte-ui-design.md) — couleurs
        complètes, pas au format `H S% L%`, parce que plusieurs ont une transparence. */
-    --glass: rgba(238, 238, 242, 0.82);
+    --glass: rgba(255, 255, 255, 0.8);
     --glass-border: rgba(255, 255, 255, 0.95);
-    --folder-back: #e5e6ea;
+    --folder-back: #e5e3de;
     --folder-sheet: #ffffff;
     --folder-sheet-line: #e1e3e8;
-    --folder-front: rgba(243, 243, 246, 0.72);
+    --folder-front: rgba(255, 255, 255, 0.72);
     --folder-front-border: rgba(255, 255, 255, 0.95);
     --note: #f1f1f4;
     --note-foreground: #5d6069;
-    --chip: #e6e7eb;
+    --chip: #e9e7e2;
     --chip-foreground: #4a4d55;
-    --pill: #efeff2;
+    --pill: #e9e7e2;
+    /* Encart posé sur le fond (note dans la liste) : blanc en clair. */
+    --surface: #ffffff;
   }
 
   .dark:root {
@@ -80,5 +82,6 @@
     --chip: #2a2d35;
     --chip-foreground: #b6bbc6;
     --pill: #1f2128;
+    --surface: #1b1d23;
   }
 }

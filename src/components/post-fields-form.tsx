@@ -12,6 +12,7 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Check, Plus } from 'lucide-react-native';
 import { z } from 'zod';
 
+import { CollectionChip } from '@/components/collection-chip';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -257,14 +258,8 @@ function CollectionChips({
               }
               accessibilityRole="checkbox"
               accessibilityState={{ checked }}
-              className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-              style={{ backgroundColor: checked ? colors.primary : colors.chip }}>
-              {checked && <Icon as={Check} size={12} color={colors.primaryForeground} />}
-              <Text
-                className="text-sm"
-                style={{ color: checked ? colors.primaryForeground : colors.chipForeground }}>
-                {collection.name}
-              </Text>
+              accessibilityLabel={collection.name}>
+              <CollectionChip name={collection.name} size="md" selected={checked} />
             </Pressable>
           );
         })}

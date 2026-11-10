@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, type Theme } from 'expo-router/react-navigatio
 
 export const THEME = {
   light: {
-    background: 'hsl(0 0% 100%)',
+    background: 'hsl(40 9% 95.5%)',
     foreground: 'hsl(0 0% 3.9%)',
     card: 'hsl(0 0% 100%)',
     cardForeground: 'hsl(0 0% 3.9%)',
@@ -27,18 +27,19 @@ export const THEME = {
     chart4: 'hsl(43 74% 66%)',
     chart5: 'hsl(27 87% 67%)',
     // Refonte — mêmes valeurs que `global.css` (`:root`).
-    glass: 'rgba(238, 238, 242, 0.82)',
+    glass: 'rgba(255, 255, 255, 0.8)',
     glassBorder: 'rgba(255, 255, 255, 0.95)',
-    folderBack: '#e5e6ea',
+    folderBack: '#e5e3de',
     folderSheet: '#ffffff',
     folderSheetLine: '#e1e3e8',
-    folderFront: 'rgba(243, 243, 246, 0.72)',
+    folderFront: 'rgba(255, 255, 255, 0.72)',
     folderFrontBorder: 'rgba(255, 255, 255, 0.95)',
     note: '#f1f1f4',
     noteForeground: '#5d6069',
-    chip: '#e6e7eb',
+    chip: '#e9e7e2',
     chipForeground: '#4a4d55',
-    pill: '#efeff2',
+    pill: '#e9e7e2',
+    surface: '#ffffff',
     // Fond du bouton « Delete » doux (texte `destructive`), comme les feuilles de référence.
     destructiveSoft: 'rgba(239, 68, 68, 0.12)',
   },
@@ -80,6 +81,7 @@ export const THEME = {
     chip: '#2a2d35',
     chipForeground: '#b6bbc6',
     pill: '#1f2128',
+    surface: '#1b1d23',
     destructiveSoft: 'rgba(239, 68, 68, 0.18)',
   },
 };

@@ -98,7 +98,7 @@ export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<View | null>
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder={onCollections ? 'Search collections' : 'Search notes and links'}
+            placeholder={onCollections ? 'Search collections' : 'Search posts'}
             placeholderTextColor={colors.mutedForeground}
             className="flex-1 py-0 text-base text-foreground"
             returnKeyType="search"

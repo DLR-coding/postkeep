@@ -31,10 +31,11 @@ import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { ChevronUp, X } from 'lucide-react-native';
+import { Check, ChevronUp, X } from 'lucide-react-native';
 
 import Svg, { LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { CollectionChip } from '@/components/collection-chip';
 import { PostThumb } from '@/components/post-thumb';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -50,6 +51,7 @@ import {
   type PostListItem,
 } from '@/db/posts';
 import { detectPlatform, PLATFORM_META, type Platform } from '@/lib/share-url';
+import { RADIUS } from '@/lib/design';
 import { THEME } from '@/lib/theme';
 import { usePostDetailStore } from '@/stores/post-detail-store';
 
@@ -67,7 +69,7 @@ const HANDLE_HEIGHT = 28;
 /** Système de design de la feuille (références : feuilles et widgets aux coins très
  *  arrondis) : coins de feuille 28, boutons et puces en pilule de 48 px de haut, champ
  *  de note arrondi à 16, 16 px d'air minimum entre le contenu et le pied. */
-const SHEET_RADIUS = 28;
+const SHEET_RADIUS = RADIUS.sheet;
 const FOOTER_GAP = 16;
 
 const PREVIEW_INDEX = 0;
@@ -155,7 +157,7 @@ function OpenButton({
   onPress: () => void;
 }) {
   return (
-    <View className={`overflow-hidden rounded-full ${grow ? 'flex-1' : ''}`}>
+    <View className={`overflow-hidden rounded-2xl ${grow ? 'flex-1' : ''}`}>
       {platform === 'instagram' && (
         <Svg width="100%" height="100%" viewBox="0 0 1 1" preserveAspectRatio="none" style={{ position: 'absolute' }}>
           <LinearGradient id="open-ig" x1="0" y1="0" x2="1" y2="0">
@@ -167,7 +169,7 @@ function OpenButton({
         </Svg>
       )}
       <Button
-        className={`h-12 rounded-full px-5 ${grow ? 'w-full' : ''}`}
+        className={`h-12 rounded-2xl px-5 ${grow ? 'w-full' : ''}`}
         style={{ backgroundColor: platform === 'instagram' ? 'transparent' : (meta?.color ?? undefined) }}
         onPress={onPress}>
         <Text className={meta ? 'text-white' : undefined}>{label}</Text>
@@ -210,6 +212,8 @@ export function PostDetailSheet() {
   const sheetRef = useRef<BottomSheetModal>(null);
   const [index, setIndex] = useState(PREVIEW_INDEX);
   const [isDeleting, setIsDeleting] = useState(false);
+  // « Saved ✓ » affiché un instant sur le bouton avant de fermer (référence « Invite »).
+  const [saved, setSaved] = useState(false);
   // `BottomSheetView` (contenu non-scrollable de l'édition, cf. plus bas) n'a
   // pas l'ajustement automatique de marge qu'offre `enableFooterMarginAdjustment`
   // sur les composants scrollables — mesuré via `onLayout` sur le footer.
@@ -285,7 +289,9 @@ export function PostDetailSheet() {
   const onSave = useCallback(
     () =>
       handleSubmit((values) => {
-        if (!postId) return;
+        // Déjà enregistré : la feuille se ferme dans un instant, un second appui ne
+        // doit rien refaire (pas d'état désactivé, qui griserait « Saved ✓ »).
+        if (!postId || saved) return;
         savePost({
           id: postId,
           url: post?.url ?? null,
@@ -293,9 +299,10 @@ export function PostDetailSheet() {
           collectionIds: values.collectionIds,
         });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        sheetRef.current?.dismiss();
+        setSaved(true);
+        setTimeout(() => sheetRef.current?.dismiss(), 650);
       })(),
-    [handleSubmit, postId, post?.url]
+    [handleSubmit, postId, post?.url, saved]
   );
 
   const handleDelete = useCallback(() => {
@@ -326,6 +333,7 @@ export function PostDetailSheet() {
     Keyboard.dismiss();
     usePostDetailStore.getState().close();
     setIsDeleting(false);
+    setSaved(false);
     setFrozenPost(null);
     setIndex(PREVIEW_INDEX);
   }, []);
@@ -354,7 +362,7 @@ export function PostDetailSheet() {
                 <>
                   <Button
                     variant="ghost"
-                    className="h-12 rounded-full px-5"
+                    className="h-12 rounded-2xl px-5"
                     style={{ backgroundColor: colors.destructiveSoft }}
                     onPress={handleDelete}
                     accessibilityLabel="Delete">
@@ -363,8 +371,14 @@ export function PostDetailSheet() {
                   {!!displayedPost.url && (
                     <OpenButton platform={platform} meta={meta} label="Open" onPress={handleOpen} />
                   )}
-                  <Button className="h-12 flex-1 rounded-full" onPress={onSave}>
-                    <Text className="font-semibold">Save</Text>
+                  <Button className="h-12 flex-1 rounded-2xl" onPress={onSave}>
+                    <Animated.View
+                      key={saved ? 'saved' : 'save'}
+                      entering={FadeIn.duration(140)}
+                      className="flex-row items-center gap-1.5">
+                      <Text className="font-semibold">{saved ? 'Saved' : 'Save'}</Text>
+                      {saved && <Icon as={Check} size={16} color={colors.primaryForeground} />}
+                    </Animated.View>
                   </Button>
                 </>
               ) : (
@@ -381,7 +395,7 @@ export function PostDetailSheet() {
         </BottomSheetFooter>
       );
     },
-    [displayedPost, index, insets.bottom, meta, platform, colors, handleOpen, onSave, handleDelete]
+    [displayedPost, index, insets.bottom, meta, platform, colors, saved, handleOpen, onSave, handleDelete]
   );
 
   return (
@@ -449,14 +463,11 @@ export function PostDetailSheet() {
             <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
               <PostHero post={displayedPost} meta={meta}>
                 <View className="flex-row flex-wrap gap-1">
-                  {(displayedPost.collectionNames.length > 0
-                    ? displayedPost.collectionNames
-                    : ['No collection']
-                  ).map((name) => (
-                    <View key={name} className="rounded-full bg-chip px-2 py-0.5">
-                      <Text className="text-[11px] text-chip-foreground">{name}</Text>
-                    </View>
-                  ))}
+                  {displayedPost.collectionNames.length > 0 ? (
+                    displayedPost.collectionNames.map((name) => <CollectionChip key={name} name={name} />)
+                  ) : (
+                    <CollectionChip name={null} />
+                  )}
                 </View>
               </PostHero>
 
