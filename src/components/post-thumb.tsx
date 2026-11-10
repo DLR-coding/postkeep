@@ -60,7 +60,7 @@ function PlatformBackdrop({ platform, width, height }: { platform: Platform; wid
 }
 
 /** Texte avec le terme de recherche surligné (jaune, lisible sur tous les fonds). */
-function HighlightedText({ text, query, ...rest }: { text: string; query?: string } & React.ComponentProps<typeof Text>) {
+export function HighlightedText({ text, query, ...rest }: { text: string; query?: string } & React.ComponentProps<typeof Text>) {
   return (
     <Text {...rest}>
       {splitHighlight(text, query ?? '').map((seg, i) =>

@@ -1,16 +1,27 @@
 import { useMemo, useState } from 'react';
-import { Pressable, TextInput, useColorScheme, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useColorScheme, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
-import { Bookmark, Search, X } from 'lucide-react-native';
+import { Bookmark } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { PlatformFilterPills } from '@/components/platform-filter-pills';
 import { PostCard } from '@/components/post-card';
+import { TAB_BAR_CLEARANCE } from '@/components/glass-tab-bar';
 import { activePostsQuery, groupPostRows, type PostListItem } from '@/db/posts';
+import { filterPosts, type PlatformFilter } from '@/lib/post-filters';
 import { THEME } from '@/lib/theme';
+import { useNavSearchStore } from '@/stores/nav-search-store';
+
+const FILTER_LABEL: Record<PlatformFilter, string> = {
+  all: '',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  x: 'X',
+};
 
 function EmptyState() {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
@@ -30,51 +41,37 @@ function EmptyState() {
 }
 
 export default function HomeScreen() {
-  const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
   const { data: rows } = useLiveQuery(activePostsQuery());
   const posts = useMemo(() => groupPostRows(rows), [rows]);
 
-  const [query, setQuery] = useState('');
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredPosts = normalizedQuery
-    ? posts.filter(
-        (post) =>
-          post.note?.toLowerCase().includes(normalizedQuery) ||
-          post.url?.toLowerCase().includes(normalizedQuery)
-      )
-    : posts;
-  const nothingFound = !!normalizedQuery && filteredPosts.length === 0;
+  const [platform, setPlatform] = useState<PlatformFilter>('all');
+  const query = useNavSearchStore((s) => s.query).trim();
+  const filteredPosts = useMemo(() => filterPosts(posts, { platform, query }), [posts, platform, query]);
   const isEmpty = filteredPosts.length === 0;
+  const filtering = platform !== 'all' || !!query;
+
+  const count = filteredPosts.length;
+  const countLine = query
+    ? `${count} result${count === 1 ? '' : 's'} for “${query}”${platform !== 'all' ? ` in ${FILTER_LABEL[platform]}` : ''}`
+    : `${count} ${FILTER_LABEL[platform]} post${count === 1 ? '' : 's'}`;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-5 pb-2 pt-4 text-3xl font-bold">All posts</Text>
-
-      {posts.length > 0 && (
-        <View className="mx-5 mb-3 flex-row items-center gap-2 rounded-xl border border-border bg-card px-3">
-          <Icon as={Search} size={18} color={colors.mutedForeground} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search a note or a URL…"
-            placeholderTextColor={colors.mutedForeground}
-            className="flex-1 py-2.5 text-base text-foreground"
-          />
-          {query.length > 0 && (
-            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
-              <Icon as={X} size={16} color={colors.mutedForeground} />
-            </Pressable>
-          )}
-        </View>
+      <Text className="px-5 pb-3 pt-4 text-3xl font-bold">All posts</Text>
+      {posts.length > 0 && <PlatformFilterPills value={platform} onChange={setPlatform} />}
+      {posts.length > 0 && filtering && (
+        <Text variant="muted" className="px-5 pb-1 pt-1 text-xs">
+          {countLine}
+        </Text>
       )}
 
       <FlashList<PostListItem>
         data={filteredPosts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PostCard item={item} />}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        renderItem={({ item }) => <PostCard item={item} highlightQuery={query} />}
         ListEmptyComponent={
-          nothingFound ? (
+          posts.length > 0 && filtering ? (
             <View className="flex-1 items-center justify-center px-8 py-16">
               <Text variant="muted" className="text-center">
                 No matching post.
@@ -84,7 +81,9 @@ export default function HomeScreen() {
             EmptyState
           )
         }
-        contentContainerStyle={isEmpty ? { flexGrow: 1 } : { padding: 16 }}
+        contentContainerStyle={
+          isEmpty ? { flexGrow: 1 } : { paddingBottom: TAB_BAR_CLEARANCE + insets.bottom + 16 }
+        }
       />
     </SafeAreaView>
   );

@@ -25,7 +25,6 @@ export function CollectionScreen() {
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard item={item} collectionId={isUncategorized ? undefined : id} />}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center px-8 py-16">
             <Text variant="muted" className="text-center">
@@ -33,7 +32,7 @@ export function CollectionScreen() {
             </Text>
           </View>
         }
-        contentContainerStyle={isEmpty ? { flexGrow: 1 } : { padding: 16 }}
+        contentContainerStyle={isEmpty ? { flexGrow: 1 } : undefined}
       />
     </View>
   );
