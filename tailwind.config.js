@@ -41,6 +41,27 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // Refonte : couleurs complètes (avec transparence), pas de `<alpha-value>`.
+        glass: {
+          DEFAULT: 'var(--glass)',
+          border: 'var(--glass-border)',
+        },
+        folder: {
+          back: 'var(--folder-back)',
+          sheet: 'var(--folder-sheet)',
+          'sheet-line': 'var(--folder-sheet-line)',
+          front: 'var(--folder-front)',
+          'front-border': 'var(--folder-front-border)',
+        },
+        note: {
+          DEFAULT: 'var(--note)',
+          foreground: 'var(--note-foreground)',
+        },
+        chip: {
+          DEFAULT: 'var(--chip)',
+          foreground: 'var(--chip-foreground)',
+        },
+        pill: 'var(--pill)',
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.32",
+    "expo-blur": "~57.0.3",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.12",
     "expo-dev-client": "~57.0.21",

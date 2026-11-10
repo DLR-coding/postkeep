@@ -28,6 +28,20 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    /* Refonte (docs/superpowers/specs/2026-11-10-refonte-ui-design.md) — couleurs
+       complètes, pas au format `H S% L%`, parce que plusieurs ont une transparence. */
+    --glass: rgba(238, 238, 242, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.95);
+    --folder-back: #e5e6ea;
+    --folder-sheet: #ffffff;
+    --folder-sheet-line: #e1e3e8;
+    --folder-front: rgba(243, 243, 246, 0.72);
+    --folder-front-border: rgba(255, 255, 255, 0.95);
+    --note: #f1f1f4;
+    --note-foreground: #5d6069;
+    --chip: #e6e7eb;
+    --chip-foreground: #4a4d55;
+    --pill: #efeff2;
   }
 
   .dark:root {
@@ -54,5 +68,17 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --glass: rgba(34, 36, 44, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --folder-back: #22242b;
+    --folder-sheet: #2b2e37;
+    --folder-sheet-line: #3c404b;
+    --folder-front: rgba(46, 49, 60, 0.72);
+    --folder-front-border: rgba(255, 255, 255, 0.08);
+    --note: #1d1f26;
+    --note-foreground: #aeb3bf;
+    --chip: #2a2d35;
+    --chip-foreground: #b6bbc6;
+    --pill: #1f2128;
   }
 }
