@@ -4,6 +4,7 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack, ThemeProvider, useRouter } from 'expo-router';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -85,6 +86,9 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ShareIntentProvider options={{ debug: __DEV__ }}>
           <ThemeProvider value={NAV_THEME[colorScheme]}>
+            {/* Icônes de la barre d'état selon le thème : sans ça elles restaient
+                blanches en mode clair depuis la barre d'onglets JS (refonte). */}
+            <StatusBar style="auto" />
             <BottomSheetModalProvider>
               <MetadataExtractorProvider>
                 {/* Le partage n'est routé qu'une fois les migrations passées : l'écran de
