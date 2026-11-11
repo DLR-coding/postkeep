@@ -67,7 +67,9 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
 **Risque connu, ouvert :**
 
-- [ ] **Session terminée sans notre `signOut()`** (jeton de rafraîchissement révoqué,
+- [x] **Session terminée sans notre `signOut()`** — corrigé le 11 novembre 2026 : la première
+      synchro d'un autre compte supprime d'abord ces lignes (`dropOtherAccountRows`). Pas vu
+      sur appareil. (jeton de rafraîchissement révoqué,
       session expirée côté serveur…) : l'app passe en mode sans compte sans vider la base.
       Les lignes de l'ancien compte restent sur le téléphone et s'afficheraient sous un autre
       compte connecté ensuite (les lectures ne filtrent pas sur `user_id` ; le push, lui, ne
@@ -123,18 +125,18 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 | TikTok | ✅ WebView | ✅ WebView |
 | X | ✅ oEmbed | ❌ |
 | Threads | ❌ | ❌ |
-| Reddit | ❌ | ❌ |
+| Reddit | ✅ `.json` (titre) | ✅ `.json` |
 | YouTube et autres liens | lien seul (non reconnu comme plateforme, query conservée) | ❌ |
 
-- [ ] *(Option)* **Légende et miniature Reddit** via l'endpoint public `.json` du post — non
-      fait ; Reddit est seulement reconnu (`reddit.com`, `redd.it`)
+- [x] *(Option)* **Légende et miniature Reddit** via l'endpoint public `.json` du post — fait
+      (11 novembre 2026), pas vu sur appareil ; liens `redd.it` et `/s/` non résolus
 
 ## 🟤 Dette technique
 
 - [x] `scrapeMetaTags` (`src/lib/oembed.ts`) : code mort depuis l'abandon du scraping
       Instagram/TikTok au profit de la WebView cachée — supprimé (11 novembre 2026)
-- [ ] `npm test` (`node --test`) lance 0 test sous Node 22.13 — en attendant :
-      `node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/lib/sync/*.test.ts src/screens/collections/tile-size.test.ts`
+- [x] `npm test` (`node --test`) lançait 0 test sous Node 22.13 — le script liste
+      maintenant les dossiers de tests explicitement (11 novembre 2026)
 - [x] Erreur lint dans `src/hooks/use-color-scheme.web.ts` (`react-hooks/set-state-in-effect`)
       — `useSyncExternalStore` à la place de l'effet (11 novembre 2026)
 - [x] [ARCHITECTURE.md](./ARCHITECTURE.md) §4 : la normalisation d'URL décrite ne dit pas que

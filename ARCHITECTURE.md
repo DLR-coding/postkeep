@@ -240,7 +240,7 @@ de TanStack Query.
 | **Instagram** | ✅ | ✅ | WebView cachée (`src/lib/webview-metadata.tsx`) |
 | **TikTok** | ✅ | ✅ | WebView cachée (`src/lib/webview-metadata.tsx`) |
 | **X (Twitter)** | ✅ | ❌ | oEmbed (`api.twitter.com/1/statuses/oembed.json`, `fetchOEmbed` dans `src/lib/oembed.ts`) : texte du tweet seulement |
-| **Reddit** | ❌ | ❌ | Rien pour l'instant. Possible via l'endpoint public `.json` d'un post, non fait |
+| **Reddit** | ✅ | ✅ | Vue publique `.json` du permalien (`<post>/.json`, `fetchOEmbed` dans `src/lib/oembed.ts`, User-Agent `PostKeep/0.3 (Android app)`) : titre du post, miniature `preview.images[0].source.url` sinon `thumbnail`. Seuls les liens `/comments/` sont traités : `redd.it` et les liens de partage `/s/` ne sont pas résolus, et un refus (403/429) laisse vide |
 | **Threads** | ❌ | ❌ | Jamais supporté |
 | **Autres** (YouTube, articles…) | ❌ | ❌ | Aucune récupération |
 
@@ -620,5 +620,8 @@ jusqu'à la remise en route du projet depuis le tableau de bord.
   une plus récente (`shortcut:` dans `engine.ts`). Négligeable à un utilisateur.
 - **Session terminée sans notre `signOut()`** (jeton de rafraîchissement révoqué, par
   exemple) : les lignes de l'ancien compte restent sur le téléphone et s'afficheraient sous
-  un autre compte connecté ensuite (les lectures ne filtrent pas sur `user_id`). Elles ne
-  partent pas dans ce compte (le push ne prend que `user_id = uid` ou `NULL`). Ouvert (TODO).
+  un autre compte connecté ensuite (les lectures ne filtrent pas sur `user_id`). Corrigé le
+  11 novembre 2026 : la première synchro d'un compte sur l'appareil supprime d'abord les
+  lignes d'un autre `user_id` (`dropOtherAccountRows`, `engine.ts`). Seules leurs
+  modifications jamais poussées sont perdues. En mode sans compte, elles restent visibles
+  jusqu'à la prochaine connexion.

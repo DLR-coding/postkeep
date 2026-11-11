@@ -503,10 +503,9 @@ node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/lib/s
 # → tests 59, pass 59
 ```
 
-⚠️ **`npm test` lance 0 test sous Node 22.13** (la version de `.nvmrc`) et affiche quand
-même un succès : le script est un simple `node --test`, et Node 22.13 ne ramasse pas les
-fichiers `.ts` sans `--experimental-strip-types`. Sous Node 24, `npm test` trouve bien les
-tests. Utiliser la commande explicite ci-dessus.
+`npm test` lance exactement cette commande (Node 22 comme Node 24). Un nouveau dossier de
+tests doit être ajouté à la liste du script `test` de `package.json` : Node 22.13 ne
+découvre pas seul les fichiers `.ts`.
 
 ---
 
@@ -615,7 +614,7 @@ Le rappel minimal pour le travail quotidien :
 | Le dev client plante à l'ouverture d'un deep link (« App react context shouldn't be created before… ») | Processus de l'app resté vivant | `adb shell am force-stop com.thejohninc.postkeep`, puis relancer le deep link (§3) |
 | Un build ne contient pas un module natif pourtant installé | Le module n'était pas commité : EAS builde depuis `HEAD` | Commiter, relancer le build (§7) |
 | Lien de téléchargement d'un vieux build « Expired » | Les artefacts EAS expirent | Prendre l'APK de la GitHub Release (§8) |
-| `npm test` affiche 0 test | Node 22.13 ne ramasse pas les `.ts` | Commande explicite du §10 |
+| `npm test` n'exécute pas un nouveau test | Son dossier manque dans le script `test` de `package.json` | L'ajouter à la liste |
 | `Unable to resolve module ...` | Paquet installé pendant que Metro tournait | `Ctrl+C` puis `npx expo start --dev-client --clear` |
 | Les classes Tailwind ne s'appliquent pas | Cache Metro | `npx expo start --clear` |
 | L'app crash au démarrage après un `npm install` | Module natif ajouté sans rebuild | Refaire un `eas build --profile development` |

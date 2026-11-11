@@ -117,6 +117,21 @@ export async function pull(uid: string): Promise<void> {
   }
 }
 
+/** Lignes d'un autre compte restées sur l'appareil : sa session a pris fin sans notre
+ *  `signOut()` (jeton révoqué, expiré hors ligne…), donc sans le vidage local. Elles
+ *  s'afficheraient sous le nouveau compte sans jamais lui être poussées. Vrai DELETE,
+ *  même exception que `wipeLocalData()` (spec, objectif 6) : ce compte garde ses lignes
+ *  côté serveur ; seules ses modifications jamais poussées sont perdues, et ce compte
+ *  n'est plus connecté pour les pousser. WHERE explicite : un DELETE sans WHERE ne
+ *  prévient pas `useLiveQuery` (optimisation truncate de SQLite). */
+function dropOtherAccountRows(uid: string): void {
+  db.transaction((tx) => {
+    for (const name of [...ORDER].reverse()) {
+      tx.run(sql`DELETE FROM ${TABLES[name]} WHERE user_id IS NOT NULL AND user_id <> ${uid}`);
+    }
+  });
+}
+
 /** Fusion des doublons invités dans le compte, après le premier pull (objectif 5). */
 function mergeGuestRows(uid: string): void {
   // Condition sans nom de table : valable telle quelle sur les trois.
@@ -151,6 +166,7 @@ async function syncOnce(uid: string): Promise<void> {
   // fusion. Marque posée avant le pull pour ne pas renvoyer tout ce qui vient d'arriver ;
   // les lignes invitées repartent quand même, le rattachement les date de maintenant.
   if (!Storage.getItemSync(key(uid, 'push'))) Storage.setItemSync(key(uid, 'push'), String(Date.now()));
+  dropOtherAccountRows(uid);
   await pull(uid);
   mergeGuestRows(uid);
   await push(uid);

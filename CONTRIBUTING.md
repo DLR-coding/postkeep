@@ -221,13 +221,12 @@ taille des tuiles…) est testée avec le **test runner natif de Node** (`node:t
 dépendance), dans des fichiers `*.test.ts` placés à côté du module testé :
 
 ```bash
-node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts
+npm test
 ```
 
-> ⚠️ `npm test` (`node --test` seul) **ne lance aucun test sous Node 22** — la version
-> épinglée dans `.nvmrc` — car la découverte automatique n'y inclut pas les fichiers `.ts`.
-> Il fonctionne sous Node 24 (44 tests). En attendant la correction (voir
-> [TODO.md](./TODO.md)), utiliser la commande ci-dessus.
+> Le script liste explicitement les dossiers de tests (`src/lib/`, `src/lib/sync/`,
+> `src/screens/collections/`) : Node 22, épinglé dans `.nvmrc`, ne découvre pas seul les
+> fichiers `.ts`. Un test dans un nouveau dossier → ajouter ce dossier au script.
 
 Une logique nouvelle qui ne dépend ni de React ni d'un module natif va dans `src/lib/` (ou à
 côté de son écran) **avec son test**.
