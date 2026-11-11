@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
-import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { FolderMinus, Trash2 } from 'lucide-react-native';
 
@@ -63,10 +62,10 @@ export function PostCard({
   const [confirm, setConfirm] = useState<'delete' | 'remove' | null>(null);
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(200)}
-      exiting={FadeOut.duration(150)}
-      layout={LinearTransition}>
+    // Pas d'animation Reanimated (entering / exiting / layout) sur la ligne : FlashList
+    // recycle les lignes, et l'animation faisait glisser chaque ligne réutilisée vers sa
+    // nouvelle taille pendant le défilement (cartes qui « se déplacent », vu sur appareil).
+    <View>
       <Swipeable
         renderRightActions={() => (
           <View className="flex-row py-3">
@@ -147,6 +146,6 @@ export function PostCard({
           }}
         />
       )}
-    </Animated.View>
+    </View>
   );
 }

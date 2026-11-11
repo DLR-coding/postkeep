@@ -25,6 +25,9 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - Une miniature qui ne se charge plus (lien expiré, 404) laisse place à la vignette de
   secours au lieu d'un rectangle gris vide.
 - Un nom de collection très long est tronqué au lieu de faire déborder sa puce de l'écran.
+- Défilement de la liste des posts : les lignes ne « glissent » plus et ne s'affichent plus
+  un instant au mauvais endroit (animation de mise en page retirée des lignes recyclées par
+  FlashList). La suppression par balayage n'a plus de fondu.
 - Les lignes de « All posts » n'affichent que 3 collections, puis « +N » (le détail du
   post les montre toutes).
 
