@@ -1,0 +1,23 @@
+# Le projet Supabase gratuit se met en pause après 7 jours sans requête : une lecture
+# tous les 3 jours le garde éveillé (spec comptes-synchro, objectif 8). La RLS renvoie
+# une liste vide à la clé publishable, mais la requête atteint bien la base.
+# Limite : GitHub désactive un workflow planifié après 60 jours sans activité sur le
+# dépôt — il prévient par email, un clic le relance.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: curl -fsS -o /dev/null "$SUPABASE_URL/rest/v1/collections?select=id&limit=1" -H "apikey: $SUPABASE_KEY"
