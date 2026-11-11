@@ -112,6 +112,33 @@ function CollectionPicker({
         </View>
       )}
 
+      {/* Formulaire de création juste sous le « + » : en bas de la liste, ses boutons
+          finissaient sous le clavier. */}
+      {creatingCollection && (
+        <View className="gap-2">
+          <SheetField
+            autoFocus
+            value={newCollectionName}
+            onChangeText={(text) => {
+              setNewCollectionName(text);
+              if (nameError) setNameError(null);
+            }}
+            onSubmitEditing={handleCreateCollection}
+            placeholder="Collection name"
+          />
+          {nameError && <Text className="text-destructive">{nameError}</Text>}
+          <SheetActions
+            onCancel={() => {
+              setCreatingCollection(false);
+              setNewCollectionName('');
+              setNameError(null);
+            }}
+            confirmLabel="Add"
+            onConfirm={handleCreateCollection}
+          />
+        </View>
+      )}
+
       <View className="flex-row flex-wrap gap-2">
         {visible.map((collection) => {
           const checked = field.value.includes(collection.id);
@@ -140,30 +167,6 @@ function CollectionPicker({
         )}
       </View>
 
-      {creatingCollection && (
-        <View className="gap-2">
-          <SheetField
-            autoFocus
-            value={newCollectionName}
-            onChangeText={(text) => {
-              setNewCollectionName(text);
-              if (nameError) setNameError(null);
-            }}
-            onSubmitEditing={handleCreateCollection}
-            placeholder="Collection name"
-          />
-          {nameError && <Text className="text-destructive">{nameError}</Text>}
-          <SheetActions
-            onCancel={() => {
-              setCreatingCollection(false);
-              setNewCollectionName('');
-              setNameError(null);
-            }}
-            confirmLabel="Add"
-            onConfirm={handleCreateCollection}
-          />
-        </View>
-      )}
     </>
   );
 }
