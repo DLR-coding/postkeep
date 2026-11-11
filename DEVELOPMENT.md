@@ -482,6 +482,7 @@ Le rappel minimal pour le travail quotidien :
 | Les classes Tailwind ne s'appliquent pas | Cache Metro | `npx expo start --clear` |
 | L'app crash au démarrage après un `npm install` | Module natif ajouté sans rebuild | Refaire un `eas build --profile development` |
 | Écran rouge « native module not found » | Idem — le natif manque dans le dev client | Idem |
+| `expo-doctor` plante : `Cannot find module '@expo/env'` | `expo-doctor@latest` 1.21.7 (publié le 11 novembre 2026) est cassé | `npx expo-doctor@1.20.5` (tag `sdk-57`) |
 | `expo-doctor` signale des versions décalées | Nouvelles versions patch publiées | `npx expo install --fix` |
 | Le CLI RNR reste bloqué sans rien afficher | Il attend une réponse interactive | Relancer avec `--yes` |
 | Texte invisible (noir sur noir en mode sombre) | `Text` de `react-native` au lieu de celui de RNR | Importer `Text` depuis `@/components/ui/text` |

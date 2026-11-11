@@ -50,9 +50,10 @@ Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage 
       scrollables **en haut**, champ Note en dessous qui prend le reste de la page. C'est le champ
       Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
       seulement la fin quand la note est longue
-- [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
-      pleine largeur « + New collection » par une icône « + » seule, positionnée à droite de
-      la barre de recherche (`src/components/post-fields-form.tsx`, vers la ligne 159)
+- [x] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : le bouton
+      pleine largeur « + New collection » est remplacé par une icône « + » à droite de la barre
+      de recherche ; sous 7 collections (pas de recherche), par la puce « + New » en pointillés
+      en fin de liste, la même qu'en édition (11 novembre 2026). Pas encore vu sur appareil
 - [x] **Dialog de confirmation de suppression d'un post (mode édition)** : l'`Alert.alert` natif
       est remplacé par `ConfirmDialog` (`src/components/sheet-kit.tsx`), rendu dans la feuille
       plein écran via un `PortalHost` dédié (`SHEET_PORTAL`) — le même composant sert au
@@ -77,13 +78,21 @@ Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage 
 
 ## 🟤 Dette technique
 
-- [ ] `scrapeMetaTags` (`src/lib/oembed.ts`) : code mort depuis l'abandon du scraping
-      Instagram/TikTok au profit de la WebView cachée
+- [x] `scrapeMetaTags` (`src/lib/oembed.ts`) : code mort depuis l'abandon du scraping
+      Instagram/TikTok au profit de la WebView cachée — supprimé (11 novembre 2026)
 - [ ] `npm test` (`node --test`) lance 0 test sous Node 22.13 — en attendant :
       `node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts`
-- [ ] Erreur lint dans `src/hooks/use-color-scheme.web.ts` (`react-hooks/set-state-in-effect`)
-- [ ] [ARCHITECTURE.md](./ARCHITECTURE.md) §4 : la normalisation d'URL décrite ne dit pas que
+- [x] Erreur lint dans `src/hooks/use-color-scheme.web.ts` (`react-hooks/set-state-in-effect`)
+      — `useSyncExternalStore` à la place de l'effet (11 novembre 2026)
+- [x] [ARCHITECTURE.md](./ARCHITECTURE.md) §4 : la normalisation d'URL décrite ne dit pas que
       la query est conservée pour les liens non reconnus (YouTube `?v=…`)
+- [x] Filtre Threads absent des pilules alors que Threads est reconnu — ajouté (11 novembre 2026)
+- [x] `versionCode` resté à 1 en v0.2.0 : `autoIncrement` ajouté au profil `production`
+      d'`eas.json` (11 novembre 2026)
+- [x] Date « 8 Sept » en septembre (`Intl` en `en-GB`) : mois écrits à la main, « 8 Sep »
+      (11 novembre 2026)
+- [x] `src/app/(tabs)/index.tsx` (151 lignes) déplacé dans `src/screens/posts/` (règle des
+      ~80 lignes de CONTRIBUTING.md) (11 novembre 2026)
 - [ ] Supprimer `handoff.txt` (notes de session non suivies, à la racine)
 
 ## ⏭️ Ensuite

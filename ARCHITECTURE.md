@@ -243,9 +243,8 @@ User-Agent mobile.
    récupération sur l'appareil, qui respecte aussi le « pas de serveur en V1 » (§1)
 4. **Share intent Android** — Instagram/TikTok n'envoient que l'URL brute
 
-⚠️ **Code mort** : `scrapeMetaTags` dans `src/lib/oembed.ts` (approche 2) n'est plus appelé —
-`fetchOEmbed` ne traite que X et renvoie vide pour tout le reste. Le commentaire d'en-tête du
-fichier, qui parle encore de scraping des `og:*`, est périmé. À supprimer.
+`scrapeMetaTags` (approche 2) a été supprimé de `src/lib/oembed.ts` le 11 novembre 2026 :
+`fetchOEmbed` ne traite plus que X et renvoie vide pour tout le reste.
 
 **Solution retenue** : `react-native-webview` en mode invisible (1×1 px, positionné hors
 écran, `incognito`, sans cache ni lecture automatique des médias). La page est chargée avec un

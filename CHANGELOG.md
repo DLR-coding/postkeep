@@ -15,6 +15,22 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Ajouté
+
+- Filtre **Threads** dans les pilules de « All posts ».
+
+### Modifié
+
+- Feuille de choix des collections : le bouton pleine largeur « + New collection » devient
+  une icône « + » à droite de la recherche, ou la puce « + New » en pointillés quand il y a
+  6 collections ou moins.
+- `eas.json` : `autoIncrement` sur le profil `production`, pour que chaque release ait son
+  propre `versionCode` (resté à 1 en v0.2.0).
+
+### Corrigé
+
+- Date affichée « 8 Sept » en septembre ; tous les mois s'écrivent maintenant en trois lettres.
+
 ## [0.2.0] — 11 novembre 2026
 
 APK : [GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.2.0).

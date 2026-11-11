@@ -8,6 +8,7 @@ const FILTERS: { value: PlatformFilter; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'x', label: 'X' },
+  { value: 'threads', label: 'Threads' },
   { value: 'reddit', label: 'Reddit' },
 ];
 
@@ -20,7 +21,7 @@ export function PlatformFilterPills({
   onChange: (value: PlatformFilter) => void;
 }) {
   return (
-    // Défile à l'horizontale : cinq pilules ne tiennent pas sur un écran étroit.
+    // Défile à l'horizontale : six pilules ne tiennent pas sur un écran étroit.
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
