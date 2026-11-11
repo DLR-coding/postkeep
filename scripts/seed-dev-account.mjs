@@ -94,7 +94,7 @@ const POSTS = [
   { k: 'emoji-only', url: 'https://www.threads.net/@dev/post/DEVemoji1', caption: '🔥🔥🔥 🍜🍣🍱 ✨', cols: ['Ω'] },
   { k: 'unknown-site', url: 'https://example.com/blog/2026/11/a-very-long-article-slug-to-test-url-truncation?ref=newsletter&utm=keep', caption: 'Unknown website: neutral fallback, query kept', cols: ['Read later'] },
   { k: 'opened', url: 'https://www.youtube.com/watch?v=devOpened01', caption: 'Already opened once', opened: true, cols: [] },
-  { k: 'old-2024', url: 'https://www.instagram.com/p/DEVold2024/', caption: 'Saved in 2024 — the date must show the year', days: 500, cols: ['Travel — Japan'] },
+  { k: 'old-2024', url: 'https://www.instagram.com/p/DEVold2024/', caption: 'Saved in 2024 — the date must show the year', days: 700, cols: ['Travel — Japan'] },
   { k: 'tombstone', url: 'https://www.instagram.com/p/DEVdeleted/', caption: 'DELETED — must never appear', deleted: true, cols: ['Recipes'] },
 
   // — Volume : défilement et grille —

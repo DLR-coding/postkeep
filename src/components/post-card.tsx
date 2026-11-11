@@ -39,6 +39,10 @@ function SwipeAction({
   );
 }
 
+// Au-delà, « +N » : une ligne de la liste ne doit pas grandir avec le nombre de collections
+// (le détail du post les montre toutes).
+const MAX_CHIPS = 3;
+
 /** Ligne « Fiche » de la refonte (spec, objectif 2) : vignette 9:16 à gauche, à droite
  *  « Plateforme · date », légende, note, puces de collection. `collectionId` : présent
  *  dans une vue collection, ajoute le balayage « Retirer de la collection »
@@ -114,7 +118,14 @@ export function PostCard({
             )}
             <View className="flex-row flex-wrap gap-1">
               {item.collectionNames.length > 0 ? (
-                item.collectionNames.map((name) => <CollectionChip key={name} name={name} />)
+                <>
+                  {item.collectionNames.slice(0, MAX_CHIPS).map((name) => (
+                    <CollectionChip key={name} name={name} />
+                  ))}
+                  {item.collectionNames.length > MAX_CHIPS && (
+                    <CollectionChip name={null} label={`+${item.collectionNames.length - MAX_CHIPS}`} />
+                  )}
+                </>
               ) : (
                 <CollectionChip name={null} />
               )}

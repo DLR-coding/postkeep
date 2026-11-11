@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Text as RNText, useColorScheme, View } from 'react-native';
 import { Image } from 'expo-image';
 import Svg, { Circle, Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -102,6 +103,7 @@ export function PostThumb({
   children?: React.ReactNode;
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const platform = post.url ? detectPlatform(post.url) : null;
   const height = Math.round((width * 16) / 9);
   // Coins de vignette proportionnels et continus (squircle sur iOS ; Android arrondit).
@@ -119,11 +121,16 @@ export function PostThumb({
     </View>
   ) : null;
 
-  if (post.thumbnailUrl) {
+  // Miniature en échec (404, URL signée expirée…) → vignette de secours. Comparée à l'URL
+  // et non booléenne : FlashList recycle le composant d'une ligne à l'autre.
+  const failed = failedUrl !== null && failedUrl === post.thumbnailUrl;
+  const onError = () => setFailedUrl(post.thumbnailUrl);
+
+  if (post.thumbnailUrl && !failed) {
     return (
       <View style={[frame, { backgroundColor: colors.muted }]}>
         {vertical ? (
-          <Image source={{ uri: post.thumbnailUrl }} contentFit="cover" style={{ width, height }} />
+          <Image source={{ uri: post.thumbnailUrl }} contentFit="cover" onError={onError} style={{ width, height }} />
         ) : (
           <>
             {/* Flou statique de l'image, calculé une fois (spec, anti-objectifs). */}
@@ -131,6 +138,7 @@ export function PostThumb({
             <Image
               source={{ uri: post.thumbnailUrl }}
               contentFit="contain"
+              onError={onError}
               style={{ position: 'absolute', top: 0, left: 0, width, height }}
             />
           </>

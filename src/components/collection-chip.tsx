@@ -21,10 +21,13 @@ export function CollectionChip({
   name,
   size = 'sm',
   selected = false,
+  label,
 }: {
   name: string | null;
   size?: 'sm' | 'md';
   selected?: boolean;
+  /** Texte d'une puce sans collection (défaut « No collection »), ex. « +3 ». */
+  label?: string;
 }) {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const colors = THEME[scheme];
@@ -34,6 +37,8 @@ export function CollectionChip({
     <View
       className="flex-row items-center self-start rounded-full"
       style={{
+        // Un nom très long est tronqué (…) au lieu de faire déborder la puce de sa ligne.
+        maxWidth: '100%',
         gap: s.gap,
         paddingLeft: tint ? s.padL : s.padR,
         paddingRight: s.padR,
@@ -52,11 +57,12 @@ export function CollectionChip({
       <Text
         numberOfLines={1}
         style={{
+          flexShrink: 1,
           fontSize: s.text,
           lineHeight: Math.round(s.text * 1.3),
           color: selected ? colors.primaryForeground : colors.chipForeground,
         }}>
-        {name ?? 'No collection'}
+        {name ?? label ?? 'No collection'}
       </Text>
       {selected && (
         <Animated.View entering={ZoomIn.duration(160)} exiting={ZoomOut.duration(120)}>

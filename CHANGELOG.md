@@ -20,6 +20,14 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - **Reddit** : titre et miniature du post récupérés à l'enregistrement (flux RSS public du
   post). Les liens courts `redd.it` et `/s/` n'ont que le titre (oEmbed officiel).
 
+### Corrigé
+
+- Une miniature qui ne se charge plus (lien expiré, 404) laisse place à la vignette de
+  secours au lieu d'un rectangle gris vide.
+- Un nom de collection très long est tronqué au lieu de faire déborder sa puce de l'écran.
+- Les lignes de « All posts » n'affichent que 3 collections, puis « +N » (le détail du
+  post les montre toutes).
+
 ## [0.3.0] — 11 novembre 2026
 
 APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.3.0).
