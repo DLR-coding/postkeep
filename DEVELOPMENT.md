@@ -403,9 +403,14 @@ n'est appliquée qu'une fois : en écrire une nouvelle plutôt que de modifier u
 
 ### Compte de dev
 
-Un compte réservé aux tests, `postkeep-dev@example.com`, rempli de données factices
-(15 posts sur toutes les plateformes, 5 collections, des notes, un post sans collection,
-un partage sans lien). Identifiants dans `.env.local` (`POSTKEEP_DEV_EMAIL`,
+Le bac à sable de vérification : `postkeep-dev@example.com`, rempli de façon à couvrir tout
+ce qui peut casser l'affichage — toutes les plateformes (dont un vrai post Reddit avec sa
+miniature), vignettes verticale / carrée / paysage / cassée (404), note et légende très
+longues, nom de collection de 60 caractères, accents et emoji (recherche insensible aux
+accents), un post dans toutes les collections (troncature `+N`), une collection vide, un
+lien inconnu, un post déjà ouvert, un post de 2024 (date avec année), une pierre tombale
+qui ne doit jamais s'afficher, et 40 posts de volume pour le défilement et la grille
+(70 posts, 11 collections). Un cas à couvrir de plus → l'ajouter à la référence du script. Identifiants dans `.env.local` (`POSTKEEP_DEV_EMAIL`,
 `POSTKEEP_DEV_PASSWORD`), jamais commités.
 
 ```bash
@@ -413,9 +418,9 @@ npm run seed:dev              # crée le compte s'il manque, ajoute la référen
 npm run seed:dev -- --reset   # réécrit la référence et supprime tout le reste
 ```
 
-**Les posts ajoutés pendant les tests font partie du jeu de test et restent** (ex. : le
-post Reddit partagé le 11 novembre pour vérifier la miniature). Sans `--reset`, le script
-ne modifie ni ne supprime rien d'existant. `--reset` seulement sur demande explicite.
+Sans `--reset`, le script ne modifie ni ne supprime rien d'existant. `--reset` remet le
+compte exactement à la référence (ce qui a été ajouté à la main pendant un test est
+supprimé : un cas qui mérite de rester va dans la référence).
 Contenu de référence : `scripts/seed-dev-account.mjs`.
 
 ⚠️ Se connecter à ce compte sur un téléphone qui a des posts **sans compte** les rattache
