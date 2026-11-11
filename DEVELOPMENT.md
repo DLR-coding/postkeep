@@ -409,12 +409,14 @@ un partage sans lien). Identifiants dans `.env.local` (`POSTKEEP_DEV_EMAIL`,
 `POSTKEEP_DEV_PASSWORD`), jamais commités.
 
 ```bash
-npm run seed:dev   # crée le compte s'il manque, puis remet son contenu à l'état de référence
+npm run seed:dev              # crée le compte s'il manque, ajoute la référence manquante
+npm run seed:dev -- --reset   # réécrit la référence et supprime tout le reste
 ```
 
-Relançable à volonté : les lignes de référence ont des ids fixes et sont réécrites ; tout
-ce qui a été créé pendant des tests passe en suppression logique (les appareils connectés
-le reçoivent à la synchro suivante). Contenu : `scripts/seed-dev-account.mjs`.
+**Les posts ajoutés pendant les tests font partie du jeu de test et restent** (ex. : le
+post Reddit partagé le 11 novembre pour vérifier la miniature). Sans `--reset`, le script
+ne modifie ni ne supprime rien d'existant. `--reset` seulement sur demande explicite.
+Contenu de référence : `scripts/seed-dev-account.mjs`.
 
 ⚠️ Se connecter à ce compte sur un téléphone qui a des posts **sans compte** les rattache
 au compte de dev (fusion à la première connexion). Sur le téléphone de tous les jours,

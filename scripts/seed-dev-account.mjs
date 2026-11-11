@@ -1,9 +1,10 @@
-// Compte de dev : crée le compte s'il n'existe pas, puis remet son contenu à l'état de
-// référence ci-dessous (posts, collections, rangements de test). Relançable à volonté :
-// les lignes de référence ont des ids fixes et sont réécrites, tout le reste du compte
-// passe en suppression logique (comme l'app, jamais de vrai DELETE).
+// Compte de dev : crée le compte s'il n'existe pas, puis crée les posts, collections et
+// rangements de référence ci-dessous qui manquent (ids fixes, relançable à volonté).
+// Les posts ajoutés pendant les tests (partages réels…) sont GARDÉS : ils font partie du
+// jeu de test. Seul `--reset` les passe en suppression logique (jamais de vrai DELETE).
 //
-//   npm run seed:dev
+//   npm run seed:dev              # ajoute la référence manquante, ne touche à rien d'autre
+//   npm run seed:dev -- --reset   # réécrit la référence et supprime tout le reste
 //
 // Identifiants dans `.env.local` (jamais commité) : POSTKEEP_DEV_EMAIL,
 // POSTKEEP_DEV_PASSWORD, plus EXPO_PUBLIC_SUPABASE_URL / _PUBLISHABLE_KEY.
@@ -46,6 +47,10 @@ const POSTS = [
   ['note-only', null, null, 'Plain text share with no link — lands in the note', []],
 ];
 
+// Sans `--reset`, rien d'existant n'est touché : seules les lignes de référence absentes
+// sont créées (les notes, collections… modifiées pendant les tests restent telles quelles).
+const reset = process.argv.includes('--reset');
+
 const supabase = createClient(url, key, { auth: { persistSession: false } });
 
 let { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -79,26 +84,33 @@ const pairs = POSTS.flatMap(([k, , , , cols], i) =>
 
 // Ordre imposé par les clés étrangères : collections et posts avant les rangements.
 for (const [table, rows] of [['collections', collections], ['posts', posts], ['post_collections', pairs]]) {
-  const { error: upsertError } = await supabase.from(table).upsert(rows, { onConflict: 'id' });
+  const { error: upsertError } = await supabase
+    .from(table)
+    .upsert(rows, { onConflict: 'id', ignoreDuplicates: !reset });
   if (upsertError) {
     console.error(`${table} :`, upsertError.message);
     process.exit(1);
   }
 }
 
-// Tout ce qui n'est pas dans la référence (créé pendant des tests) passe en suppression
+// `--reset` seulement : tout ce qui n'est pas dans la référence passe en suppression
 // logique — les appareils connectés le recevront comme n'importe quelle suppression.
-for (const [table, rows] of [['post_collections', pairs], ['posts', posts], ['collections', collections]]) {
-  const keep = rows.map((r) => r.id);
-  const { error: cleanError } = await supabase
-    .from(table)
-    .update({ deleted_at: now, updated_at: now })
-    .is('deleted_at', null)
-    .not('id', 'in', `(${keep.join(',')})`);
-  if (cleanError) {
-    console.error(`${table} (nettoyage) :`, cleanError.message);
-    process.exit(1);
+if (reset) {
+  for (const [table, rows] of [['post_collections', pairs], ['posts', posts], ['collections', collections]]) {
+    const keep = rows.map((r) => r.id);
+    const { error: cleanError } = await supabase
+      .from(table)
+      .update({ deleted_at: now, updated_at: now })
+      .is('deleted_at', null)
+      .not('id', 'in', `(${keep.join(',')})`);
+    if (cleanError) {
+      console.error(`${table} (nettoyage) :`, cleanError.message);
+      process.exit(1);
+    }
   }
 }
 
-console.log(`Compte de dev prêt : ${posts.length} posts, ${collections.length} collections, ${pairs.length} rangements.`);
+console.log(
+  `Compte de dev prêt : référence de ${posts.length} posts, ${collections.length} collections, ${pairs.length} rangements` +
+    (reset ? ' (le reste supprimé).' : ' (posts de test ajoutés gardés).')
+);
