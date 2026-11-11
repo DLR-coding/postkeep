@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useState } from 'react';
+import { type RefObject, useCallback, useRef, useState } from 'react';
 import { Linking, Pressable, Share, useColorScheme, View } from 'react-native';
 import {
   BottomSheetBackdrop,
@@ -6,20 +6,27 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
+import { PortalHost } from '@rn-primitives/portal';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
-import { ChevronRight, CodeXml, Info, Share2, UserRound } from 'lucide-react-native';
+import { ChevronRight, CodeXml, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
 
+import { AccountSheet } from '@/components/account-sheet';
 import { SectionLabel } from '@/components/post-fields-form';
-import { sheetBackgroundStyle } from '@/components/sheet-kit';
+import { ConfirmDialog, sheetBackgroundStyle } from '@/components/sheet-kit';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { activePostsQuery, groupPostRows } from '@/db/posts';
 import { buildExport, type ThemePreference } from '@/lib/settings-logic';
 import { loadThemePreference, saveThemePreference } from '@/lib/settings';
+import { deleteAccount, requestSync, signOut } from '@/lib/sync/account';
+import { syncStatusLabel } from '@/lib/sync-status';
 import { THEME } from '@/lib/theme';
+import { useAccountStore } from '@/stores/account-store';
 
 const REPO_URL = 'https://github.com/DLR-coding/postkeep';
+/** Hôte des dialogues ouverts depuis la feuille, pour qu'ils passent au-dessus d'elle. */
+const SETTINGS_PORTAL = 'settings-sheet';
 
 const THEMES: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -33,6 +40,7 @@ function Row({
   detail,
   onPress,
   disabled,
+  destructive,
   last,
 }: {
   icon: typeof Share2;
@@ -40,6 +48,7 @@ function Row({
   detail?: string;
   onPress?: () => void;
   disabled?: boolean;
+  destructive?: boolean;
   last?: boolean;
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
@@ -50,8 +59,8 @@ function Row({
       accessibilityRole="button"
       className={`flex-row items-center gap-3 py-4 active:opacity-60 ${last ? '' : 'border-b border-border'}`}
       style={disabled ? { opacity: 0.5 } : undefined}>
-      <Icon as={icon} size={20} color={colors.foreground} />
-      <Text className="flex-1 text-base">{label}</Text>
+      <Icon as={icon} size={20} color={destructive ? colors.destructive : colors.foreground} />
+      <Text className={`flex-1 text-base ${destructive ? 'text-destructive' : ''}`}>{label}</Text>
       {!!detail && (
         <Text variant="muted" className="text-sm">
           {detail}
@@ -62,8 +71,91 @@ function Row({
   );
 }
 
-/** Paramètres : apparence, compte (à venir avec la synchronisation, V1.5), export des
- *  posts, à propos. Ouverte par le bouton ⚙ de l'écran All posts. */
+/** Section « Account » : déconnecté, une ligne qui ouvre `AccountSheet` ; connecté, l'email,
+ *  l'état de la synchro (appui = relancer), la déconnexion et la suppression du compte,
+ *  confirmées par `ConfirmDialog` dans le `PortalHost` de la feuille. */
+function AccountSection() {
+  const { userId, email, status, lastSyncedAt, error } = useAccountStore();
+  const accountSheetRef = useRef<BottomSheetModal>(null);
+  const [confirm, setConfirm] = useState<'signOut' | 'delete' | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const run = async (action: () => Promise<void>) => {
+    setActionError(null);
+    setBusy(true);
+    try {
+      await action();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Something went wrong. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const closeConfirm = (open: boolean) => {
+    if (!open) setConfirm(null);
+  };
+
+  return (
+    <View>
+      <SectionLabel>Account</SectionLabel>
+      {/* Montée dans les deux états : la connexion réussie bascule la section avant que la
+          feuille ne se ferme, elle ne doit pas être démontée en plein vol. */}
+      <AccountSheet sheetRef={accountSheetRef} />
+      {userId ? (
+        <>
+          <Row icon={UserRound} label={email ?? 'Signed in'} />
+          <Row
+            icon={RefreshCw}
+            label={syncStatusLabel({ status, lastSyncedAt, error })}
+            onPress={status === 'syncing' ? undefined : requestSync}
+          />
+          <Row icon={LogOut} label="Sign out" onPress={() => setConfirm('signOut')} disabled={busy} />
+          <Row
+            icon={Trash2}
+            label="Delete account"
+            onPress={() => setConfirm('delete')}
+            disabled={busy}
+            destructive
+            last={!actionError}
+          />
+          {!!actionError && <Text className="pt-2 text-sm text-destructive">{actionError}</Text>}
+        </>
+      ) : (
+        <Row
+          icon={UserRound}
+          label="Sign in"
+          detail="Sync & backup"
+          onPress={() => accountSheetRef.current?.present()}
+          last
+        />
+      )}
+      <ConfirmDialog
+        open={confirm === 'signOut'}
+        onOpenChange={closeConfirm}
+        title="Sign out?"
+        description="Your posts will be removed from this phone. They stay in your account."
+        confirmLabel="Sign out"
+        destructive={false}
+        onConfirm={() => run(signOut)}
+        portalHost={SETTINGS_PORTAL}
+      />
+      <ConfirmDialog
+        open={confirm === 'delete'}
+        onOpenChange={closeConfirm}
+        title="Delete your account?"
+        description="This permanently deletes your account and all its posts."
+        confirmLabel="Delete account"
+        onConfirm={() => run(deleteAccount)}
+        portalHost={SETTINGS_PORTAL}
+      />
+    </View>
+  );
+}
+
+/** Paramètres : apparence, compte et synchro, export des posts, à propos. Ouverte par le
+ *  bouton ⚙ de l'écran All posts. */
 export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetModal | null> }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const [theme, setTheme] = useState<ThemePreference>(loadThemePreference);
@@ -118,10 +210,7 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
           </View>
         </View>
 
-        <View>
-          <SectionLabel>Account</SectionLabel>
-          <Row icon={UserRound} label="Sign in" detail="Coming soon" disabled last />
-        </View>
+        <AccountSection />
 
         <View>
           <SectionLabel>Data</SectionLabel>
@@ -134,6 +223,7 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
           <Row icon={Info} label="Version" detail={version} last />
         </View>
       </BottomSheetScrollView>
+      <PortalHost name={SETTINGS_PORTAL} />
     </BottomSheetModal>
   );
 }
