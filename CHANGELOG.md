@@ -15,7 +15,9 @@ Le projet suivra [SemVer](https://semver.org/lang/fr/) à partir de la première
 
 ## [Non publié]
 
-Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
+## [0.2.0] — 11 novembre 2026
+
+APK : [GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.2.0).
 
 ### Ajouté
 
