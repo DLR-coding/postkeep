@@ -57,14 +57,16 @@ export function CollectionFolder({
             backgroundColor: colors.folderBack,
           }}
         />
-        {/* Onglet du dossier */}
+        {/* Onglet du dossier. Il descend dans le dos jusqu'au bas de son coin arrondi
+            (13 + RADIUS.card) : plus court, l'arrondi du dos restait visible dessous et
+            dessinait une encoche en haut à gauche (vu sur appareil, absent de la maquette). */}
         <View
           style={{
             position: 'absolute',
             left: 0,
             top: height * 0.14 - 13,
             width: size * 0.44,
-            height: 20,
+            height: 13 + RADIUS.card,
             borderTopLeftRadius: 12,
             borderTopRightRadius: 12,
             backgroundColor: colors.folderBack,
