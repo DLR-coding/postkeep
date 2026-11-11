@@ -87,20 +87,34 @@ export function PostThumb({
   post,
   width,
   highlightQuery,
+  stickerAt = 'bottom-left',
+  radius: radiusOverride,
+  children,
 }: {
   post: ThumbPost;
   width: number;
   highlightQuery?: string;
+  /** Grille : autocollant en haut à droite, la légende occupe le bas. */
+  stickerAt?: 'bottom-left' | 'top-right';
+  /** Rayon des coins ; par défaut proportionnel à la largeur. */
+  radius?: number;
+  /** Calque posé sur la miniature (légende de la grille). */
+  children?: React.ReactNode;
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const platform = post.url ? detectPlatform(post.url) : null;
   const height = Math.round((width * 16) / 9);
   // Coins de vignette proportionnels et continus (squircle sur iOS ; Android arrondit).
-  const radius = width * 0.2;
+  const radius = radiusOverride ?? width * 0.2;
   const vertical = isVerticalVideo(post.url, platform);
   const frame = { width, height, borderRadius: radius, borderCurve: 'continuous' as const, overflow: 'hidden' as const };
   const sticker = platform ? (
-    <View style={{ position: 'absolute', left: 5, bottom: 5 }}>
+    <View
+      style={
+        stickerAt === 'top-right'
+          ? { position: 'absolute', right: 5, top: 5, transform: [{ rotate: '10deg' }] }
+          : { position: 'absolute', left: 5, bottom: 5 }
+      }>
       <PlatformSticker platform={platform} size="sm" />
     </View>
   ) : null;
@@ -147,6 +161,7 @@ export function PostThumb({
             />
           </View>
         )}
+        {children}
         {sticker}
       </View>
     );
@@ -164,7 +179,9 @@ export function PostThumb({
           numberOfLines={7}
           style={{
             margin: width * 0.1,
-            marginBottom: width * 0.45,
+            // Autocollant en haut à droite (grille) : le texte commence sous lui.
+            marginTop: stickerAt === 'top-right' ? 34 : width * 0.1,
+            marginBottom: stickerAt === 'top-right' ? width * 0.1 : width * 0.45,
             fontSize: Math.max(8, width * 0.118),
             lineHeight: Math.max(8, width * 0.118) * 1.35,
             fontWeight: '600',

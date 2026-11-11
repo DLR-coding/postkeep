@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildExport, parseThemePreference, toColorScheme } from './settings-logic.ts';
+import { buildExport, parsePostsLayout, parseThemePreference, toColorScheme } from './settings-logic.ts';
 
 test('parseThemePreference accepte les trois valeurs et retombe sur « system »', () => {
   assert.equal(parseThemePreference('light'), 'light');
@@ -46,4 +46,11 @@ test('buildExport : JSON lisible avec les champs utiles, sans colonnes internes'
     },
   ]);
   assert.ok(json.includes('\n  "posts"'), 'indenté pour être lisible');
+});
+
+test('parsePostsLayout : liste par défaut, grille si enregistrée', () => {
+  assert.equal(parsePostsLayout('grid'), 'grid');
+  assert.equal(parsePostsLayout('list'), 'list');
+  assert.equal(parsePostsLayout(null), 'list');
+  assert.equal(parsePostsLayout('mosaic'), 'list');
 });

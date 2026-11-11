@@ -42,3 +42,10 @@ export function buildExport(posts: ExportablePost[], now: Date = new Date()): st
     2
   );
 }
+
+export type PostsLayout = 'list' | 'grid';
+
+/** Affichage de « All posts » : liste par défaut. */
+export function parsePostsLayout(raw: string | null): PostsLayout {
+  return raw === 'grid' ? 'grid' : 'list';
+}

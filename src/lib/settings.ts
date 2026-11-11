@@ -1,7 +1,13 @@
 import { Appearance } from 'react-native';
 import Storage from 'expo-sqlite/kv-store';
 
-import { parseThemePreference, toColorScheme, type ThemePreference } from './settings-logic';
+import {
+  parsePostsLayout,
+  parseThemePreference,
+  toColorScheme,
+  type PostsLayout,
+  type ThemePreference,
+} from './settings-logic';
 
 /** Préférences de l'appareil. Stockées dans le magasin clé-valeur d'expo-sqlite (SQLite,
  *  conforme à AGENTS.md) : une préférence d'appareil, pas une donnée à synchroniser,
@@ -21,4 +27,14 @@ export function applyThemePreference(pref: ThemePreference): void {
 export function saveThemePreference(pref: ThemePreference): void {
   Storage.setItemSync(THEME_KEY, pref);
   applyThemePreference(pref);
+}
+
+const LAYOUT_KEY = 'postsLayout';
+
+export function loadPostsLayout(): PostsLayout {
+  return parsePostsLayout(Storage.getItemSync(LAYOUT_KEY));
+}
+
+export function savePostsLayout(layout: PostsLayout): void {
+  Storage.setItemSync(LAYOUT_KEY, layout);
 }

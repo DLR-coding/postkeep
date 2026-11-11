@@ -19,6 +19,9 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Vue grille** dans « All posts » (bouton en haut à droite, à côté de ⚙) : 3 colonnes de
+  vignettes 9:16, légende sur dégradé, autocollant en haut à droite. La liste reste le
+  défaut ; le choix est mémorisé sur l'appareil.
 - **Reddit** reconnu (`reddit.com`, `redd.it`) : autocollant orange, filtre, vignette de
   secours, liens de partage nettoyés de leur tracking. Pas de récupération de légende ni de
   miniature pour l'instant.
