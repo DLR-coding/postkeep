@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, useColorScheme, View } from 'react-native';
 import { useShareIntentContext } from 'expo-share-intent';
 import { useRouter } from 'expo-router';
@@ -34,6 +34,16 @@ export function SavePost() {
       router.replace('/');
     }
   }, [isReady, hasShareIntent, router]);
+
+  // Quitter l'écran sans enregistrer (bouton retour) doit aussi effacer le partage en
+  // attente : sinon `hasShareIntent` reste vrai et `ShareIntentRedirect`
+  // (`src/app/_layout.tsx`) rouvre l'écran au prochain remontage (rechargement, Android
+  // qui recrée l'activité). Le ref évite de relancer le nettoyage si la fonction change.
+  const resetRef = useRef(resetShareIntent);
+  useEffect(() => {
+    resetRef.current = resetShareIntent;
+  }, [resetShareIntent]);
+  useEffect(() => () => resetRef.current(), []);
 
   useEffect(() => {
     if (!isReady || !hasShareIntent) return;
