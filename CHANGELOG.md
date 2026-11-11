@@ -15,39 +15,15 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
-### Ajouté
-
-- **Reddit** : titre et miniature du post récupérés à l'enregistrement (flux RSS public du
-  post). Les liens courts `redd.it` et `/s/` n'ont que le titre (oEmbed officiel).
-
-### Modifié
-
-- **Icône et écran de démarrage** définitifs (piste « Glacier ») : marque-page à yeux en
-  relief sur dégradé indigo ; icône thématisée Android 13 ; splash indigo `#5048e0`, et
-  `#120c3a` en mode sombre. Sources SVG dans `assets/icon-source/`.
-- « All posts » et l'écran d'une collection : chaque post est une carte séparée aux coins
-  arrondis (maquette 2e tour, variante 1 « Liste au vrai format »), au lieu de lignes
-  séparées par un trait. Contenu de la carte inchangé ; la carte glisse dans la marge au
-  balayage.
-- Dossiers des collections : façade en verre dépoli quasi opaque avec ombre portée, comme
-  la maquette — les feuilles ne dépassent plus qu'en haut au lieu de transparaître en entier.
-
-### Corrigé
-
-- Une miniature qui ne se charge plus (lien expiré, 404) laisse place à la vignette de
-  secours au lieu d'un rectangle gris vide.
-- Un nom de collection très long est tronqué au lieu de faire déborder sa puce de l'écran.
-- Défilement de la liste des posts : les lignes ne « glissent » plus et ne s'affichent plus
-  un instant au mauvais endroit (animation de mise en page retirée des lignes recyclées par
-  FlashList). La suppression par balayage garde son fondu, piloté à la main.
-- Les lignes de « All posts » n'affichent que 3 collections, puis « +N » (le détail du
-  post les montre toutes).
-
 ## [0.3.0] — 11 novembre 2026
 
 APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.3.0).
 
 ### Ajouté
+
+- **Reddit** : titre et miniature du post récupérés à l'enregistrement (flux RSS public du
+  post). Les liens courts `redd.it` et `/s/` n'ont que le titre (oEmbed officiel).
+
 
 - Filtre **Threads** dans les pilules de « All posts ».
 - **Compte optionnel** (email + mot de passe, 8 caractères minimum) dans la section
@@ -71,6 +47,17 @@ APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/ta
 
 ### Modifié
 
+- **Icône et écran de démarrage** définitifs (piste « Glacier ») : marque-page à yeux en
+  relief sur dégradé indigo ; icône thématisée Android 13 ; splash indigo `#5048e0`, et
+  `#120c3a` en mode sombre. Sources SVG dans `assets/icon-source/`.
+- « All posts » et l'écran d'une collection : chaque post est une carte séparée aux coins
+  arrondis (maquette 2e tour, variante 1 « Liste au vrai format »), au lieu de lignes
+  séparées par un trait. Contenu de la carte inchangé ; la carte glisse dans la marge au
+  balayage.
+- Dossiers des collections : façade en verre dépoli quasi opaque avec ombre portée, comme
+  la maquette — les feuilles ne dépassent plus qu'en haut au lieu de transparaître en entier.
+
+
 - Feuille de choix des collections : le bouton pleine largeur « + New collection » devient
   une icône « + » à droite de la recherche, ou la puce « + New » en pointillés quand il y a
   6 collections ou moins.
@@ -78,6 +65,16 @@ APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/ta
   propre `versionCode` (resté à 1 en v0.2.0).
 
 ### Corrigé
+
+- Une miniature qui ne se charge plus (lien expiré, 404) laisse place à la vignette de
+  secours au lieu d'un rectangle gris vide.
+- Un nom de collection très long est tronqué au lieu de faire déborder sa puce de l'écran.
+- Défilement de la liste des posts : les lignes ne « glissent » plus et ne s'affichent plus
+  un instant au mauvais endroit (animation de mise en page retirée des lignes recyclées par
+  FlashList). La suppression par balayage garde son fondu, piloté à la main.
+- Les lignes de « All posts » n'affichent que 3 collections, puis « +N » (le détail du
+  post les montre toutes).
+
 
 - Date affichée « 8 Sept » en septembre ; tous les mois s'écrivent maintenant en trois lettres.
 
