@@ -15,6 +15,10 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+## [0.3.0] — 11 novembre 2026
+
+APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.3.0).
+
 ### Ajouté
 
 - Filtre **Threads** dans les pilules de « All posts ».
@@ -273,6 +277,7 @@ APK : [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/ta
 - **Expo Go est définitivement inutilisable** sur ce projet à cause d'`expo-share-intent`
   (module natif hors du périmètre d'Expo Go). Un *development build* est obligatoire
 
-[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.2.0...HEAD
+[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/DLR-coding/postkeep/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/DLR-coding/postkeep/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0
