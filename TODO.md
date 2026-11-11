@@ -129,9 +129,9 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 | YouTube et autres liens | lien seul (non reconnu comme plateforme, query conservée) | ❌ |
 
 - [x] *(Option)* **Légende et miniature Reddit** via le flux RSS public du post (repli :
-      oEmbed officiel, titre seul) — fait le 11 novembre 2026 ; flux et image vérifiés depuis
-      le téléphone (200), enregistrement réel pas encore vu. Liens courts `redd.it`/`/s/` :
-      titre seul
+      oEmbed officiel, titre seul) — fait le 11 novembre 2026, vérifié sur appareil (partage
+      d'un post r/pics sur le compte de dev : titre + miniature, synchronisés). Liens courts
+      `redd.it`/`/s/` : titre seul
 
 ## 🟤 Dette technique
 
