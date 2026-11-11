@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { type ComponentRef, useEffect, type RefObject } from 'react';
 import { Pressable, TextInput, useColorScheme, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
@@ -26,7 +26,7 @@ function Glass({
   className,
   children,
 }: {
-  blurTarget: RefObject<View | null>;
+  blurTarget: RefObject<ComponentRef<typeof View> | null>;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -51,7 +51,7 @@ function Glass({
 /** Barre flottante de la refonte (spec, objectif 4) : recherche à gauche, onglets
  *  Posts / Collections à droite. Frère du `BlurTargetView` qui contient les onglets
  *  (voir `src/app/(tabs)/_layout.tsx`) : `BlurView` doit être à côté de sa cible. */
-export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<View | null> }) {
+export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<ComponentRef<typeof View> | null> }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
   const router = useRouter();

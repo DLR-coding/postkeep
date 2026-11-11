@@ -88,7 +88,11 @@ export function AccountSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetModa
           autoCorrect={false}
           returnKeyType="next"
           submitBehavior="submit"
-          onSubmitEditing={() => passwordRef.current?.focus()}
+          // shortcut: les types de @gorhom/bottom-sheet 5.2.14 décrivent la ref avec le
+          // `TextInput` de gesture-handler 2 ; en v3 ce nom désigne le composant, pas
+          // l'instance. À l'exécution c'est bien un champ natif avec `focus()`. Retirer le
+          // cast quand bottom-sheet publiera des types pour gesture-handler 3.
+          onSubmitEditing={() => (passwordRef.current as unknown as { focus(): void } | null)?.focus()}
         />
         <SheetField
           ref={passwordRef}

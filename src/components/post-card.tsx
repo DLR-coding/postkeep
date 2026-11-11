@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+// `Swipeable` (non Reanimated) a disparu de gesture-handler 3 (SDK 58).
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
@@ -88,7 +89,7 @@ export function PostCard({
     // Cartes séparées (maquette 2e tour, variante 1 « Liste au vrai format », mise à
     // l'échelle d'un écran de 282 px à ~360 dp) : marge latérale 20, 12 entre cartes.
     <Animated.View style={[{ paddingHorizontal: SPACE.lg + SPACE.xs, paddingBottom: SPACE.md }, fadeStyle]}>
-      <Swipeable
+      <ReanimatedSwipeable
         renderRightActions={() => (
           <View className="flex-row">
             {collectionId && (
@@ -163,7 +164,7 @@ export function PostCard({
             </View>
           </View>
         </Pressable>
-      </Swipeable>
+      </ReanimatedSwipeable>
       {confirm && (
         <ConfirmDialog
           open

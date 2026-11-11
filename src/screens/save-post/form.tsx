@@ -132,7 +132,7 @@ export function SavePostForm({
 
         <PostFieldsForm control={control} />
 
-        <Button className="mt-6 h-12 rounded-2xl" onPress={handleSubmit(onSubmit)} disabled={isSaving}>
+        <Button className="mt-6 h-12 rounded-2xl" onPress={() => handleSubmit(onSubmit)()} disabled={isSaving}>
           <Text className="font-semibold">{isSaving ? 'Saving…' : 'Save'}</Text>
         </Button>
       </BottomSheetScrollView>

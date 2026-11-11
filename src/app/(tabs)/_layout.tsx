@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { type ComponentRef, useRef } from 'react';
 import { View } from 'react-native';
 import { BlurTargetView } from 'expo-blur';
 import { Tabs } from 'expo-router/js-tabs';
@@ -9,7 +9,7 @@ import { GlassTabBar } from '@/components/glass-tab-bar';
  *  l'exige expo-blur sur Android) remplace `NativeTabs`. L'onglet actif vient de
  *  l'URL (`usePathname`), la navigation passe par `router.navigate`. */
 export default function TabsLayout() {
-  const blurTarget = useRef<View>(null);
+  const blurTarget = useRef<ComponentRef<typeof View>>(null);
   return (
     <View className="flex-1">
       <BlurTargetView ref={blurTarget} style={{ flex: 1 }}>

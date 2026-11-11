@@ -23,6 +23,12 @@ import {
 import { StyleSheet, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
+// shortcut: react-native-webview 14.0.1 déclare `class WebView<P = undefined>` dans ses types
+// racine, et `WebViewProps & undefined` vaut `never` (aucune prop acceptée). On fixe P à
+// `object` (le défaut de la v13) ; à retirer quand les types upstream seront corrigés.
+const ExtractorWebView = WebView<object>;
+type ExtractorWebViewInstance = WebView<object>;
+
 export type ExtractedMetadata = {
   caption: string | null;
   thumbnailUrl: string | null;
@@ -95,7 +101,7 @@ const MetadataExtractorContext = createContext<MetadataExtractorContextValue | n
 export function MetadataExtractorProvider({ children }: { children: ReactNode }) {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const pendingRequest = useRef<ExtractRequest | null>(null);
-  const webViewRef = useRef<WebView>(null);
+  const webViewRef = useRef<ExtractorWebViewInstance>(null);
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     console.log('[WebView] onMessage:', event.nativeEvent.data.slice(0, 200));
@@ -161,7 +167,7 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
       {/* WebView cachée, positionnée hors écran */}
       <View style={styles.hidden} pointerEvents="none">
         {currentUrl && (
-          <WebView
+          <ExtractorWebView
             ref={webViewRef}
             source={{ uri: currentUrl }}
             userAgent={MOBILE_USER_AGENT}
