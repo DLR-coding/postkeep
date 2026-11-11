@@ -240,7 +240,7 @@ de TanStack Query.
 | **Instagram** | ✅ | ✅ | WebView cachée (`src/lib/webview-metadata.tsx`) |
 | **TikTok** | ✅ | ✅ | WebView cachée (`src/lib/webview-metadata.tsx`) |
 | **X (Twitter)** | ✅ | ❌ | oEmbed (`api.twitter.com/1/statuses/oembed.json`, `fetchOEmbed` dans `src/lib/oembed.ts`) : texte du tweet seulement |
-| **Reddit** | ✅ | ❌ | oEmbed officiel (`reddit.com/oembed?url=…`, `fetchOEmbed` dans `src/lib/oembed.ts`, User-Agent `PostKeep/0.3 (Android app)`) : titre du post. Pas de miniature : la vue publique `.json` du post, qui en a une, répond 403 même depuis le réseau mobile du téléphone (vérifié le 11 novembre 2026) |
+| **Reddit** | ✅ | ✅ | Flux RSS public du post (`<permalien>/.rss`, `fetchOEmbed` dans `src/lib/oembed.ts`, User-Agent `PostKeep/0.3 (Android app)`) : titre de l'entrée + `media:thumbnail`. Si rien (lien court `redd.it`/`/s/`, refus 403/429) : oEmbed officiel, titre seul. Écartés (vérifiés le 11 novembre 2026 depuis le téléphone) : `.json` public → 403 ; page HTML → vérification anti-bot, qu'on ne contourne pas |
 | **Threads** | ❌ | ❌ | Jamais supporté |
 | **Autres** (YouTube, articles…) | ❌ | ❌ | Aucune récupération |
 

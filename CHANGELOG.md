@@ -17,8 +17,8 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ### Ajouté
 
-- **Reddit** : titre du post récupéré à l'enregistrement (oEmbed officiel de Reddit). Pas
-  de miniature : Reddit refuse l'accès public au détail des posts.
+- **Reddit** : titre et miniature du post récupérés à l'enregistrement (flux RSS public du
+  post). Les liens courts `redd.it` et `/s/` n'ont que le titre (oEmbed officiel).
 
 ## [0.3.0] — 11 novembre 2026
 

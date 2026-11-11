@@ -125,12 +125,13 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 | TikTok | ✅ WebView | ✅ WebView |
 | X | ✅ oEmbed | ❌ |
 | Threads | ❌ | ❌ |
-| Reddit | ✅ oEmbed (titre) | ❌ (`.json` refusé, 403) |
+| Reddit | ✅ RSS du post, sinon oEmbed | ✅ RSS du post (`media:thumbnail`) |
 | YouTube et autres liens | lien seul (non reconnu comme plateforme, query conservée) | ❌ |
 
-- [x] *(Option)* **Légende Reddit** via l'oEmbed officiel (titre du post) — fait le 11 novembre
-      2026 ; endpoint vérifié depuis le téléphone (200), enregistrement réel pas encore vu.
-      Miniature abandonnée : le `.json` public répond 403, même en réseau mobile
+- [x] *(Option)* **Légende et miniature Reddit** via le flux RSS public du post (repli :
+      oEmbed officiel, titre seul) — fait le 11 novembre 2026 ; flux et image vérifiés depuis
+      le téléphone (200), enregistrement réel pas encore vu. Liens courts `redd.it`/`/s/` :
+      titre seul
 
 ## 🟤 Dette technique
 

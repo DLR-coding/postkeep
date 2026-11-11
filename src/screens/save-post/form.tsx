@@ -46,7 +46,7 @@ export function SavePostForm({
       // Récupération des métadonnées selon la plateforme :
       // - Instagram/TikTok : WebView (les plateformes rendent les og:* côté client)
       // - X/Twitter : oEmbed API (fonctionne)
-      // - Reddit : oEmbed officiel (titre seul)
+      // - Reddit : flux RSS du post (titre + miniature), sinon oEmbed (titre)
       // - Autres : pas de récupération
       let metadata = { caption: null as string | null, thumbnailUrl: null as string | null };
 
