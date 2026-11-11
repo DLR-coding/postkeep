@@ -31,7 +31,7 @@ export type PostListItem = Post & { collectionNames: string[] };
 export type PostRow = { post: Post; collectionName: string | null };
 
 /** Requête réactive (à passer à `useLiveQuery`, ARCHITECTURE.md §5) : posts non
- *  supprimés jointes à leurs collections actives, du plus récemment modifié au
+ *  supprimés jointes à leurs collections actives, du plus récemment enregistré au
  *  plus ancien — une ligne par paire post/collection, à regrouper avec
  *  `groupPostRows` pour l'écran « Tous les posts » (phase 3). */
 export function activePostsQuery() {
@@ -44,7 +44,7 @@ export function activePostsQuery() {
     )
     .leftJoin(collections, and(eq(collections.id, postCollections.collectionId), isNull(collections.deletedAt)))
     .where(isNull(posts.deletedAt))
-    .orderBy(desc(posts.updatedAt));
+    .orderBy(desc(posts.createdAt));
 }
 
 /** Même requête que `activePostsQuery`, restreinte aux posts rangés dans une
@@ -73,7 +73,7 @@ export function collectionPostsQuery(collectionId: string) {
         )
       )
     )
-    .orderBy(desc(posts.updatedAt));
+    .orderBy(desc(posts.createdAt));
 }
 
 /** Même requête que `activePostsQuery`, restreinte aux posts n'appartenant à
@@ -90,7 +90,7 @@ export function uncategorizedPostsQuery() {
     )
     .leftJoin(collections, and(eq(collections.id, postCollections.collectionId), isNull(collections.deletedAt)))
     .where(and(isNull(posts.deletedAt), isNull(postCollections.id)))
-    .orderBy(desc(posts.updatedAt));
+    .orderBy(desc(posts.createdAt));
 }
 
 /** Même requête que `activePostsQuery`, restreinte à un post — pour la feuille de

@@ -61,7 +61,7 @@ export function collectionPreviewRowsQuery() {
       postId: posts.id,
       url: posts.url,
       thumbnailUrl: posts.thumbnailUrl,
-      updatedAt: posts.updatedAt,
+      createdAt: posts.createdAt,
     })
     .from(posts)
     .leftJoin(
@@ -73,7 +73,7 @@ export function collectionPreviewRowsQuery() {
       and(eq(collections.id, postCollections.collectionId), isNull(collections.deletedAt))
     )
     .where(isNull(posts.deletedAt))
-    .orderBy(desc(posts.updatedAt));
+    .orderBy(desc(posts.createdAt));
 }
 
 /** Nombre de posts actifs n'appartenant à aucune collection active — pseudo-

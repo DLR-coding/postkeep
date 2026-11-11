@@ -14,7 +14,7 @@ export type PreviewRow = {
   postId: string;
   url: string | null;
   thumbnailUrl: string | null;
-  updatedAt: Date;
+  createdAt: Date;
 };
 
 export type CollectionPreview = { thumbnails: string[]; platform: Platform | null };
@@ -34,7 +34,7 @@ export function buildCollectionPreviews(rows: PreviewRow[]): Map<string, Collect
 
   const previews = new Map<string, CollectionPreview>();
   for (const [key, group] of byCollection) {
-    const recentFirst = [...group].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    const recentFirst = [...group].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     const thumbnails = [
       ...new Set(recentFirst.map((r) => r.thumbnailUrl).filter((t): t is string => !!t)),

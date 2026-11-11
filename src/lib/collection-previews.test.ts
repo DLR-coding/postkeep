@@ -9,7 +9,7 @@ const row = (over: Partial<PreviewRow> & { daysAgo: number }): PreviewRow => ({
   postId: `p${n++}`,
   url: 'https://www.tiktok.com/@a/video/1',
   thumbnailUrl: null,
-  updatedAt: new Date(Date.UTC(2026, 10, 10 - over.daysAgo)),
+  createdAt: new Date(Date.UTC(2026, 10, 10 - over.daysAgo)),
   ...over,
 });
 
