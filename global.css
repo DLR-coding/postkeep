@@ -35,7 +35,7 @@
     --folder-back: #e5e3de;
     --folder-sheet: #ffffff;
     --folder-sheet-line: #e1e3e8;
-    --folder-front: rgba(255, 255, 255, 0.72);
+    --folder-front: rgba(240, 240, 243, 0.93);
     --folder-front-border: rgba(255, 255, 255, 0.95);
     --note: #f1f1f4;
     --note-foreground: #5d6069;
@@ -75,7 +75,7 @@
     --folder-back: #22242b;
     --folder-sheet: #2b2e37;
     --folder-sheet-line: #3c404b;
-    --folder-front: rgba(46, 49, 60, 0.72);
+    --folder-front: rgba(44, 47, 57, 0.94);
     --folder-front-border: rgba(255, 255, 255, 0.08);
     --note: #1d1f26;
     --note-foreground: #aeb3bf;

@@ -143,7 +143,7 @@ export function PostsScreen() {
             : {
                 paddingBottom: TAB_BAR_CLEARANCE + insets.bottom + 16,
                 paddingHorizontal: layout === 'grid' ? GRID_SIDE - GRID_GAP / 2 : 0,
-                paddingTop: layout === 'grid' ? 4 : 0,
+                paddingTop: 4,
               }
         }
       />

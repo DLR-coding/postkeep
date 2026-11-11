@@ -91,7 +91,7 @@ export function CollectionFolder({
                 elevation: 1,
               }}>
               {thumb ? (
-                <Image source={{ uri: thumb }} contentFit="cover" style={{ height: '48%', margin: 6, marginBottom: 0, borderRadius: 3 }} />
+                <Image source={{ uri: thumb }} contentFit="cover" style={{ height: '36%', margin: 6, marginBottom: 0, borderRadius: 3 }} />
               ) : null}
               <View style={{ height: 3, margin: 7, marginBottom: 0, borderRadius: 2, backgroundColor: colors.folderSheetLine }} />
               <View style={{ height: 3, width: '55%', margin: 7, marginBottom: 0, borderRadius: 2, backgroundColor: colors.folderSheetLine }} />
@@ -110,6 +110,10 @@ export function CollectionFolder({
             borderWidth: virtual ? 1.5 : 1,
             borderStyle: virtual ? 'dashed' : 'solid',
             borderColor: virtual ? colors.folderSheetLine : colors.folderFrontBorder,
+            // Ombre portée de la maquette (0 10px 20px -12px), absente du dossier virtuel.
+            ...(virtual
+              ? null
+              : { boxShadow: '0px 8px 16px -10px rgba(30, 35, 50, 0.45)' }),
           }}>
           {preview?.platform && !virtual && (
             <View style={{ position: 'absolute', right: '10%', bottom: '12%' }}>

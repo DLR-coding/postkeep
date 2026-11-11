@@ -20,6 +20,15 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - **Reddit** : titre et miniature du post récupérés à l'enregistrement (flux RSS public du
   post). Les liens courts `redd.it` et `/s/` n'ont que le titre (oEmbed officiel).
 
+### Modifié
+
+- « All posts » et l'écran d'une collection : chaque post est une carte séparée aux coins
+  arrondis (maquette 2e tour, variante 1 « Liste au vrai format »), au lieu de lignes
+  séparées par un trait. Contenu de la carte inchangé ; la carte glisse dans la marge au
+  balayage.
+- Dossiers des collections : façade en verre dépoli quasi opaque avec ombre portée, comme
+  la maquette — les feuilles ne dépassent plus qu'en haut au lieu de transparaître en entier.
+
 ### Corrigé
 
 - Une miniature qui ne se charge plus (lien expiré, 404) laisse place à la vignette de

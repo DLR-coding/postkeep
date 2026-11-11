@@ -11,13 +11,14 @@ import { HighlightedText, PostThumb } from '@/components/post-thumb';
 import { ConfirmDialog } from '@/components/sheet-kit';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { RADIUS } from '@/lib/design';
+import { RADIUS, SPACE } from '@/lib/design';
 import { formatPostDate } from '@/lib/format-date';
 import { removePostFromCollection, softDeletePost, type PostListItem } from '@/db/posts';
 import { detectPlatform, PLATFORM_META } from '@/lib/share-url';
 import { usePostDetailStore } from '@/stores/post-detail-store';
 
 const THUMB_WIDTH = 80;
+const CARD_PADDING = SPACE.md;
 
 function SwipeAction({
   onPress,
@@ -33,7 +34,8 @@ function SwipeAction({
   return (
     <Pressable
       onPress={onPress}
-      className={`ml-2 w-20 items-center justify-center rounded-2xl ${colorClassName}`}
+      className={`ml-2 w-20 items-center justify-center ${colorClassName}`}
+      style={{ borderRadius: RADIUS.card, borderCurve: 'continuous' }}
       accessibilityLabel={accessibilityLabel}>
       <Icon as={icon} className="text-white" size={20} />
     </Pressable>
@@ -83,10 +85,12 @@ export function PostCard({
     // Pas d'animation Reanimated `entering` / `exiting` / `layout` sur la ligne : FlashList
     // recycle les lignes, et l'animation faisait glisser chaque ligne réutilisée vers sa
     // nouvelle taille pendant le défilement (cartes qui « se déplacent », vu sur appareil).
-    <Animated.View style={fadeStyle}>
+    // Cartes séparées (maquette 2e tour, variante 1 « Liste au vrai format », mise à
+    // l'échelle d'un écran de 282 px à ~360 dp) : marge latérale 20, 12 entre cartes.
+    <Animated.View style={[{ paddingHorizontal: SPACE.lg + SPACE.xs, paddingBottom: SPACE.md }, fadeStyle]}>
       <Swipeable
         renderRightActions={() => (
-          <View className="flex-row py-3">
+          <View className="flex-row">
             {collectionId && (
               <SwipeAction
                 onPress={() => setConfirm('remove')}
@@ -103,12 +107,22 @@ export function PostCard({
             />
           </View>
         )}
-        overshootRight={false}>
+        overshootRight={false}
+        // La carte glisse jusque dans la marge latérale au lieu d'être coupée net à gauche.
+        containerStyle={{ overflow: 'visible' }}>
         <Pressable
           onPress={() => usePostDetailStore.getState().open(item.id)}
-          className="flex-row gap-3.5 border-b border-border bg-background px-4 py-3"
-          style={({ pressed }) => (pressed ? { opacity: 0.7 } : undefined)}>
-          <PostThumb post={item} width={THUMB_WIDTH} highlightQuery={highlightQuery} />
+          // Style objet et non fonction : avec `className`, NativeWind ignorait le style
+          // fonction (carte sans marge ni coins arrondis, vu sur appareil).
+          className="flex-row gap-3.5 bg-surface active:opacity-70"
+          style={{ padding: CARD_PADDING, borderRadius: RADIUS.card, borderCurve: 'continuous' }}>
+          {/* Rayon concentrique à celui de la carte (rayon de la carte − marge intérieure). */}
+          <PostThumb
+            post={item}
+            width={THUMB_WIDTH}
+            radius={RADIUS.card - CARD_PADDING}
+            highlightQuery={highlightQuery}
+          />
 
           <View className="min-w-0 flex-1 gap-1.5">
             <Text variant="muted" className="text-[11px]">
@@ -123,7 +137,7 @@ export function PostCard({
               />
             )}
             {!!item.note && (
-              <View className="flex-row gap-1.5 bg-surface px-2.5 py-2" style={{ borderRadius: RADIUS.inset }}>
+              <View className="flex-row gap-1.5 bg-background px-2.5 py-2" style={{ borderRadius: RADIUS.inset }}>
                 <Text className="text-xs font-semibold text-note-foreground">Note</Text>
                 <HighlightedText
                   text={item.note}

@@ -32,7 +32,9 @@ export const THEME = {
     folderBack: '#e5e3de',
     folderSheet: '#ffffff',
     folderSheetLine: '#e1e3e8',
-    folderFront: 'rgba(255, 255, 255, 0.72)',
+    // Quasi opaque : sans flou en direct (pas de BlurView par dossier, spec), c'est l'opacité
+    // qui cache les feuilles derrière la façade comme le verre dépoli de la maquette.
+    folderFront: 'rgba(240, 240, 243, 0.93)',
     folderFrontBorder: 'rgba(255, 255, 255, 0.95)',
     note: '#f1f1f4',
     noteForeground: '#5d6069',
@@ -74,7 +76,7 @@ export const THEME = {
     folderBack: '#22242b',
     folderSheet: '#2b2e37',
     folderSheetLine: '#3c404b',
-    folderFront: 'rgba(46, 49, 60, 0.72)',
+    folderFront: 'rgba(44, 47, 57, 0.94)',
     folderFrontBorder: 'rgba(255, 255, 255, 0.08)',
     note: '#1d1f26',
     noteForeground: '#aeb3bf',
