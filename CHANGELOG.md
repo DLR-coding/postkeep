@@ -22,6 +22,9 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ### Modifié
 
+- **Icône et écran de démarrage** définitifs (piste « Glacier ») : marque-page à yeux en
+  relief sur dégradé indigo ; icône thématisée Android 13 ; splash indigo `#5048e0`, et
+  `#120c3a` en mode sombre. Sources SVG dans `assets/icon-source/`.
 - « All posts » et l'écran d'une collection : chaque post est une carte séparée aux coins
   arrondis (maquette 2e tour, variante 1 « Liste au vrai format »), au lieu de lignes
   séparées par un trait. Contenu de la carte inchangé ; la carte glisse dans la marge au

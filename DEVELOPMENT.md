@@ -401,6 +401,19 @@ n'est appliquée qu'une fois : en écrire une nouvelle plutôt que de modifier u
 > donc `revoke all … from anon, authenticated`, puis accorder le strict utile, et activer la
 > RLS — comme `20261111000000_account_sync.sql`.
 
+### Icône et écran de démarrage
+
+Sources SVG dans `assets/icon-source/` (piste « Glacier », grille adaptative Android de 108 :
+72 visibles). Après une retouche, régénérer les PNG puis refaire un build natif (l'icône et
+le splash sont compilés dans l'APK, Metro ne les recharge pas) :
+
+```bash
+for f in android-icon-background android-icon-foreground android-icon-monochrome icon splash-icon; do
+  npx -y @resvg/resvg-js-cli --fit-width 1024 assets/icon-source/$f.svg assets/images/$f.png
+done
+npx -y @resvg/resvg-js-cli --fit-width 48 assets/icon-source/icon.svg assets/images/favicon.png
+```
+
 ### Compte de dev
 
 Le bac à sable de vérification : `postkeep-dev@example.com`, rempli de façon à couvrir tout

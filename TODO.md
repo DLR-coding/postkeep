@@ -83,9 +83,10 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 - [x] **`eas.json` : ajouter `"buildType": "apk"` au profil `production`** (4 septembre 2026)
 - [x] **Numéro de version** : `0.1.0` dans `app.json` et `package.json` (4 septembre 2026)
 - [x] **Nom affiché** : `"PostKeep"` dans `app.json` (4 septembre 2026)
-- [ ] **Icône et écran de démarrage définitifs** — placeholder posé (glyphe bookmark, fond
-      indigo `#6366F1`) le temps qu'une vraie direction artistique soit tranchée ; toujours pas
-      les visuels finaux
+- [x] **Icône et écran de démarrage définitifs** — piste « Glacier » retenue le 11 novembre
+      2026 (marque-page à yeux, dégradé blanc → lavande sur indigo `#7a7bff` → `#2b1d8f`).
+      Sources SVG dans `assets/icon-source/`, PNG 1024 px dans `assets/images/`, splash
+      `#5048e0` (sombre `#120c3a`). Visible au prochain build natif (pas encore vu sur appareil)
 - [x] Instructions d'installation — dans les notes de la
       [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0)
       (4 septembre 2026)
