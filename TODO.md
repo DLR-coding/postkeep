@@ -33,16 +33,27 @@ mot de passe, keepalive, sauvegarde de la base) : [DEVELOPMENT.md](./DEVELOPMENT
 tests destructifs, et base du téléphone sauvegardée hors du dépôt avant la première
 connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
-- [ ] Sans compte : l'app se comporte comme avant (rien de plus hors des Paramètres)
-- [ ] Création de compte avec des posts existants → tout est rattaché, visible dans Supabase
-- [ ] Modification sur le téléphone → poussée en quelques secondes
-- [ ] Modification simulée d'un « autre appareil » (curl avec le jeton du compte,
-      `updated_at` plus récent) → visible après retour au premier plan, liste rafraîchie seule
+- [x] Sans compte : l'app se comporte comme avant (rien de plus hors des Paramètres)
+      (11 novembre 2026, Galaxy S23)
+- [x] Création de compte avec des posts existants → tout est rattaché, visible dans Supabase
+      (39 posts, 18 collections, 50 rangements, identiques à la base locale)
+- [x] Modification sur le téléphone → poussée en quelques secondes ; pas de synchro en
+      boucle (`server_updated_at` stable après coup)
+- [x] Modification simulée d'un « autre appareil » (curl avec le jeton du compte,
+      `updated_at` plus récent) → visible après retour au premier plan, liste rafraîchie
+      seule, y compris quand seul un rangement change
 - [ ] Mode avion : modification sans erreur bloquante ; déconnexion refusée avec le message
-- [ ] Réseau revenu → synchro, puis déconnexion → téléphone vide ; reconnexion → tout revient
-- [ ] Deuxième compte : ne voit rien du premier
-- [ ] Suppression du compte de test → plus rien côté serveur ni sur le téléphone
-- [ ] `npx expo-doctor@1.20.5` 21/21, doctor RNR, types, lint, tests
+      — **non testé** : le PC passe par le partage de connexion du téléphone, couper le
+      réseau du téléphone coupe aussi la session de test
+- [x] Déconnexion → téléphone vide, liste vidée aussitôt (bug trouvé et corrigé : un DELETE
+      sans WHERE ne prévenait pas `useLiveQuery`) ; reconnexion → tout revient
+- [x] Deuxième compte : ne voit rien du premier — vérifié côté serveur (RLS, deux comptes
+      de test en curl), pas sur le téléphone
+- [ ] Fusion des doublons à la connexion avec deux appareils ayant des posts sans compte —
+      **non testé** (un seul téléphone) ; couvert par les tests de `planGuestMerge`
+- [x] Suppression du compte de test → plus rien côté serveur ni sur le téléphone ; base du
+      téléphone restaurée ensuite depuis la sauvegarde
+- [x] `npx expo-doctor@1.20.5` 21/21, doctor RNR, types, lint, 59 tests
 - [ ] Premier passage planifié du workflow keepalive, une fois la branche fusionnée dans
       `master` (un `schedule` ne part que de la branche par défaut)
 
@@ -135,7 +146,7 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       (11 novembre 2026)
 - [x] `src/app/(tabs)/index.tsx` (151 lignes) déplacé dans `src/screens/posts/` (règle des
       ~80 lignes de CONTRIBUTING.md) (11 novembre 2026)
-- [ ] Supprimer `handoff.txt` (notes de session non suivies, à la racine)
+- [x] Supprimer `handoff.txt` (notes de session non suivies, à la racine)
 
 ## ⏭️ Ensuite
 
