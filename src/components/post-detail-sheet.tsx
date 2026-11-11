@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   BackHandler,
   Keyboard,
   Linking,
@@ -36,7 +35,9 @@ import { Check, ChevronUp, X } from 'lucide-react-native';
 import Svg, { LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { CollectionChip } from '@/components/collection-chip';
+import { PortalHost } from '@rn-primitives/portal';
 import { PostThumb } from '@/components/post-thumb';
+import { ConfirmDialog } from '@/components/sheet-kit';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -71,6 +72,7 @@ const HANDLE_HEIGHT = 28;
  *  de note arrondi à 16, 16 px d'air minimum entre le contenu et le pied. */
 const SHEET_RADIUS = RADIUS.sheet;
 const FOOTER_GAP = 16;
+const SHEET_PORTAL = 'post-detail-sheet';
 
 const PREVIEW_INDEX = 0;
 const EDIT_INDEX = 1;
@@ -305,21 +307,14 @@ export function PostDetailSheet() {
     [handleSubmit, postId, post?.url, saved]
   );
 
-  const handleDelete = useCallback(() => {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const handleDelete = useCallback(() => setConfirmDelete(true), []);
+  const deletePost = useCallback(() => {
     if (!postId) return;
-    Alert.alert('Delete this post?', 'It will disappear from PostKeep.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          setIsDeleting(true);
-          softDeletePost(postId);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          sheetRef.current?.dismiss();
-        },
-      },
-    ]);
+    setIsDeleting(true);
+    softDeletePost(postId);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    sheetRef.current?.dismiss();
   }, [postId]);
 
   const handleSheetChange = useCallback((newIndex: number) => {
@@ -399,6 +394,7 @@ export function PostDetailSheet() {
   );
 
   return (
+    <>
     <BottomSheetModal
       ref={sheetRef}
       snapPoints={['50%', '100%']}
@@ -501,7 +497,19 @@ export function PostDetailSheet() {
           )}
         </BottomSheetScrollView>
       )}
+      {/* Hôte des dialogues ouverts depuis la feuille, pour qu'ils passent au-dessus. */}
+      <PortalHost name={SHEET_PORTAL} />
     </BottomSheetModal>
+    <ConfirmDialog
+      open={confirmDelete}
+      onOpenChange={setConfirmDelete}
+      title="Delete this post?"
+      description="It will disappear from PostKeep."
+      confirmLabel="Delete"
+      onConfirm={deletePost}
+      portalHost={SHEET_PORTAL}
+    />
+    </>
   );
 }
 

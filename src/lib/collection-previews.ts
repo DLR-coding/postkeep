@@ -22,8 +22,12 @@ export type CollectionPreview = { thumbnails: string[]; platform: Platform | nul
 const MAX_THUMBNAILS = 3;
 
 export function buildCollectionPreviews(rows: PreviewRow[]): Map<string, CollectionPreview> {
+  // Une ligne sans collection pour un post qui a aussi une collection active vient d'une
+  // collection supprimée : le post n'est pas « sans collection ».
+  const filed = new Set(rows.filter((r) => r.collectionId).map((r) => r.postId));
   const byCollection = new Map<string, PreviewRow[]>();
   for (const row of rows) {
+    if (!row.collectionId && filed.has(row.postId)) continue;
     const key = row.collectionId ?? UNCATEGORIZED_KEY;
     byCollection.set(key, [...(byCollection.get(key) ?? []), row]);
   }

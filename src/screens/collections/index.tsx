@@ -21,15 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message';
 
 import { CollectionChip } from '@/components/collection-chip';
-import { sheetBackgroundStyle, SheetActions, SheetField } from '@/components/sheet-kit';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { ConfirmDialog, sheetBackgroundStyle, SheetActions, SheetField } from '@/components/sheet-kit';
 import { TAB_BAR_CLEARANCE } from '@/components/glass-tab-bar';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -106,7 +98,6 @@ function CollectionActionsSheet({
     softDeleteCollection(collection.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Toast.show({ type: 'success', text1: 'Collection deleted', visibilityTime: 1500 });
-    setConfirmOpen(false);
   };
 
   return (
@@ -177,22 +168,14 @@ function CollectionActionsSheet({
         </BottomSheetView>
       </BottomSheetModal>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="rounded-3xl border-0 bg-surface">
-          <DialogHeader>
-            <DialogTitle>{`Delete "${collection.name}"?`}</DialogTitle>
-            <DialogDescription>The posts it contains are not deleted.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <SheetActions
-              onCancel={() => setConfirmOpen(false)}
-              confirmLabel="Delete"
-              destructive
-              onConfirm={handleDelete}
-            />
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Delete "${collection.name}"?`}
+        description="The posts it contains are not deleted."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+      />
     </>
   );
 }
@@ -331,6 +314,7 @@ export function CollectionsScreen() {
         // Glisser la liste ferme le clavier : sans ça, pendant une recherche, les
         // derniers résultats restent sous le clavier et la barre (edge-to-edge).
         keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         data={gridItems}
         numColumns={NUM_COLUMNS}
         keyExtractor={(item) => (item.type === 'uncategorized' ? UNCATEGORIZED_ID : item.collection.id)}

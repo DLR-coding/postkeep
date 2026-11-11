@@ -70,6 +70,8 @@ export default function HomeScreen() {
         // Glisser la liste ferme le clavier : sans ça, pendant une recherche, les
         // derniers résultats restent sous le clavier et la barre (edge-to-edge).
         keyboardDismissMode="on-drag"
+        // Premier appui sur une ligne : ouvre le post, sans seulement fermer le clavier.
+        keyboardShouldPersistTaps="handled"
         data={filteredPosts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard item={item} highlightQuery={query} />}

@@ -58,3 +58,14 @@ test('miniatures sans doublon et collection absente sans entrée', () => {
   assert.deepEqual(previews.get('recipes')?.thumbnails, ['same.jpg']);
   assert.equal(previews.has('other'), false);
 });
+
+test('un post rangé dans une collection active ne compte pas aussi sous « none »', () => {
+  // Une de ses collections est supprimée (ligne sans collection), l'autre est active.
+  const rows = [
+    row({ daysAgo: 0, postId: 'shared', collectionId: 'recipes', thumbnailUrl: 'a.jpg' }),
+    row({ daysAgo: 0, postId: 'shared', collectionId: null, thumbnailUrl: 'a.jpg' }),
+  ];
+  const previews = buildCollectionPreviews(rows);
+  assert.equal(previews.has(UNCATEGORIZED_KEY), false);
+  assert.deepEqual(previews.get('recipes')?.thumbnails, ['a.jpg']);
+});

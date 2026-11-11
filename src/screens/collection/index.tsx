@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 import { Text } from '@/components/ui/text';
@@ -11,6 +12,7 @@ import { collectionPostsQuery, groupPostRows, uncategorizedPostsQuery, type Post
 const UNCATEGORIZED_ID = 'none';
 
 export function CollectionScreen() {
+  const insets = useSafeAreaInsets();
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const isUncategorized = id === UNCATEGORIZED_ID;
   const query = isUncategorized ? uncategorizedPostsQuery() : collectionPostsQuery(id);
@@ -32,7 +34,8 @@ export function CollectionScreen() {
             </Text>
           </View>
         }
-        contentContainerStyle={isEmpty ? { flexGrow: 1 } : undefined}
+        // Dernière ligne au-dessus de la barre de navigation Android (edge-to-edge).
+        contentContainerStyle={isEmpty ? { flexGrow: 1 } : { paddingBottom: insets.bottom + 16 }}
       />
     </View>
   );

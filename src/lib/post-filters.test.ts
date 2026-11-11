@@ -77,3 +77,12 @@ test('filterCollectionsByName filtre sur le nom', () => {
   assert.deepEqual(filterCollectionsByName(cols, 'japan'), [{ name: 'Japan trip' }]);
   assert.deepEqual(filterCollectionsByName(cols, ''), cols);
 });
+
+test('texte en Unicode décomposé (NFD, iOS) : trouvé sans accent, surligné en entier', () => {
+  const decomposed = 'Ask Léa'; // « Léa » avec un accent combinant
+  assert.equal(matchesText(decomposed, 'lea'), true);
+  assert.deepEqual(splitHighlight(decomposed, 'lea'), [
+    { text: 'Ask ', match: false },
+    { text: 'Léa', match: true },
+  ]);
+});

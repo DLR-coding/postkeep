@@ -3,6 +3,14 @@ import { useColorScheme, View } from 'react-native';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Text } from '@/components/ui/text';
 import { CONTROL_HEIGHT, RADIUS } from '@/lib/design';
 import { THEME } from '@/lib/theme';
@@ -79,5 +87,51 @@ export function SheetActions({
         <Text className={destructive ? 'font-semibold text-destructive' : 'font-semibold'}>{confirmLabel}</Text>
       </Button>
     </View>
+  );
+}
+
+/** Confirmation au style de l'app (coins `RADIUS.card`, sans contour, fond `surface`),
+ *  à la place de l'`Alert.alert` natif d'Android. Rendue via le `PortalHost` racine. */
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel,
+  onConfirm,
+  destructive = true,
+  portalHost,
+}: {
+  /** Hôte de portail à utiliser : depuis une feuille du bas, celui monté dans la feuille,
+   *  sinon le dialogue est dessiné sous la feuille (portail racine plus bas). */
+  portalHost?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+  destructive?: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent portalHost={portalHost} className="rounded-3xl border-0 bg-surface">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {!!description && <DialogDescription>{description}</DialogDescription>}
+        </DialogHeader>
+        <DialogFooter>
+          <SheetActions
+            onCancel={() => onOpenChange(false)}
+            confirmLabel={confirmLabel}
+            destructive={destructive}
+            onConfirm={() => {
+              onOpenChange(false);
+              onConfirm();
+            }}
+          />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -7,14 +7,14 @@ import { FolderMinus, Trash2 } from 'lucide-react-native';
 
 import { CollectionChip } from '@/components/collection-chip';
 import { HighlightedText, PostThumb } from '@/components/post-thumb';
+import { ConfirmDialog } from '@/components/sheet-kit';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { RADIUS } from '@/lib/design';
+import { formatPostDate } from '@/lib/format-date';
 import { removePostFromCollection, softDeletePost, type PostListItem } from '@/db/posts';
 import { detectPlatform, PLATFORM_META } from '@/lib/share-url';
 import { usePostDetailStore } from '@/stores/post-detail-store';
-
-const dateFormatter = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
 
 const THUMB_WIDTH = 80;
 
@@ -56,34 +56,7 @@ export function PostCard({
   const platform = item.url ? detectPlatform(item.url) : null;
   const platformLabel = platform ? PLATFORM_META[platform].label : 'Text';
 
-  const handleRemoveFromCollection = useCallback(() => {
-    if (!collectionId) return;
-    Alert.alert('Remove this post from the collection?', 'It stays in "All posts".', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => {
-          removePostFromCollection(item.id, collectionId);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        },
-      },
-    ]);
-  }, [item.id, collectionId]);
-
-  const handleDelete = useCallback(() => {
-    Alert.alert('Delete this post?', 'It will disappear from PostKeep.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          softDeletePost(item.id);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        },
-      },
-    ]);
-  }, [item.id]);
+  const [confirm, setConfirm] = useState<'delete' | 'remove' | null>(null);
 
   return (
     <Animated.View
@@ -95,14 +68,14 @@ export function PostCard({
           <View className="flex-row py-3">
             {collectionId && (
               <SwipeAction
-                onPress={handleRemoveFromCollection}
+                onPress={() => setConfirm('remove')}
                 icon={FolderMinus}
                 colorClassName="bg-amber-500"
                 accessibilityLabel="Remove from collection"
               />
             )}
             <SwipeAction
-              onPress={handleDelete}
+              onPress={() => setConfirm('delete')}
               icon={Trash2}
               colorClassName="bg-destructive"
               accessibilityLabel="Delete"
@@ -118,7 +91,7 @@ export function PostCard({
 
           <View className="min-w-0 flex-1 gap-1.5">
             <Text variant="muted" className="text-[11px]">
-              {platformLabel} · {dateFormatter.format(item.updatedAt)}
+              {platformLabel} · {formatPostDate(item.createdAt)}
             </Text>
             {!!item.caption && (
               <HighlightedText
@@ -129,12 +102,13 @@ export function PostCard({
               />
             )}
             {!!item.note && (
-              <View className="bg-surface px-2.5 py-2" style={{ borderRadius: RADIUS.inset }}>
+              <View className="flex-row gap-1.5 bg-surface px-2.5 py-2" style={{ borderRadius: RADIUS.inset }}>
+                <Text className="text-xs font-semibold text-note-foreground">Note</Text>
                 <HighlightedText
-                  text={`Note  ${item.note}`}
+                  text={item.note}
                   query={highlightQuery}
                   numberOfLines={3}
-                  className="text-xs leading-[1.35] text-note-foreground"
+                  className="flex-1 text-xs leading-[1.35] text-note-foreground"
                 />
               </View>
             )}
@@ -148,6 +122,20 @@ export function PostCard({
           </View>
         </Pressable>
       </Swipeable>
+      {confirm && (
+        <ConfirmDialog
+          open
+          onOpenChange={(open) => !open && setConfirm(null)}
+          title={confirm === 'delete' ? 'Delete this post?' : 'Remove from this collection?'}
+          description={confirm === 'delete' ? 'It will disappear from PostKeep.' : 'It stays in "All posts".'}
+          confirmLabel={confirm === 'delete' ? 'Delete' : 'Remove'}
+          onConfirm={() => {
+            if (confirm === 'delete') softDeletePost(item.id);
+            else if (collectionId) removePostFromCollection(item.id, collectionId);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }}
+        />
+      )}
     </Animated.View>
   );
 }

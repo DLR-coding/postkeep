@@ -50,12 +50,10 @@ export function groupCollectionRows(
 /** Lignes post × collection pour les aperçus de dossiers (`buildCollectionPreviews`,
  *  `src/lib/collection-previews.ts`). `.from(posts)` : `useLiveQuery` n'écoute que la
  *  table racine (cf. `src/db/posts.ts`), donc un changement de miniature rafraîchit.
- *  `collectionId` nul = aucune collection active (jointure sur collections actives).
- *
- *  ponytail: un post dont toutes les collections sont supprimées compte ici comme
- *  « Uncategorized », alors que `uncategorizedPostsCountQuery` ne le compte pas
- *  (elle ne regarde que `post_collections`) — écart d'un compteur, sans effet sur
- *  les miniatures affichées. */
+ *  `collectionId` nul = lien vers une collection supprimée ou aucun lien ;
+ *  `buildCollectionPreviews` ignore la ligne nulle d'un post qui a une autre collection
+ *  active. Le compteur de `uncategorizedPostsCountQuery` peut différer d'un post dont
+ *  toutes les collections sont supprimées (il ne regarde que `post_collections`). */
 export function collectionPreviewRowsQuery() {
   return db
     .select({
