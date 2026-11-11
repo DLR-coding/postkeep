@@ -134,6 +134,17 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       d'un post r/pics sur le compte de dev : titre + miniature, synchronisés). Liens courts
       `redd.it`/`/s/` : titre seul
 
+## 🔜 Plus tard (demandé le 11 novembre 2026)
+
+- [ ] **Verre liquide sur la barre flottante**, repris de budget-app (branche
+      `worktree-liquid-glass-skia`, commit `e9ab1ae`) : shader SkSL d'après le modèle « V2 » de
+      `webgl-apple-liquid-glass` (MIT, attribution à garder), capture de l'écran derrière la
+      barre, bulle qui glisse entre Posts et Collections, et écran « Verre liquide » de réglages
+      fins (curseurs, stockés dans le kv-store). Implique `react-native-skia` 3.9.1 (module
+      natif → nouveau build ; build Skia lourd : `arm64-v8a` seul et un worker Gradle, comme
+      budget-app), formes du shader à redessiner pour la barre recherche + double rond, et un
+      contrôle de fluidité en vidéo pendant le défilement. Garder `expo-blur` en repli.
+
 ## 🟤 Dette technique
 
 - [x] `scrapeMetaTags` (`src/lib/oembed.ts`) : code mort depuis l'abandon du scraping
