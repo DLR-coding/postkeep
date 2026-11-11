@@ -19,6 +19,13 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Paramètres** (bouton ⚙ de « All posts ») : thème système / clair / sombre, enregistré
+  dans le magasin clé-valeur d'expo-sqlite et appliqué au démarrage ; export de tous les
+  posts en JSON via la feuille de partage Android ; version et lien vers le code ; ligne
+  « Sign in — Coming soon » en attendant la V1.5 (compte + synchronisation).
+- **Confirmations au style de l'app** pour supprimer un post, le retirer d'une collection ou
+  supprimer une collection (plus d'alerte native).
+
 - **Système de design** (10 novembre 2026, d'après les références de feuilles, widgets et
   l'animation « Invite ») : jetons de forme et d'espacement (`src/lib/design.ts` — champs et
   boutons 16, cartes 24, feuilles 28), fond gris chaud en mode clair avec surfaces blanches,

@@ -19,6 +19,10 @@ import { db } from '@/db';
 import migrations from '@/db/migrations/migrations';
 import { NAV_THEME, THEME } from '@/lib/theme';
 import { MetadataExtractorProvider } from '@/lib/webview-metadata';
+import { applyThemePreference, loadThemePreference } from '@/lib/settings';
+
+// Thème choisi dans les Paramètres, appliqué avant le premier rendu.
+applyThemePreference(loadThemePreference());
 
 SplashScreen.preventAutoHideAsync();
 

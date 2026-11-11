@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Pressable, useColorScheme, View } from 'react-native';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
-import { Bookmark } from 'lucide-react-native';
+import { Bookmark, Settings } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { PlatformFilterPills } from '@/components/platform-filter-pills';
 import { PostCard } from '@/components/post-card';
+import { SettingsSheet } from '@/components/settings-sheet';
 import { TAB_BAR_CLEARANCE } from '@/components/glass-tab-bar';
 import { activePostsQuery, groupPostRows, type PostListItem } from '@/db/posts';
 import { filterPosts, type PlatformFilter } from '@/lib/post-filters';
@@ -41,6 +43,8 @@ function EmptyState() {
 }
 
 export default function HomeScreen() {
+  const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  const settingsRef = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
   const { data: rows } = useLiveQuery(activePostsQuery());
   const posts = useMemo(() => groupPostRows(rows), [rows]);
@@ -58,7 +62,18 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Text className="px-5 pb-3 pt-4 text-3xl font-bold">All posts</Text>
+      <View className="flex-row items-center justify-between px-5 pb-3 pt-4">
+        <Text className="flex-1 text-3xl font-bold" numberOfLines={1}>
+          All posts
+        </Text>
+        <Pressable
+          onPress={() => settingsRef.current?.present()}
+          accessibilityLabel="Settings"
+          hitSlop={8}
+          className="h-10 w-10 items-center justify-center rounded-full bg-pill active:scale-95">
+          <Icon as={Settings} size={20} color={colors.foreground} />
+        </Pressable>
+      </View>
       {posts.length > 0 && <PlatformFilterPills value={platform} onChange={setPlatform} />}
       {posts.length > 0 && filtering && (
         <Text variant="muted" className="px-5 pb-1 pt-1 text-xs">
@@ -90,6 +105,7 @@ export default function HomeScreen() {
           isEmpty ? { flexGrow: 1 } : { paddingBottom: TAB_BAR_CLEARANCE + insets.bottom + 16 }
         }
       />
+      <SettingsSheet sheetRef={settingsRef} />
     </SafeAreaView>
   );
 }
