@@ -113,13 +113,11 @@ export default function HomeScreen() {
         numColumns={layout === 'grid' ? GRID_COLUMNS : 1}
         data={filteredPosts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) =>
+        renderItem={({ item }) =>
           layout === 'grid' ? (
-            <View
-              style={{
-                marginLeft: index % GRID_COLUMNS === 0 ? 0 : GRID_GAP,
-                marginBottom: GRID_GAP,
-              }}>
+            // FlashList découpe la largeur en tranches égales : chaque case est centrée
+            // dans sa tranche avec une demi-marge de chaque côté, pour des écarts égaux.
+            <View style={{ alignItems: 'center', paddingHorizontal: GRID_GAP / 2, marginBottom: GRID_GAP }}>
               <PostGridCell item={item} width={cellWidth} highlightQuery={query} />
             </View>
           ) : (
@@ -142,7 +140,7 @@ export default function HomeScreen() {
             ? { flexGrow: 1 }
             : {
                 paddingBottom: TAB_BAR_CLEARANCE + insets.bottom + 16,
-                paddingHorizontal: layout === 'grid' ? GRID_SIDE : 0,
+                paddingHorizontal: layout === 'grid' ? GRID_SIDE - GRID_GAP / 2 : 0,
                 paddingTop: layout === 'grid' ? 4 : 0,
               }
         }
