@@ -69,6 +69,7 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
+    "seed:dev": "node --env-file=.env.local scripts/seed-dev-account.mjs",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

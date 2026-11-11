@@ -401,6 +401,25 @@ n'est appliquée qu'une fois : en écrire une nouvelle plutôt que de modifier u
 > donc `revoke all … from anon, authenticated`, puis accorder le strict utile, et activer la
 > RLS — comme `20261111000000_account_sync.sql`.
 
+### Compte de dev
+
+Un compte réservé aux tests, `postkeep-dev@example.com`, rempli de données factices
+(15 posts sur toutes les plateformes, 5 collections, des notes, un post sans collection,
+un partage sans lien). Identifiants dans `.env.local` (`POSTKEEP_DEV_EMAIL`,
+`POSTKEEP_DEV_PASSWORD`), jamais commités.
+
+```bash
+npm run seed:dev   # crée le compte s'il manque, puis remet son contenu à l'état de référence
+```
+
+Relançable à volonté : les lignes de référence ont des ids fixes et sont réécrites ; tout
+ce qui a été créé pendant des tests passe en suppression logique (les appareils connectés
+le reçoivent à la synchro suivante). Contenu : `scripts/seed-dev-account.mjs`.
+
+⚠️ Se connecter à ce compte sur un téléphone qui a des posts **sans compte** les rattache
+au compte de dev (fusion à la première connexion). Sur le téléphone de tous les jours,
+d'abord se connecter à son vrai compte, ou se déconnecter de tout compte avec une base vide.
+
 ### Réinitialiser un mot de passe
 
 Il n'y a pas de « mot de passe oublié » dans l'app : la confirmation d'email est coupée
