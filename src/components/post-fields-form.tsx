@@ -14,7 +14,6 @@ import { z } from 'zod';
 
 import { CollectionChip } from '@/components/collection-chip';
 import { sheetBackgroundStyle, SheetActions, SheetField } from '@/components/sheet-kit';
-import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { db, schema } from '@/db';
@@ -79,6 +78,13 @@ function CollectionPicker({
   // sa sélection en tapant une recherche) — seules les non sélectionnées passent
   // par le filtre.
   const query = search.trim().toLowerCase();
+  // La recherche n'apparaît qu'au-delà de 6 collections ; en dessous, le « + » devient
+  // une puce en fin de liste. Il préremplit le nom avec la recherche en cours.
+  const showSearch = collections.length > 6;
+  const startCreating = () => {
+    setNewCollectionName(search.trim());
+    setCreatingCollection(true);
+  };
   const visible = collections.filter(
     (collection) =>
       field.value.includes(collection.id) || !query || collection.name.toLowerCase().includes(query)
@@ -86,12 +92,24 @@ function CollectionPicker({
 
   return (
     <>
-      {collections.length > 6 && (
-        <SheetField
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search for a collection…"
-        />
+      {showSearch && (
+        <View className="flex-row items-center gap-2">
+          <SheetField
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search for a collection…"
+            style={{ flex: 1 }}
+          />
+          {!creatingCollection && (
+            <Pressable
+              onPress={startCreating}
+              accessibilityLabel="New collection"
+              className="h-12 w-12 items-center justify-center rounded-2xl active:scale-95"
+              style={{ backgroundColor: colors.chip, borderCurve: 'continuous' }}>
+              <Icon as={Plus} size={20} color={colors.chipForeground} />
+            </Pressable>
+          )}
+        </View>
       )}
 
       <View className="flex-row flex-wrap gap-2">
@@ -114,6 +132,7 @@ function CollectionPicker({
             </Pressable>
           );
         })}
+        {!showSearch && !creatingCollection && <NewCollectionChip onPress={startCreating} />}
         {visible.length === 0 && (
           <Text variant="muted" className="text-sm">
             No matching collection.
@@ -121,7 +140,7 @@ function CollectionPicker({
         )}
       </View>
 
-      {creatingCollection ? (
+      {creatingCollection && (
         <View className="gap-2">
           <SheetField
             autoFocus
@@ -144,23 +163,26 @@ function CollectionPicker({
             onConfirm={handleCreateCollection}
           />
         </View>
-      ) : (
-        <Button
-          variant="ghost"
-          className="h-12 rounded-2xl"
-          style={{ backgroundColor: colors.chip }}
-          onPress={() => {
-            setNewCollectionName(search.trim());
-            setCreatingCollection(true);
-          }}>
-          <Text>
-            {query && visible.length === 0
-              ? `+ Create "${search.trim()}"`
-              : '+ New collection'}
-          </Text>
-        </Button>
       )}
     </>
+  );
+}
+
+/** Puce « + New » en pointillés : fin de la liste de puces en édition, et dans le
+ *  picker quand il n'y a pas de recherche (6 collections ou moins). */
+function NewCollectionChip({ onPress }: { onPress: () => void }) {
+  const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel="New collection"
+      className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
+      style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.folderSheetLine }}>
+      <Icon as={Plus} size={14} color={colors.mutedForeground} />
+      <Text className="text-sm" style={{ color: colors.mutedForeground }}>
+        New
+      </Text>
+    </Pressable>
   );
 }
 
@@ -213,7 +235,6 @@ function CollectionChips({
   field: CollectionField;
   collections: Collection[];
 }) {
-  const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const pickerRef = useRef<BottomSheetModal>(null);
   // Collections du post en tête, comme dans l'aperçu. Ordre figé à l'ouverture : les
   // puces ne doivent pas changer de place pendant qu'on les coche.
@@ -249,16 +270,7 @@ function CollectionChips({
             </Pressable>
           );
         })}
-        <Pressable
-          onPress={() => pickerRef.current?.present()}
-          accessibilityLabel="New collection"
-          className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-          style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.folderSheetLine }}>
-          <Icon as={Plus} size={14} color={colors.mutedForeground} />
-          <Text className="text-sm" style={{ color: colors.mutedForeground }}>
-            New
-          </Text>
-        </Pressable>
+        <NewCollectionChip onPress={() => pickerRef.current?.present()} />
       </ScrollView>
       <CollectionPickerSheet sheetRef={pickerRef} field={field} collections={collections} />
     </>
