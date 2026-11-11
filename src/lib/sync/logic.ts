@@ -135,3 +135,37 @@ export function planGuestMerge({ guest, account }: { guest: MergeRows; account: 
 
   return plan;
 }
+
+type ErrorLike = { name?: string; message?: string; code?: string } | null | undefined;
+
+/** Erreur réseau : `fetch` de React Native (« Network request failed »), relayée telle
+ *  quelle par PostgREST, ou `AuthRetryableFetchError` côté authentification. */
+function isOffline(error: ErrorLike): boolean {
+  return error?.name === 'AuthRetryableFetchError' || /network request failed/i.test(error?.message ?? '');
+}
+
+const OFFLINE = 'No internet connection.';
+
+const AUTH_MESSAGES: Record<string, string> = {
+  invalid_credentials: 'Wrong email or password.',
+  user_already_exists: 'An account already exists with this email.',
+  email_exists: 'An account already exists with this email.',
+  weak_password: 'Password must be at least 8 characters.',
+  email_address_invalid: 'Enter a valid email address.',
+  validation_failed: 'Enter a valid email address.',
+  over_request_rate_limit: 'Too many attempts. Try again in a few minutes.',
+};
+
+/** Message en anglais, affichable tel quel, pour une erreur de connexion/inscription. */
+export function authErrorMessage(error: unknown): string {
+  const e = error as ErrorLike;
+  if (isOffline(e)) return OFFLINE;
+  return AUTH_MESSAGES[e?.code ?? ''] ?? e?.message ?? 'Something went wrong. Try again.';
+}
+
+/** Message d'état de synchro (paramètres) ; la synchro réessaie au prochain déclencheur. */
+export function syncErrorMessage(error: unknown): string {
+  const e = error as ErrorLike;
+  if (isOffline(e)) return "Offline — changes will sync when you're back online.";
+  return `Sync failed: ${e?.message ?? 'unknown error'}`;
+}

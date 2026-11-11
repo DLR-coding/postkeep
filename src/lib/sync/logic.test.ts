@@ -2,7 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import type { Collection, Post, PostCollection } from '../../db/schema.ts';
-import { fromRemote, isNewer, nextCursor, planGuestMerge, toRemote, type MergeRows } from './logic.ts';
+import {
+  authErrorMessage,
+  fromRemote,
+  isNewer,
+  nextCursor,
+  planGuestMerge,
+  syncErrorMessage,
+  toRemote,
+  type MergeRows,
+} from './logic.ts';
 
 const T1 = new Date(Date.UTC(2026, 10, 1, 8));
 const T2 = new Date(Date.UTC(2026, 10, 2, 8));
@@ -196,4 +205,15 @@ test('planGuestMerge : post et collection fusionnés sur la même paire, doublon
     { table: 'posts', id: 'gp1' },
     { table: 'post_collections', id: 'gpc2' },
   ]);
+});
+
+test('authErrorMessage : code connu, réseau, inconnu', () => {
+  assert.equal(authErrorMessage({ name: 'AuthApiError', code: 'invalid_credentials', message: 'x' }), 'Wrong email or password.');
+  assert.equal(authErrorMessage({ name: 'AuthRetryableFetchError', message: 'Network request failed' }), 'No internet connection.');
+  assert.equal(authErrorMessage({ name: 'AuthApiError', code: 'other', message: 'Raw server message' }), 'Raw server message');
+});
+
+test('syncErrorMessage : réseau (message PostgREST) ou autre', () => {
+  assert.match(syncErrorMessage({ message: 'TypeError: Network request failed', code: '' }), /^Offline/);
+  assert.equal(syncErrorMessage(new Error('boom')), 'Sync failed: boom');
 });

@@ -16,6 +16,7 @@ import { PortalHost } from '@rn-primitives/portal';
 
 import { PostDetailSheet } from '@/components/post-detail-sheet';
 import { db } from '@/db';
+import { useAccountSync } from '@/hooks/use-account-sync';
 import migrations from '@/db/migrations/migrations';
 import { NAV_THEME, THEME } from '@/lib/theme';
 import { MetadataExtractorProvider } from '@/lib/webview-metadata';
@@ -78,6 +79,7 @@ function MigrationGate({ error }: { error?: Error }) {
 export default function RootLayout() {
   const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const { success, error } = useMigrations(db, migrations);
+  useAccountSync(success);
 
   useEffect(() => {
     if (success || error) {
