@@ -46,13 +46,14 @@ export function SavePostForm({
       // Récupération des métadonnées selon la plateforme :
       // - Instagram/TikTok : WebView (les plateformes rendent les og:* côté client)
       // - X/Twitter : oEmbed API (fonctionne)
+      // - Reddit : oEmbed officiel (titre seul)
       // - Autres : pas de récupération
       let metadata = { caption: null as string | null, thumbnailUrl: null as string | null };
 
       if (analyzed?.url) {
         if (analyzed.platform === 'instagram' || analyzed.platform === 'tiktok') {
           metadata = await extractMetadata(analyzed.url);
-        } else if (analyzed.platform === 'x') {
+        } else if (analyzed.platform === 'x' || analyzed.platform === 'reddit') {
           metadata = await fetchOEmbed(analyzed.url, analyzed.platform);
         }
       }

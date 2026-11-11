@@ -240,7 +240,7 @@ de TanStack Query.
 | **Instagram** | ✅ | ✅ | WebView cachée (`src/lib/webview-metadata.tsx`) |
 | **TikTok** | ✅ | ✅ | WebView cachée (`src/lib/webview-metadata.tsx`) |
 | **X (Twitter)** | ✅ | ❌ | oEmbed (`api.twitter.com/1/statuses/oembed.json`, `fetchOEmbed` dans `src/lib/oembed.ts`) : texte du tweet seulement |
-| **Reddit** | ✅ | ✅ | Vue publique `.json` du permalien (`<post>/.json`, `fetchOEmbed` dans `src/lib/oembed.ts`, User-Agent `PostKeep/0.3 (Android app)`) : titre du post, miniature `preview.images[0].source.url` sinon `thumbnail`. Seuls les liens `/comments/` sont traités : `redd.it` et les liens de partage `/s/` ne sont pas résolus, et un refus (403/429) laisse vide |
+| **Reddit** | ✅ | ❌ | oEmbed officiel (`reddit.com/oembed?url=…`, `fetchOEmbed` dans `src/lib/oembed.ts`, User-Agent `PostKeep/0.3 (Android app)`) : titre du post. Pas de miniature : la vue publique `.json` du post, qui en a une, répond 403 même depuis le réseau mobile du téléphone (vérifié le 11 novembre 2026) |
 | **Threads** | ❌ | ❌ | Jamais supporté |
 | **Autres** (YouTube, articles…) | ❌ | ❌ | Aucune récupération |
 

@@ -15,6 +15,11 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Ajouté
+
+- **Reddit** : titre du post récupéré à l'enregistrement (oEmbed officiel de Reddit). Pas
+  de miniature : Reddit refuse l'accès public au détail des posts.
+
 ## [0.3.0] — 11 novembre 2026
 
 APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.3.0).
