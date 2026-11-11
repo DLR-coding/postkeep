@@ -15,6 +15,23 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Modifié
+
+- **Expo SDK 58** (branche `feat/sdk-58`) : React Native 0.88.1, React 19.3.0, Reanimated
+  4.7.1, Worklets 0.13.0, FlashList 2.3.2, `react-native-webview` 14.0.1,
+  `react-native-svg` 15.16.0, paquets `expo-*` en 58.x. Nécessite un nouveau dev build ;
+  pas encore testé sur appareil.
+- **gesture-handler 3.3.0** (majeure) : `Swipeable` retiré, la carte de post utilise
+  `ReanimatedSwipeable`. `@gorhom/bottom-sheet` reste en 5.2.14, sans support officiel de
+  gesture-handler 3 (cast de type dans la feuille de compte).
+- **NativeWind 4.2.6 → 4.2.7** (patch, `react-native-css-interop` 0.2.7) ; Tailwind reste en
+  3.4.19.
+- **`expo-share-intent` 8.0.1 → 9.0.0** : la 8 exigeait `expo` ^57 et bloquait l'installation.
+- Contournements de types : ref de `View` en `ComponentRef<typeof View>` (React Native 0.88),
+  `WebView<object>` pour les types erronés de `react-native-webview` 14.0.1.
+- `expo-doctor` du SDK 58 : 20 vérifications (20/20) ; le contournement
+  `npx expo-doctor@1.20.5` n'est plus nécessaire.
+
 ## [0.3.0] — 11 novembre 2026
 
 APK : [GitHub Release v0.3.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.3.0).

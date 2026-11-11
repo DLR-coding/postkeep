@@ -159,7 +159,13 @@ Après la V1 (phases 6 et 7 closes), sans rien en installer avant — détail da
 [ROADMAP.md](./ROADMAP.md) :
 
 - **V1.5** : rétention (rappels, triage). Comptes et synchronisation : avancés, voir plus haut
-- **Montée vers le SDK 58**, sur une branche séparée
+- **Montée vers le SDK 58** : faite sur la branche `feat/sdk-58` (React Native 0.88,
+  gesture-handler 3, NativeWind 4.2.7 ; `expo-doctor` 20/20, doctor RNR OK). Avant fusion :
+  - [ ] Nouveau dev build (le natif a changé), puis test sur appareil : balayage des cartes
+        (`ReanimatedSwipeable`), feuilles `@gorhom/bottom-sheet` sous gesture-handler 3 (dont
+        le passage au champ mot de passe), flou de la barre, extraction WebView, partage
+  - [ ] Minification R8 (activée par défaut en release depuis le SDK 58) vérifiée sur un APK
+        release
 
 ---
 

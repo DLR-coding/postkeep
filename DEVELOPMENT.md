@@ -46,7 +46,7 @@ Il va chercher le JavaScript à distance, sur le serveur **Metro** qui tourne su
 
 ## 2. Prérequis (une seule fois)
 
-1. **Node.js 22.13.x** (version attendue par le SDK 57 ; `.nvmrc` → `nvm use`).
+1. **Node.js 22, 22.13 minimum** (le SDK 58 accepte `^22.13` ; `.nvmrc` → `nvm use`).
 2. **Un téléphone Android** avec le dev client installé.
    S'il n'est pas installé, voir §7 « Construire un dev client ».
 3. **Un chemin du téléphone vers Metro sur ton PC** : `--tunnel` (marche partout), câble USB
@@ -202,7 +202,7 @@ Symptôme si on oublie : l'app plante au lancement avec une erreur du type
 ## 5. Ajouter une dépendance — l'arbre de décision
 
 **Toujours essayer `npx expo install` en premier.** Cette commande choisit automatiquement la
-version compatible avec le SDK 57, contrairement à `npm install` qui prend la dernière version
+version compatible avec le SDK 58, contrairement à `npm install` qui prend la dernière version
 publiée (et casse l'alignement).
 
 ```bash
@@ -229,10 +229,10 @@ Certaines versions sont volontairement figées. Les changer casse le projet :
 
 | Paquet | Version | Pourquoi |
 |---|---|---|
-| `nativewind` | 4.2.6 | La v5 supprime `tailwind.config.js` → casse React Native Reusables |
+| `nativewind` | 4.2.7 | La v5 supprime `tailwind.config.js` → casse React Native Reusables |
 | `tailwindcss` | 3.4.19 | La v4 est une config CSS-first → même problème |
 
-> La doc officielle d'Expo recommande NativeWind v5 pour le SDK 57. **Ne pas la suivre ici.**
+> La doc officielle d'Expo recommande NativeWind v5 pour le SDK 58. **Ne pas la suivre ici.**
 > Voir « Piège 2 » dans `INIT.md`.
 
 ---
@@ -498,12 +498,12 @@ d'abord) : il peut contenir les dernières écritures.
 Trois commandes à connaître. À lancer après toute installation, et avant tout commit important.
 
 ```bash
-npx expo-doctor              # 21 vérifications : versions, peer deps, config native
-npx expo install --check     # les versions correspondent-elles au SDK 57 ?
+npx expo-doctor              # 20 vérifications (SDK 58) : versions, peer deps, config native
+npx expo install --check     # les versions correspondent-elles au SDK 58 ?
 npx @react-native-reusables/cli doctor --yes   # config NativeWind + RNR complète ?
 ```
 
-**Objectif : `21/21 checks passed` et `All checks passed`.**
+**Objectif : `20/20 checks passed` et `All checks passed`.**
 
 Si `expo-doctor` signale un décalage de versions :
 
@@ -512,6 +512,17 @@ npx expo install --fix
 ```
 
 C'est normal et sans danger : Expo publie des versions patch régulièrement.
+
+### Monter de SDK Expo
+
+Procédure qui a fonctionné pour le passage SDK 57 → 58 (novembre 2026) :
+
+1. `npx expo install expo@^58.0.0 --fix` — a échoué (`ERESOLVE`) : `expo-share-intent` 8
+   exige `expo` ^57 en peer.
+2. Passer `expo-share-intent` à la version du nouveau SDK (9.0.0), puis régénérer le lockfile.
+3. `npx expo install --fix`, puis les deux doctors (ci-dessus) et les types.
+4. Lire les notes de version des majeures (ex. gesture-handler 3 : `Swipeable` retiré).
+5. **Nouveau dev build obligatoire** (le natif change), puis tester sur appareil (§4, §7).
 
 ### Tests unitaires
 
@@ -639,7 +650,6 @@ Le rappel minimal pour le travail quotidien :
 | Les classes Tailwind ne s'appliquent pas | Cache Metro | `npx expo start --clear` |
 | L'app crash au démarrage après un `npm install` | Module natif ajouté sans rebuild | Refaire un `eas build --profile development` |
 | Écran rouge « native module not found » | Idem — le natif manque dans le dev client | Idem |
-| `expo-doctor` plante : `Cannot find module '@expo/env'` | `expo-doctor@latest` 1.21.7 (publié le 11 novembre 2026) est cassé | `npx expo-doctor@1.20.5` (tag `sdk-57`) |
 | `expo-doctor` signale des versions décalées | Nouvelles versions patch publiées | `npx expo install --fix` |
 | Le CLI RNR reste bloqué sans rien afficher | Il attend une réponse interactive | Relancer avec `--yes` |
 | Texte invisible (noir sur noir en mode sombre) | `Text` de `react-native` au lieu de celui de RNR | Importer `Text` depuis `@/components/ui/text` |

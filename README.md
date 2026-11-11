@@ -67,7 +67,7 @@ What's next: [ROADMAP.md](./ROADMAP.md) and [TODO.md](./TODO.md).
 
 | Area | Choice |
 |---|---|
-| Framework | Expo SDK 57 / React Native 0.86 / React 19.2 / TypeScript |
+| Framework | Expo SDK 58 / React Native 0.88 / React 19.3 / TypeScript |
 | Navigation | `expo-router` (file-based routing) |
 | Style | NativeWind 4 + Tailwind 3 (pinned versions) |
 | Components | [React Native Reusables](https://reactnativereusables.com) (shadcn/ui for mobile) |

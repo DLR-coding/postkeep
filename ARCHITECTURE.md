@@ -341,30 +341,42 @@ le provider racine, le partage arrive mais rien ne se passe.
 
 | Paquet | Version | Pourquoi c'est figé |
 |---|---|---|
-| `nativewind` | 4.2.6 | La v5 supprime `tailwind.config.js` (configuration CSS-first) → le CLI React Native Reusables en dépend et échoue |
+| `nativewind` | 4.2.7 | La v5 supprime `tailwind.config.js` (configuration CSS-first) → le CLI React Native Reusables en dépend et échoue. Patch 4.2.6 → 4.2.7 (avec `react-native-css-interop` 0.2.7) validé le 11 novembre 2026 pour le SDK 58 |
 | `tailwindcss` | 3.4.19 | La v4 impose la même configuration CSS-first → même conséquence |
-| `expo` | ~57.0.32 | Socle validé, `expo-doctor` 21/21. Les patchs du même SDK se suivent avec `npx expo install --fix` — c'est le **mineur** (SDK 58) qui demande une décision |
-| `expo-share-intent` | 8.0.1 | Version requise pour SDK 57 (le plugin vérifie et refuse un décalage) |
-| `react-native-reanimated` | 4.5.1 | Version fournie par le SDK 57 |
-| `react-native-gesture-handler` | 2.32.0 | Idem |
-| `expo-blur` | ~57.0.3 | Module natif (refonte) : flou de la barre flottante. Sur Android, `BlurTargetView` + `blurTarget`, `blurMethod="dimezisBlurViewSdk31Plus"` |
-| `react-native-webview` | 13.16.1 | Version fournie par le SDK 57. Module natif : lecture des balises `og:` d'Instagram/TikTok dans une WebView cachée (`src/lib/webview-metadata.tsx`) |
-| `react-native-svg` | 15.15.4 | Version fournie par le SDK 57. Module natif : dégradés de la refonte (sticker Instagram, fonds de repli Instagram/TikTok des vignettes et de la feuille de détail, voile sous le texte d'une case de la grille) |
+| `expo` | ~58.0.24 | Socle SDK 58 (React Native 0.88.1, React 19.3.0), `expo-doctor` 20/20. Les patchs du même SDK se suivent avec `npx expo install --fix` — c'est le **mineur** (SDK 59) qui demande une décision |
+| `expo-share-intent` | 9.0.0 | Version requise pour SDK 58 (la 8.0.1 exige `expo` ^57 en peer et bloque `npm install` ; le plugin vérifie et refuse un décalage) |
+| `react-native-reanimated` | 4.7.1 | Version fournie par le SDK 58 |
+| `react-native-gesture-handler` | ~3.3.0 | Version fournie par le SDK 58. Majeure : `Swipeable` a disparu, `post-card.tsx` utilise `ReanimatedSwipeable` (`react-native-gesture-handler/ReanimatedSwipeable`) |
+| `expo-blur` | ~58.0.6 | Module natif (refonte) : flou de la barre flottante. Sur Android, `BlurTargetView` + `blurTarget`, `blurMethod="dimezisBlurViewSdk31Plus"` |
+| `react-native-webview` | 14.0.1 | Version fournie par le SDK 58. Module natif : lecture des balises `og:` d'Instagram/TikTok dans une WebView cachée (`src/lib/webview-metadata.tsx`). Ses types racine déclarent `class WebView<P = undefined>` → props `never` : contourné par `WebView<object>` (commentaire `shortcut:`), à retirer quand les types upstream seront corrigés |
+| `react-native-svg` | 15.16.0 | Version fournie par le SDK 58. Module natif : dégradés de la refonte (sticker Instagram, fonds de repli Instagram/TikTok des vignettes et de la feuille de détail, voile sous le texte d'une case de la grille) |
 
-Les autres modules natifs (`react-native-keyboard-controller` 1.21.9, `@shopify/flash-list`
-2.0.2, `react-native-worklets` 0.10.1, paquets `expo-*`) suivent aussi les versions du SDK 57 :
+Les autres modules natifs (`react-native-keyboard-controller` 1.22.7, `@shopify/flash-list`
+2.3.2, `react-native-worklets` 0.13.0, paquets `expo-*`) suivent aussi les versions du SDK 58 :
 toujours les ajouter ou les mettre à jour avec `npx expo install`, et grouper ces ajouts avant
 un build (§9).
 
-⚠️ **La documentation officielle d'Expo recommande NativeWind v5 pour le SDK 57.
+⚠️ **La documentation officielle d'Expo recommande NativeWind v5 pour le SDK 58.
 Ne pas la suivre sur ce projet** — elle casse React Native Reusables.
+
+Avec React Native 0.88, la ref d'une `View` se type `ComponentRef<typeof View>`
+(`ReactNativeElement`), plus `View` (voir `src/app/(tabs)/_layout.tsx`).
+
+Depuis le SDK 58, les builds **release** activent la minification R8 par défaut : pas encore
+vérifiée sur un APK release (voir TODO.md).
 
 ### Compatibilité vérifiée manuellement
 
-`@gorhom/bottom-sheet` v5 est documenté pour **Reanimated v3**, alors que le SDK 57 installe
-**Reanimated v4**. Aucune confirmation officielle de compatibilité n'existe. Testé sur
+`@gorhom/bottom-sheet` v5 est documenté pour **Reanimated v3**, alors que le SDK 57 installait
+déjà **Reanimated v4**. Aucune confirmation officielle de compatibilité n'existe. Testé sur
 appareil réel pendant l'initialisation : **fonctionne**. À re-tester si l'une des deux
 versions bouge.
+
+⚠️ **`@gorhom/bottom-sheet` 5.2.14 × gesture-handler 3 (SDK 58)** : aucun support officiel de
+gesture-handler 3. D'après l'issue upstream #2793, la bibliothèque fonctionne, mais ses types
+de ref pour `BottomSheetTextInput` sont faux sous gesture-handler 3 → cast `shortcut:` dans
+`src/components/account-sheet.tsx`. **Pas encore testé sur appareil** avec le SDK 58 : à
+vérifier en priorité sur le nouveau dev build (ouverture, glissement, saisie au clavier).
 
 ---
 

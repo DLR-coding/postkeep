@@ -2,7 +2,7 @@
 
 ## Expo HAS CHANGED
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any
+Read the exact versioned docs at https://docs.expo.dev/versions/v58.0.0/ before writing any
 code. Verify library documentation with Context7 rather than relying on training data —
 several decisions on this project were made on outdated assumptions and had to be reverted.
 
@@ -20,8 +20,8 @@ several decisions on this project were made on outdated assumptions and had to b
 
 ## Contraintes non négociables
 
-- **NativeWind 4.2.6 / Tailwind 3.4.19 épinglés.** La doc Expo recommande NativeWind v5 pour
-  le SDK 57 : ne pas la suivre, elle casse React Native Reusables.
+- **NativeWind 4.2.7 / Tailwind 3.4.19 épinglés.** La doc Expo recommande NativeWind v5 pour
+  le SDK 58 : ne pas la suivre, elle casse React Native Reusables.
 - **Ne jamais lancer `npm audit fix --force`** — casse l'alignement des versions.
 - **Ne jamais lancer `react-native-reusables init`** — recrée un projet en SDK 56.
 - **`npx expo install` avant `npm install`**, systématiquement.
@@ -33,6 +33,6 @@ several decisions on this project were made on outdated assumptions and had to b
 ## Vérifier son travail
 
 ```bash
-npx expo-doctor                                # doit afficher 21/21
+npx expo-doctor                                # doit afficher 20/20
 npx @react-native-reusables/cli doctor --yes   # doit afficher "All checks passed"
 ```

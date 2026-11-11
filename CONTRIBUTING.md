@@ -40,7 +40,7 @@ Le détail (connexion au serveur, dépannage réseau) est dans [DEVELOPMENT.md](
 Trois commandes, à lancer avant et après toute modification de dépendances :
 
 ```bash
-npx expo-doctor                                # doit afficher 21/21
+npx expo-doctor                                # doit afficher 20/20
 npx expo install --check                       # doit afficher "Dependencies are up to date"
 npx @react-native-reusables/cli doctor --yes   # doit afficher "All checks passed"
 ```
@@ -201,7 +201,7 @@ Quelqu'un qui lit ce commit dans six mois comprend la contrainte, pas seulement 
 
 ### Avant de proposer une modification
 
-- [ ] `npx expo-doctor` → 21/21
+- [ ] `npx expo-doctor` → 20/20
 - [ ] Tests unitaires verts (§5) si une logique pure a été touchée
 - [ ] L'app se lance et l'écran modifié fonctionne **sur un appareil réel**
 - [ ] Aucune couleur en dur (vérifier en mode clair **et** sombre)
@@ -267,7 +267,7 @@ npm install <paquet>          # 2. seulement si le paquet est hors registre Expo
 npx expo-doctor               # 3. systématiquement après
 ```
 
-`expo install` choisit automatiquement la version compatible avec le SDK 57. `npm install`
+`expo install` choisit automatiquement la version compatible avec le SDK 58. `npm install`
 prend la dernière version publiée et casse l'alignement — c'est une erreur qui a déjà coûté
 du temps sur ce projet.
 
