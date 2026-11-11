@@ -93,3 +93,17 @@ test('isVerticalVideo : TikTok et Reels seulement', () => {
   assert.equal(check('https://x.com/a/status/1'), false);
   assert.equal(check(null), false);
 });
+
+test('detectPlatform reconnaît Reddit (www, old, liens courts redd.it)', () => {
+  assert.equal(detectPlatform('https://www.reddit.com/r/reactnative/comments/abc/title/'), 'reddit');
+  assert.equal(detectPlatform('https://old.reddit.com/r/reactnative/'), 'reddit');
+  assert.equal(detectPlatform('https://redd.it/abc123'), 'reddit');
+  assert.equal(detectPlatform('https://notreddit.com/r/x'), null);
+});
+
+test('analyzeSharedUrl retire le tracking des liens de partage Reddit', () => {
+  assert.deepEqual(
+    analyzeSharedUrl('https://www.reddit.com/r/reactnative/comments/abc/title/?utm_source=share&utm_medium=android_app'),
+    { url: 'https://www.reddit.com/r/reactnative/comments/abc/title/', platform: 'reddit' }
+  );
+});

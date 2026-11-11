@@ -86,3 +86,8 @@ test('texte en Unicode décomposé (NFD, iOS) : trouvé sans accent, surligné e
     { text: 'Léa', match: true },
   ]);
 });
+
+test('filterPosts : filtre Reddit', () => {
+  const r = post('https://www.reddit.com/r/x/comments/1/t/', 'A thread');
+  assert.deepEqual(filterPosts([...all, r], { platform: 'reddit', query: '' }), [r]);
+});

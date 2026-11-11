@@ -56,7 +56,9 @@ function PlatformBackdrop({ platform, width, height }: { platform: Platform; wid
       </Svg>
     );
   }
-  return <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#16171b' }} />;
+  // Reddit : son orange ; X et Threads : gris très foncé.
+  const backdrop = platform === 'reddit' ? '#FF4500' : '#16171b';
+  return <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: backdrop }} />;
 }
 
 /** Texte avec le terme de recherche surligné (jaune, lisible sur tous les fonds). */

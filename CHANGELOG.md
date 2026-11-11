@@ -19,6 +19,9 @@ Aucune version n'a encore été distribuée — voir [ROADMAP.md](./ROADMAP.md).
 
 ### Ajouté
 
+- **Reddit** reconnu (`reddit.com`, `redd.it`) : autocollant orange, filtre, vignette de
+  secours, liens de partage nettoyés de leur tracking. Pas de récupération de légende ni de
+  miniature pour l'instant.
 - **Paramètres** (bouton ⚙ de « All posts ») : thème système / clair / sombre, enregistré
   dans le magasin clé-valeur d'expo-sqlite et appliqué au démarrage ; export de tous les
   posts en JSON via la feuille de partage Android ; version et lien vers le code ; ligne

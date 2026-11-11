@@ -4,13 +4,14 @@
  * ce module se charge de la normaliser et d'en déduire la plateforme.
  */
 
-export type Platform = 'instagram' | 'tiktok' | 'x' | 'threads';
+export type Platform = 'instagram' | 'tiktok' | 'x' | 'threads' | 'reddit';
 
 const PLATFORM_HOSTS: Record<Platform, string[]> = {
   instagram: ['instagram.com'],
   tiktok: ['tiktok.com'],
   x: ['x.com', 'twitter.com'],
   threads: ['threads.net', 'threads.com'],
+  reddit: ['reddit.com', 'redd.it'],
 };
 
 /** Aperçu de repli quand aucune miniature n'a pu être récupérée (ARCHITECTURE.md
@@ -21,6 +22,7 @@ export const PLATFORM_META: Record<Platform, { label: string; badge: string; col
   tiktok: { label: 'TikTok', badge: 'TT', color: '#010101' },
   x: { label: 'X', badge: 'X', color: '#000000' },
   threads: { label: 'Threads', badge: 'TH', color: '#000000' },
+  reddit: { label: 'Reddit', badge: 'R', color: '#FF4500' },
 };
 
 function isSameOrSubdomain(hostname: string, host: string): boolean {

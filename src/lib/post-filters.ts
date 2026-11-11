@@ -6,7 +6,7 @@
 
 import { detectPlatform } from './share-url.ts';
 
-export type PlatformFilter = 'all' | 'instagram' | 'tiktok' | 'x';
+export type PlatformFilter = 'all' | 'instagram' | 'tiktok' | 'x' | 'reddit';
 
 export type SearchablePost = { url: string | null; caption: string | null; note: string | null };
 

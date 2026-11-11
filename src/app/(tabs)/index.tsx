@@ -23,6 +23,7 @@ const FILTER_LABEL: Record<PlatformFilter, string> = {
   instagram: 'Instagram',
   tiktok: 'TikTok',
   x: 'X',
+  reddit: 'Reddit',
 };
 
 function EmptyState() {

@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 import type { PlatformFilter } from '@/lib/post-filters';
@@ -8,6 +8,7 @@ const FILTERS: { value: PlatformFilter; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'x', label: 'X' },
+  { value: 'reddit', label: 'Reddit' },
 ];
 
 /** Pilules de filtre par plateforme sous le titre de All posts (refonte, décision 1). */
@@ -19,7 +20,13 @@ export function PlatformFilterPills({
   onChange: (value: PlatformFilter) => void;
 }) {
   return (
-    <View className="flex-row gap-1.5 px-5 pb-2" accessibilityRole="tablist">
+    // Défile à l'horizontale : cinq pilules ne tiennent pas sur un écran étroit.
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="grow-0"
+      contentContainerClassName="gap-1.5 px-5 pb-2"
+      accessibilityRole="tablist">
       {FILTERS.map((f) => {
         const active = f.value === value;
         return (
@@ -35,6 +42,6 @@ export function PlatformFilterPills({
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
