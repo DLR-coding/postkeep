@@ -3,7 +3,7 @@
 Toutes les modifications notables du projet sont consignées ici.
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
-Le projet suivra [SemVer](https://semver.org/lang/fr/) à partir de la première version publiée.
+Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version publiée (0.1.0).
 
 **Catégories** : `Ajouté` · `Modifié` · `Déprécié` · `Retiré` · `Corrigé` · `Sécurité`
 
@@ -48,6 +48,53 @@ APK : [GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/ta
   accents), écran Collections en dossiers avec aperçu des miniatures, feuille de détail
   restylée. Modules natifs ajoutés : `expo-blur`.
 
+- **Légende et miniature des posts sauvegardés**, récupérées une seule fois à l'enregistrement,
+  depuis l'appareil, et stockées en base (`posts.caption`, `posts.thumbnail_url`, migration
+  0002) : la liste ne touche jamais le réseau. Instagram et TikTok via une WebView cachée qui
+  lit les balises `og:*` une fois le script de la page exécuté (`src/lib/webview-metadata.tsx`,
+  module natif `react-native-webview` ajouté) ; X via l'oEmbed `api.twitter.com` (texte
+  seulement, pas de miniature). À défaut, la légende reprend le texte envoyé avec le partage.
+  Pas de récupération côté serveur : une Edge Function Supabase recevait des réponses vides,
+  les trois plateformes bloquant les IP de datacenter.
+
+### Modifié
+
+- **Interface traduite en anglais** (textes de l'app et `README`).
+- **Date affichée sur un post** : date d'enregistrement, avec l'année seulement si ce n'est
+  pas l'année en cours (« 8 Nov », « 3 Mar 2025 » — `src/lib/format-date.ts`, testé).
+- Versions de patch alignées sur le SDK 57 (`npx expo install --fix` : `expo` ~57.0.32,
+  `react-native` 0.86.3) ; Node 22 épinglé dans `.nvmrc`.
+
+### Corrigé
+
+- **Le bouton « Open » manquait en mode édition plein écran.**
+- **Liens YouTube cassés** : la query string était retirée de toutes les URLs pour
+  dédoublonner les partages Instagram (`?igsh=…` change à chaque fois), ce qui supprimait
+  `?v=ID_VIDEO`. Elle n'est plus retirée que pour les plateformes connues.
+- **L'écran de partage se rouvrait** après un rechargement : le fermer avec le retour Android
+  ne retirait que la route, le partage restait en attente dans `expo-share-intent`. L'écran
+  appelle maintenant `resetShareIntent()` au démontage. Non reproductible dans le dev client,
+  à confirmer sur l'APK de production.
+- **Tri des posts incohérent avec la date affichée** : les listes et les aperçus de dossiers
+  étaient triés par dernière modification alors que la ligne affiche la date
+  d'enregistrement — un vieux post modifié remontait en tête avec une vieille date. Tri par
+  `created_at` partout.
+- **La note ne défilait pas en mode édition** : le conteneur d'édition (`BottomSheetView`,
+  `flex: 1`) n'avait pas de hauteur bornée et grandissait avec la note ; il prend maintenant
+  la hauteur de la fenêtre moins la poignée et le clavier. Un glissé dans la note ne replie
+  plus la feuille, et l'en-tête et les collections se replient pendant la saisie.
+- **Icônes de la barre d'état invisibles en mode clair** depuis le passage aux onglets JS
+  (`<StatusBar style="auto" />`).
+
+## [0.1.0] — 4 septembre 2026
+
+APK : [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0).
+
+### Ajouté
+
+- **Distribution en APK** (Phase 6) : le profil EAS `production` produit un APK installable
+  au lieu d'un AAB Play Store ; nom affiché « PostKeep », icône et splash provisoires
+  (signet sur indigo `#6366F1`) à la place de ceux du gabarit Expo.
 - **Consultation des posts sauvegardés** (Phase 3) : liste (`@shopify/flash-list`,
   `(tabs)/index.tsx`), carte de post (`src/components/post-card.tsx` — plateforme, note,
   badges de collection tronqués à 3 + `+N`, date), état vide soigné
@@ -129,13 +176,6 @@ APK : [GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/ta
 
 ### Corrigé
 
-- **La note ne défilait pas en mode édition** : le conteneur d'édition (`BottomSheetView`,
-  `flex: 1`) n'avait pas de hauteur bornée et grandissait avec la note ; il prend maintenant
-  la hauteur de la fenêtre moins la poignée et le clavier. Un glissé dans la note ne replie
-  plus la feuille, et l'en-tête et les collections se replient pendant la saisie.
-- **Icônes de la barre d'état invisibles en mode clair** depuis le passage aux onglets JS
-  (`<StatusBar style="auto" />`).
-
 - **Trois bugs de réactivité `useLiveQuery`** (`drizzle-orm/expo-sqlite`, `src/db/posts.ts`) :
   la fonction n'écoute que la table du `.from()` racine d'une requête, jamais les tables
   jointes (`node_modules/drizzle-orm/expo-sqlite/query.js`). `savePost`,
@@ -198,3 +238,7 @@ APK : [GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/ta
   si l'une des deux versions change
 - **Expo Go est définitivement inutilisable** sur ce projet à cause d'`expo-share-intent`
   (module natif hors du périmètre d'Expo Go). Un *development build* est obligatoire
+
+[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/DLR-coding/postkeep/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0

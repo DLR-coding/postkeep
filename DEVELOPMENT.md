@@ -46,11 +46,11 @@ Il va chercher le JavaScript à distance, sur le serveur **Metro** qui tourne su
 
 ## 2. Prérequis (une seule fois)
 
-1. **Node.js 22.13.x** (version attendue par le SDK 57).
+1. **Node.js 22.13.x** (version attendue par le SDK 57 ; `.nvmrc` → `nvm use`).
 2. **Un téléphone Android** avec le dev client installé.
    S'il n'est pas installé, voir §7 « Construire un dev client ».
-3. **Le téléphone et le PC sur le même réseau Wi-Fi.** Obligatoire : le téléphone doit pouvoir
-   joindre Metro sur ton PC.
+3. **Un chemin du téléphone vers Metro sur ton PC** : `--tunnel` (marche partout), câble USB
+   + `adb reverse`, ou même réseau Wi-Fi si aucun pare-feu ne bloque le port 8081 (voir §3).
 4. Les dépendances du projet :
    ```bash
    npm install
@@ -76,6 +76,18 @@ l'ancien code sans prévenir.
 
 Alternative par câble USB (plus rapide) : `adb reverse tcp:8081 tcp:8081` (avec l'`adb.exe`
 de Windows), puis dans l'app « Enter URL manually » → `http://localhost:8081`.
+
+```bash
+ADB=/mnt/c/Users/drakotomahefa/AppData/Local/platform-tools/adb.exe
+$ADB reverse tcp:8081 tcp:8081
+# Ouvrir directement le dev client sur Metro, sans passer par le launcher :
+$ADB shell am force-stop com.thejohninc.postkeep   # d'abord — voir le piège ci-dessous
+$ADB shell am start -a android.intent.action.VIEW \
+  -d 'exp+postkeep://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081'
+```
+
+> 🐛 **Piège vécu** : sans le `force-stop`, le deep link arrive dans un processus encore
+> vivant et le dev client plante (« App react context shouldn't be created before… »).
 
 Puis sur le téléphone : ouvrir l'app **postkeep**, et se connecter au serveur.
 
@@ -124,6 +136,23 @@ qu'il faut tester séparément (cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7).
 > `+native-intent.tsx` ne couvre que le démarrage à froid. Il faut **aussi** un
 > `ShareIntentProvider` monté à la racine. Si vous touchez à cette partie, testez les deux cas.
 
+**Simuler un partage sans ouvrir Instagram** (même `ADB` qu'au-dessus) :
+
+```bash
+$ADB shell am start -a android.intent.action.SEND -t text/plain \
+  --es android.intent.extra.TEXT 'https://www.instagram.com/reel/XXXX/' com.thejohninc.postkeep
+```
+
+### Mesurer l'interface
+
+Pour vérifier une taille ou un espacement, lire les coordonnées réelles plutôt que d'estimer
+à l'œil sur une capture d'écran :
+
+```bash
+$ADB shell uiautomator dump /sdcard/ui.xml && $ADB exec-out cat /sdcard/ui.xml
+# → chaque élément a ses bounds="[x1,y1][x2,y2]" en pixels physiques
+```
+
 ---
 
 ## 4. Quand faut-il reconstruire l'app ? (la question qui revient tout le temps)
@@ -153,22 +182,6 @@ qu'il faut tester séparément (cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7).
 > 💡 **Bonne pratique senior :** grouper les changements natifs. Si tu sais que tu vas ajouter
 > trois modules natifs, installe-les **tous d'abord**, puis fais **un seul** build — au lieu de
 > payer 3 × 15 minutes de compilation.
-
-### ⚠️ État actuel : un rebuild est en attente
-
-`expo-sqlite` a été ajouté au projet **après** la construction du dev client actuellement
-installé. Le module natif n'est donc **pas** dans l'app sur le téléphone.
-
-Ça ne pose aucun problème tant que **rien n'importe `expo-sqlite`** — du code jamais exécuté
-ne peut pas planter. Mais dès la première ligne de code qui ouvre la base
-(début de la Phase 1, cf. [ROADMAP.md](./ROADMAP.md)), il faudra reconstruire une fois :
-
-```bash
-npx eas-cli build --profile development --platform android
-```
-
-Après ce rebuild, retour au Fast Refresh normal — modifier le schéma ou écrire des requêtes
-ne demandera **pas** de nouveau build.
 
 Symptôme si on oublie : l'app plante au lancement avec une erreur du type
 *« native module not found »*.
@@ -239,7 +252,29 @@ npx @react-native-reusables/cli doctor --yes
 
 ---
 
-## 7. Construire un dev client (rare)
+## 7. Les builds : lequel pour quoi
+
+### Quel build pour quoi
+
+| Profil (`eas.json`) | Le JavaScript | Autonome ? | Sert à |
+|---|---|---|---|
+| `development` | **Pas dans l'APK** : servi par Metro depuis le PC | Non — sans Metro, l'app reste sur l'écran du launcher | Développer (Fast Refresh) |
+| `production` | Embarqué dans l'APK | Oui | **L'app du quotidien**, et celle publiée en GitHub Release |
+| `preview` | Embarqué dans l'APK | Oui | Défini mais inutilisé : `production` produit déjà un APK |
+
+- **Même paquet (`com.thejohninc.postkeep`), même clé de signature EAS** : on peut installer
+  l'APK de production par-dessus le dev client, et inversement, **sans perdre les données**
+  (la base SQLite reste en place).
+- **Expo Go est impossible** : `expo-share-intent` contient du code natif qu'Expo Go n'a pas
+  (voir §2).
+- **Libellés trompeurs du tableau de bord Expo** : un build `production` y est affiché
+  « Android Play Store build », même s'il n'est jamais envoyé au Play Store (c'est seulement
+  sa distribution par défaut). Un build `preview` (`distribution: internal`, sans dev client)
+  n'apparaît dans aucune des deux cartes de l'Overview — seulement dans Activity / Builds.
+- **Les artefacts EAS expirent** (un build de deux mois est marqué « Expired » et n'est plus
+  téléchargeable). L'APK à garder est donc celui attaché à la **GitHub Release** (§8).
+
+### Construire un dev client (rare)
 
 Nécessaire seulement dans les cas du §4, ou pour installer l'app sur un nouveau téléphone.
 
@@ -250,9 +285,10 @@ npx eas-cli build --profile development --platform android
 Le build se fait **dans le cloud** (pas besoin d'Android Studio ni d'une machine puissante).
 À la fin, un QR code et un lien s'affichent : ouvrir le lien **sur le téléphone** pour installer l'APK.
 
-> Le plan EAS gratuit a un quota mensuel de builds. Une fois atteint, les builds sont **bloqués
-> jusqu'au renouvellement** — jamais facturés automatiquement. Raison de plus pour grouper les
-> changements natifs.
+> Le plan EAS gratuit a un quota mensuel de builds (15 builds Android ; à notre connaissance,
+> le même quota pour tous les profils — ce n'est pas documenté explicitement). Une fois
+> atteint, les builds sont **bloqués jusqu'au renouvellement** — jamais facturés
+> automatiquement. Raison de plus pour grouper les changements natifs.
 
 ### ⚠️ EAS builde depuis `git HEAD`, pas depuis votre dossier de travail
 
@@ -266,19 +302,47 @@ le dev client jusqu'au prochain build.
 
 Ça ne concerne **que le natif** : tout le JavaScript (écrans, requêtes, schéma Drizzle) est
 servi par Metro depuis le dossier de travail et n'a jamais besoin d'être commité pour être
-testé sur l'appareil.
-
-### Les trois profils (`eas.json`)
-
-| Profil | Commande | Usage |
-|---|---|---|
-| `development` | `--profile development` | Dev client : se connecte à Metro, Fast Refresh. **Celui du quotidien.** |
-| `preview` | `--profile preview` | APK autonome, sans Metro. Pour faire tester à quelqu'un. |
-| `production` | `--profile production` | Version finale à distribuer (GitHub Release). |
+testé sur l'appareil. Un build `production`, lui, embarque le JavaScript : il prend donc
+**tout** depuis le dernier commit.
 
 ---
 
-## 8. Vérifier que le projet est sain
+## 8. Publier une release
+
+Procédure suivie pour v0.2.0 (11 novembre 2026). Remplacer `X.Y.Z` par la version.
+
+1. **Fusionner** la branche de travail dans `master` et se placer sur `master`.
+2. **Monter la version** aux trois endroits :
+   - `app.json` → `expo.version` (la version affichée par Android et par les Paramètres) ;
+   - `package.json` + `package-lock.json` → `npm version X.Y.Z --no-git-tag-version` ;
+   - `CHANGELOG.md` → renommer `[Non publié]` en `[X.Y.Z] — <date>`, avec le lien vers la
+     release, et laisser un `[Non publié]` vide au-dessus.
+3. **Commiter** (`chore: release X.Y.Z`) — **avant** le build, EAS builde depuis `HEAD` (§7).
+4. **Builder** l'APK autonome :
+   ```bash
+   npx eas-cli build -p android --profile production
+   ```
+5. **Télécharger l'APK** depuis le lien affiché en fin de build (ou la page du build sur
+   expo.dev) et le nommer `postkeep-vX.Y.Z.apk`. L'installer sur le téléphone pour vérifier.
+6. **Tagger et pousser** :
+   ```bash
+   git tag vX.Y.Z
+   git push origin master vX.Y.Z
+   ```
+7. **Créer la GitHub Release**, notes **en anglais** dans un fichier hors du dépôt :
+   ```bash
+   gh release create vX.Y.Z postkeep-vX.Y.Z.apk --title "PostKeep vX.Y.Z" --notes-file <notes.md>
+   ```
+8. **Vérifier l'asset** :
+   ```bash
+   gh release view vX.Y.Z --json assets -q '.assets[].name'   # → postkeep-vX.Y.Z.apk
+   ```
+
+Ne pas laisser l'APK téléchargé dans le dossier du projet.
+
+---
+
+## 9. Vérifier que le projet est sain
 
 Trois commandes à connaître. À lancer après toute installation, et avant tout commit important.
 
@@ -298,9 +362,23 @@ npx expo install --fix
 
 C'est normal et sans danger : Expo publie des versions patch régulièrement.
 
+### Tests unitaires
+
+Les tests (`node:test`, logique pure de `src/lib/` et du calcul de tuiles) se lancent avec :
+
+```bash
+node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts
+# → tests 44, pass 44
+```
+
+⚠️ **`npm test` lance 0 test sous Node 22.13** (la version de `.nvmrc`) et affiche quand
+même un succès : le script est un simple `node --test`, et Node 22.13 ne ramasse pas les
+fichiers `.ts` sans `--experimental-strip-types`. Sous Node 24, `npm test` trouve bien les
+44 tests. Utiliser la commande explicite ci-dessus.
+
 ---
 
-## 9. Règles strictes — ne jamais faire
+## 10. Règles strictes — ne jamais faire
 
 | Interdit | Pourquoi |
 |---|---|
@@ -313,7 +391,7 @@ C'est normal et sans danger : Expo publie des versions patch régulièrement.
 
 ---
 
-## 10. Carte du projet
+## 11. Carte du projet
 
 ```
 postkeep/
@@ -322,20 +400,24 @@ postkeep/
 │   │   ├── _layout.tsx         #   Layout racine : providers globaux + Stack
 │   │   ├── +native-intent.tsx  #   Redirection des partages entrants (app fermée)
 │   │   ├── shareintent.tsx     #   Écran de réception d'un partage (modale)
-│   │   └── (tabs)/             #   Groupe d'onglets
+│   │   ├── collection/[id].tsx #   Contenu d'une collection
+│   │   └── (tabs)/             #   Groupe d'onglets (barre flottante glass-tab-bar.tsx)
 │   │       ├── _layout.tsx
-│   │       ├── index.tsx       #     Accueil ("/")
-│   │       └── explore.tsx     #     (démo du template, à supprimer)
-│   ├── screens/                # Corps des écrans complexes (à créer, voir CONTRIBUTING §3)
-│   ├── components/
+│   │       ├── index.tsx       #     All posts ("/")
+│   │       └── collections.tsx #     Collections
+│   ├── screens/                # Corps des écrans complexes (save-post, collections, collection)
+│   ├── components/             # post-card, post-grid-cell, post-detail-sheet, settings-sheet,
+│   │   │                       # sheet-kit (feuilles + ConfirmDialog)…
 │   │   └── ui/                 # Composants React Native Reusables (copiés, modifiables)
 │   ├── db/
-│   │   ├── schema.ts           #   Schéma Drizzle (vide pour l'instant)
+│   │   ├── index.ts            #   Ouverture de la base (enableChangeListener)
+│   │   ├── schema.ts           #   Schéma Drizzle
+│   │   ├── posts.ts, collections.ts  # Requêtes
 │   │   └── migrations/         #   Migrations générées par drizzle-kit
-│   ├── lib/
-│   │   ├── utils.ts            #   cn() — fusion de classes Tailwind
-│   │   └── theme.ts            #   THEME + NAV_THEME (couleurs en TS)
-│   ├── constants/theme.ts      # Thème du template Expo d'origine (à fusionner/supprimer)
+│   ├── lib/                    # Logique pure, testée (*.test.ts) : share-url, post-filters,
+│   │   │                       # format-date… + design.ts (jetons), theme.ts (THEME, NAV_THEME)
+│   │   └── webview-metadata.tsx #  Légende + miniature Instagram/TikTok (WebView cachée)
+│   ├── stores/                 # Zustand — état d'interface uniquement
 │   └── hooks/
 ├── global.css                  # Directives Tailwind + variables CSS du thème
 ├── tailwind.config.js          # Mapping couleurs → variables CSS. content: ./src/**
@@ -367,7 +449,7 @@ Créer un fichier dans `src/app/` suffit à créer la route — aucune config à
 
 ---
 
-## 11. Règles de code spécifiques au projet
+## 12. Règles de code spécifiques au projet
 
 Les règles complètes et leurs justifications sont dans
 [ARCHITECTURE.md](./ARCHITECTURE.md) — **source de vérité**, ne pas dupliquer ici.
@@ -385,11 +467,17 @@ Le rappel minimal pour le travail quotidien :
 
 ---
 
-## 12. Dépannage
+## 13. Dépannage
 
 | Symptôme | Cause probable | Solution |
 |---|---|---|
 | Le dev client ne trouve pas le serveur | Téléphone et PC sur des réseaux différents | Même Wi-Fi, ou saisir `exp://<IP>:8081` manuellement |
+| Le QR code « charge » indéfiniment (WSL) | Réseau `mirrored` : le pare-feu Hyper-V de WSL bloque le port 8081 en entrée | `npx expo start --dev-client --tunnel`, ou câble USB + `adb reverse tcp:8081 tcp:8081` (§3) |
+| Les modifications n'apparaissent plus sur le téléphone, sans erreur | Metro lancé avec `CI=1` : le rechargement est désactivé | Relancer Metro sans `CI=1` |
+| Le dev client plante à l'ouverture d'un deep link (« App react context shouldn't be created before… ») | Processus de l'app resté vivant | `adb shell am force-stop com.thejohninc.postkeep`, puis relancer le deep link (§3) |
+| Un build ne contient pas un module natif pourtant installé | Le module n'était pas commité : EAS builde depuis `HEAD` | Commiter, relancer le build (§7) |
+| Lien de téléchargement d'un vieux build « Expired » | Les artefacts EAS expirent | Prendre l'APK de la GitHub Release (§8) |
+| `npm test` affiche 0 test | Node 22.13 ne ramasse pas les `.ts` | Commande explicite du §9 |
 | `Unable to resolve module ...` | Paquet installé pendant que Metro tournait | `Ctrl+C` puis `npx expo start --dev-client --clear` |
 | Les classes Tailwind ne s'appliquent pas | Cache Metro | `npx expo start --clear` |
 | L'app crash au démarrage après un `npm install` | Module natif ajouté sans rebuild | Refaire un `eas build --profile development` |
@@ -400,15 +488,14 @@ Le rappel minimal pour le travail quotidien :
 | Un partage n'ouvre pas l'écran attendu | Un seul des deux chemins de réception est câblé | Vérifier `+native-intent.tsx` **et** `ShareIntentProvider` racine (ARCHITECTURE §7) |
 | `useLiveQuery` ne se met jamais à jour | Base ouverte sans `enableChangeListener: true` | Corriger l'ouverture de la base dans `src/db/` |
 | Des éléments supprimés réapparaissent | Requête sans filtre sur la suppression logique | Ajouter `WHERE deleted_at IS NULL` |
-| Micro-saccade au lancement | Deux animations du template qui s'enchaînent | Comportement connu, disparaîtra au nettoyage du template ([TODO.md](./TODO.md)) |
 
 ---
 
-## 13. Résumé — la journée type
+## 14. Résumé — la journée type
 
 ```bash
-# 1. Démarrer (une fois le matin)
-npx expo start --dev-client
+# 1. Démarrer (une fois le matin) — --tunnel sous WSL, voir §3
+npx expo start --dev-client --tunnel
 
 # 2. Coder. Sauvegarder. Regarder le téléphone. Répéter.
 #    → Fast Refresh, aucune commande à relancer.

@@ -6,7 +6,20 @@
 > dans le même commit que le travail. Une tâche découverte en cours de route s'ajoute ici
 > plutôt que de rester dans une tête.
 
-Dernière mise à jour : 4 septembre 2026
+Dernière mise à jour : 11 novembre 2026
+
+---
+
+## 🟠 À vérifier sur l'APK v0.2.0 (usage réel)
+
+Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage quotidien :
+
+- [ ] **L'écran de partage ne se rouvre plus** au rechargement : l'intention de partage est
+      réinitialisée au démontage de l'écran — correctif à confirmer sur l'APK de production
+- [ ] **Édition d'un post** : enregistrer après avoir coché/décoché des collections, et
+      « + New » depuis l'édition (non testé sur appareil pendant la refonte)
+- [ ] **Légende et miniature Instagram/TikTok** récupérées par la WebView cachée sur des
+      partages réels
 
 ---
 
@@ -21,24 +34,15 @@ Dernière mise à jour : 4 septembre 2026
 - [x] Instructions d'installation — dans les notes de la
       [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0)
       (4 septembre 2026)
+- [x] **Release v0.2.0** — [GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.2.0)
+      avec `postkeep-v0.2.0.apk`, build EAS `production` `8c851dba` sur le commit `01aa3aa`,
+      installé et vérifié sur Galaxy S23 (11 novembre 2026). La release garde l'APK : les
+      artefacts EAS expirent
 - [ ] **Critère de fin de phase** : un tiers installe l'app depuis la release et sauvegarde un
       post sans aide — **reporté après la phase 7** (4 septembre 2026) : app pas encore jugée
       assez polie pour être exposée à quelqu'un d'autre
 
 ---
-
-## 🟢 Refonte de l'interface (10 novembre 2026)
-
-Conception : [docs/superpowers/specs/2026-11-10-refonte-ui-design.md](./docs/superpowers/specs/2026-11-10-refonte-ui-design.md)
-
-- [x] Barre flottante en verre dépoli (recherche + onglets), remplace `NativeTabs`
-- [x] All posts en lignes « Fiche » (vignette 9:16, légende, note, collections), filtres par
-      plateforme, recherche avec surlignage
-- [x] Collections en dossiers (miniatures récentes, plateforme dominante, « + » en haut)
-- [x] Feuille de détail restylée ; en édition la note défile seule et reste visible au clavier
-- [x] Vérifié sur appareil (Galaxy S23), clair et sombre
-- [ ] Non testé sur appareil : enregistrer après avoir coché/décoché des collections en
-      édition, « + New » depuis l'édition
 
 ## 🟢 Phase 7 — Polish UI/UX (repérées le 31 août 2026)
 
@@ -47,19 +51,16 @@ Conception : [docs/superpowers/specs/2026-11-10-refonte-ui-design.md](./docs/sup
       Note qui doit scroller (pas la page), pour toujours voir le début du texte au lieu de
       seulement la fin quand la note est longue
 - [ ] **`CollectionPickerSheet` (feuille empilée du picker de collections)** : remplacer le bouton
-      pleine largeur « + Nouvelle collection » par une icône « + » seule, positionnée à droite de
-      la barre de recherche
-- [ ] **Dialog de confirmation de suppression d'un post (mode édition)** : remplacer l'`Alert.alert`
-      natif par un dialog custom stylé comme le reste de l'app — même traitement que celui déjà
-      fait sur les collections (`CollectionActionsSheet`, `src/screens/collections/index.tsx`)
+      pleine largeur « + New collection » par une icône « + » seule, positionnée à droite de
+      la barre de recherche (`src/components/post-fields-form.tsx`, vers la ligne 159)
+- [x] **Dialog de confirmation de suppression d'un post (mode édition)** : l'`Alert.alert` natif
+      est remplacé par `ConfirmDialog` (`src/components/sheet-kit.tsx`), rendu dans la feuille
+      plein écran via un `PortalHost` dédié (`SHEET_PORTAL`) — le même composant sert au
+      balayage et à la suppression d'une collection ; plus aucun `Alert.alert` dans `src/`
+      (11 novembre 2026, livré en v0.2.0)
+  - Connu et accepté : en édition, le pied de la feuille n'est pas assombri sous le dialog
 
-## 🟢 Aperçu des posts — caption et miniature via WebView (10 novembre 2026)
-
-- [x] Colonnes `posts.caption` / `posts.thumbnail_url` (migration `0002`)
-- [x] oEmbed X/Twitter fonctionne (`api.twitter.com/1/statuses/oembed.json`) → caption ✅
-- [x] **WebView cachée** (`src/lib/webview-metadata.tsx`) pour Instagram/TikTok → caption ✅, miniature ✅
-- [x] Extraction fallback du texte partagé (`extractCaptionFromText`)
-- [ ] **Nouveau build EAS** nécessaire : `react-native-webview` est un module natif
+## 🟢 Aperçu des posts — par plateforme
 
 État actuel par plateforme — voir [ARCHITECTURE.md](./ARCHITECTURE.md) §6 :
 | Plateforme | Caption | Miniature |
@@ -68,6 +69,30 @@ Conception : [docs/superpowers/specs/2026-11-10-refonte-ui-design.md](./docs/sup
 | TikTok | ✅ WebView | ✅ WebView |
 | X | ✅ oEmbed | ❌ |
 | Threads | ❌ | ❌ |
+| Reddit | ❌ | ❌ |
+| YouTube et autres liens | lien seul (non reconnu comme plateforme, query conservée) | ❌ |
+
+- [ ] *(Option)* **Légende et miniature Reddit** via l'endpoint public `.json` du post — non
+      fait ; Reddit est seulement reconnu (`reddit.com`, `redd.it`)
+
+## 🟤 Dette technique
+
+- [ ] `scrapeMetaTags` (`src/lib/oembed.ts`) : code mort depuis l'abandon du scraping
+      Instagram/TikTok au profit de la WebView cachée
+- [ ] `npm test` (`node --test`) lance 0 test sous Node 22.13 — en attendant :
+      `node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts`
+- [ ] Erreur lint dans `src/hooks/use-color-scheme.web.ts` (`react-hooks/set-state-in-effect`)
+- [ ] [ARCHITECTURE.md](./ARCHITECTURE.md) §4 : la normalisation d'URL décrite ne dit pas que
+      la query est conservée pour les liens non reconnus (YouTube `?v=…`)
+- [ ] Supprimer `handoff.txt` (notes de session non suivies, à la racine)
+
+## ⏭️ Ensuite
+
+Après la V1 (phases 6 et 7 closes), sans rien en installer avant — détail dans
+[ROADMAP.md](./ROADMAP.md) :
+
+- **V1.5** : comptes et synchronisation Supabase, phase de conception d'abord
+- **Montée vers le SDK 58**, sur une branche séparée
 
 ---
 
@@ -92,6 +117,51 @@ post déjà présent rouvert plutôt que dupliqué.
 ---
 
 ## ✅ Terminé
+
+<details>
+<summary>v0.2.0 — Refonte, aperçus, paramètres (7 septembre – 11 novembre 2026)</summary>
+
+Détail côté utilisateur : [CHANGELOG.md](./CHANGELOG.md) §0.2.0.
+
+**Aperçu des posts — caption et miniature via WebView**
+
+- [x] Colonnes `posts.caption` / `posts.thumbnail_url` (migration `0002`)
+- [x] oEmbed X/Twitter fonctionne (`api.twitter.com/1/statuses/oembed.json`) → caption ✅
+- [x] **WebView cachée** (`src/lib/webview-metadata.tsx`) pour Instagram/TikTok → caption ✅, miniature ✅
+      — l'Edge Function Supabase a été abandonnée (IP de datacenter bloquées par les plateformes)
+- [x] Extraction fallback du texte partagé (`extractCaptionFromText`)
+- [x] Query string conservée pour les URLs non reconnues (YouTube `?v=…`)
+- [x] **Nouveau build EAS** avec `react-native-webview` (module natif) : build `production`
+      `8c851dba` de la v0.2.0 (11 novembre 2026)
+
+**Refonte de l'interface** — conception : [docs/superpowers/specs/2026-11-10-refonte-ui-design.md](./docs/superpowers/specs/2026-11-10-refonte-ui-design.md)
+
+- [x] Barre flottante en verre dépoli (recherche + onglets), remplace `NativeTabs`
+- [x] All posts en lignes « Fiche » (vignette 9:16, légende, note, collections), filtres par
+      plateforme, recherche avec surlignage
+- [x] Collections en dossiers (miniatures récentes, plateforme dominante, « + » en haut)
+- [x] Feuille de détail restylée ; en édition la note défile seule et reste visible au clavier
+- [x] Système de design : `src/lib/design.ts` (rayons, espacements, hauteur des contrôles),
+      jetons de thème, `src/components/sheet-kit.tsx`, puces de collection teintées
+      (`src/lib/collection-tint.ts`)
+- [x] Écran de partage restylé ; intention de partage réinitialisée au démontage (à confirmer
+      en usage réel, voir « À vérifier sur l'APK v0.2.0 »)
+- [x] Vérifié sur appareil (Galaxy S23), clair et sombre
+
+**Après la refonte (11 novembre 2026)**
+
+- [x] Confirmations de suppression en `ConfirmDialog` partout (voir Phase 7)
+- [x] **Paramètres** (`src/components/settings-sheet.tsx`, bouton ⚙ de All posts) : thème
+      Système/Clair/Sombre (kv-store expo-sqlite, clé `theme`), export JSON, « Sign in — Coming
+      soon », lien code source + version
+- [x] **Reddit** reconnu (`reddit.com`, `redd.it`, couleur `#FF4500`)
+- [x] Tri par date d'enregistrement (`createdAt` décroissant) partout ; date affichée par
+      `formatPostDate` (« 8 Nov », ou « 3 Mar 2025 » pour une autre année)
+- [x] **Vue grille** 3 colonnes dans All posts (`src/components/post-grid-cell.tsx`), bascule
+      liste/grille mémorisée (kv-store, clé `postsLayout`)
+- [x] Release v0.2.0 publiée et installée sur Galaxy S23 (voir Phase 6)
+
+</details>
 
 <details>
 <summary>Phase 5 — Nettoyage template & dette technique (3 septembre 2026)</summary>

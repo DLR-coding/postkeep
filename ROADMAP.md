@@ -3,6 +3,8 @@
 > Les phases de développement, dans l'ordre où elles doivent être faites, et **pourquoi**
 > cet ordre.
 > Pour les tâches concrètes à prendre maintenant : [TODO.md](./TODO.md).
+>
+> État au 11 novembre 2026 — dernière version publiée : **v0.2.0**.
 
 **Principe directeur** : chaque phase produit quelque chose d'utilisable. On ne construit
 pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvrir le suivant.
@@ -19,8 +21,9 @@ pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvr
 | 3 | Consultation — retrouver et rouvrir un post | ✅ Terminée |
 | 4 | Organisation — chercher et filtrer | ✅ Terminée |
 | 5 | Nettoyage — retirer le template, éponger la dette | ✅ Terminée |
-| 6 | Distribution — APK public | ⬜ |
-| 7 | Polish — améliorations UI/UX en attente | ⬜ |
+| 6 | Distribution — APK public | 🟡 v0.1.0 puis v0.2.0 publiées ; restent icône/splash et test par un tiers |
+| 7 | Polish — améliorations UI/UX en attente | 🟡 Refonte livrée en v0.2.0 ; reste l'icône « + » du picker |
+| — | Livré hors plan initial (aperçu, paramètres, Reddit, grille…) | ✅ Publié en v0.2.0 |
 | V1.5 | Rétention + synchronisation multi-appareils | 🔒 Verrouillée jusqu'à la fin de V1 |
 
 ---
@@ -80,7 +83,9 @@ produit ne peut exister sans stockage.
 1. **Analyser l'URL partagée** : détecter la plateforme (Instagram, TikTok, X, Threads),
    extraire l'URL propre du texte partagé (les apps ajoutent souvent du texte autour)
 2. **Écran de sauvegarde réel** — remplace l'écran de test actuel (`shareintent.tsx`) :
-   - Aperçu = logo de la plateforme (pas de récupération de métadonnées, cf. ARCHITECTURE.md §6)
+   - Aperçu = logo de la plateforme (pas de récupération de métadonnées à l'époque — remplacé
+     en novembre 2026 par légende + miniature, cf. [Livré hors plan initial](#livré-hors-plan-initial)
+     et ARCHITECTURE.md §6)
    - Choix des collections en **multi-sélection** (création à la volée incluse) — zéro
      collection est un état valide : le post existe, il n'est simplement rangé nulle part
    - Champ de note
@@ -98,7 +103,8 @@ quitter le parcours.
 - Tester **les deux chemins de réception** (app fermée / app en arrière-plan) —
   cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §7
 - Le texte partagé n'est pas toujours une URL propre — prévoir les cas dégradés
-- Un même post partagé deux fois : normaliser l'URL (query + fragment retirés) et rouvrir
+- Un même post partagé deux fois : normaliser l'URL (fragment retiré ; query retirée pour les
+  plateformes connues, conservée pour les autres URL comme YouTube `?v=…`) et rouvrir
   l'existant en édition plutôt que dupliquer — tranché, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §4
 
 ---
@@ -172,7 +178,7 @@ une seule source de vérité pour le thème, et le dépôt poussé sur un remote
 
 ---
 
-## Phase 6 — Distribution
+## Phase 6 — Distribution 🟡
 
 **Objectif** : que quelqu'un d'autre puisse installer l'app.
 
@@ -195,9 +201,19 @@ Un tiers installe l'app depuis GitHub et sauvegarde un post, sans aide.
 > jugée assez polie pour l'exposer à quelqu'un d'autre. Phase 6 ne se ferme (✅ dans le tableau
 > ci-dessus) qu'une fois ce test passé, après la phase 7.
 
+### État au 11 novembre 2026
+
+- **v0.1.0** publiée le 4 septembre 2026, **v0.2.0** le 11 novembre 2026
+  ([GitHub Release v0.2.0](https://github.com/DLR-coding/postkeep/releases/tag/v0.2.0), APK
+  `postkeep-v0.2.0.apk`, vérifiée sur Galaxy S23)
+- Fait : profil `production` en APK, nom « PostKeep », version alignée (`0.2.0` dans `app.json`
+  et `package.json`), instructions d'installation
+- Reste : **icône et écran de démarrage définitifs** (toujours le placeholder bookmark sur fond
+  indigo) et le **test d'installation par un tiers**
+
 ---
 
-## Phase 7 — Polish UI/UX ⬜
+## Phase 7 — Polish UI/UX 🟡
 
 **Objectif** : corriger les frictions d'interface repérées pendant les tests des phases
 précédentes, avant de considérer la V1 close.
@@ -218,6 +234,42 @@ Les trois frictions repérées le 31 août 2026 sont corrigées et validées sur
 Une fois cette phase close, reprendre le critère de fin de la phase 6 (test d'installation par
 un tiers), en attente depuis le 4 septembre 2026.
 
+### État au 11 novembre 2026
+
+La refonte de l'interface (10-11 novembre 2026, livrée en v0.2.0 — conception :
+[docs/superpowers/specs/2026-11-10-refonte-ui-design.md](./docs/superpowers/specs/2026-11-10-refonte-ui-design.md))
+a absorbé deux des trois frictions :
+
+- ✅ Écran d'édition réagencé (collections en haut, note qui défile seule)
+- ✅ Dialog de suppression custom (`ConfirmDialog`) — remplace désormais **tous** les
+  `Alert.alert` de l'app
+- ⬜ Reste : l'icône « + » à droite de la recherche dans le picker de collections, à la place du
+  bouton pleine largeur
+
+---
+
+## Livré hors plan initial
+
+Ajouts qui ne figuraient dans aucune phase, livrés entre v0.1.0 et v0.2.0 (9-11 novembre 2026).
+Détail : [TODO.md](./TODO.md) et `git log v0.1.0..v0.2.0`.
+
+- **Aperçu légende + miniature** — récupérés une seule fois, au partage : Instagram/TikTok via
+  une WebView cachée, X via oEmbed (légende seulement). Revient sur l'exclusion initiale des
+  métadonnées, cf. [ARCHITECTURE.md](./ARCHITECTURE.md) §6
+- **Refonte de l'interface** — barre flottante en verre, All posts en « fiches » avec filtres par
+  plateforme et recherche surlignée, Collections en dossiers, feuilles restylées (cf. phase 7)
+- **Système de design** — rayons, espacements et hauteurs partagés (`src/lib/design.ts`), jetons de
+  thème, composants de feuille communs (`src/components/sheet-kit.tsx`)
+- **Paramètres** — thème Système/Clair/Sombre, export JSON, emplacement « Sign in — Coming soon »
+- **Reddit** reconnu comme plateforme (sans légende ni miniature pour l'instant)
+- **Vue grille** dans All posts, bascule liste/grille mémorisée
+- **Tri par date d'enregistrement** partout, cohérent avec la date affichée
+
+### Prévu hors phases
+
+- **Montée vers le SDK Expo 58** — sur une branche séparée, après la v0.2.0, sans bloquer la
+  clôture des phases 6 et 7
+
 ---
 
 ## V1.5 — Rétention & synchronisation 🔒
@@ -237,6 +289,10 @@ Critère de fin : recevoir un rappel pertinent et pouvoir trier dix posts en moi
 
 ### Synchronisation
 
+**Phase de conception obligatoire avant d'écrire du code** : comptes, rattachement des données
+existantes et moteur de synchro sont à concevoir et trancher d'abord. Pile pressentie, pas
+encore décidée — **Supabase** comme backend, **PowerSync** envisagé pour la synchro :
+
 ```
 Supabase                     Postgres + authentification + RLS
 @powersync/react-native      moteur de synchronisation SQLite ↔ Postgres
@@ -247,7 +303,8 @@ GitHub Actions (cron)        ping tous les 3 jours — évite la mise en pause d
 
 **Le compte utilisateur sera optionnel** — jamais un mur d'inscription au lancement.
 Les données créées avant inscription seront rattachées a posteriori, d'où la colonne
-`user_id` nullable prévue dès la V1.
+`user_id` nullable prévue dès la V1. Un emplacement « Sign in — Coming soon » (désactivé)
+figure déjà dans les paramètres depuis la v0.2.0.
 
 **Ce qui rend cette phase possible** : le schéma respecte les règles de synchronisation
 depuis le premier jour ([ARCHITECTURE.md](./ARCHITECTURE.md) §4). Sans ça, il faudrait
@@ -262,6 +319,6 @@ Décidé, à ne pas re-débattre sans raison nouvelle :
 | Exclu | Raison |
 |---|---|
 | iOS | Après la V1 Android. Coût de compte développeur + surface de test doublée |
-| WebView / contenus embarqués | Lourd, fragile, souvent bloqué par les plateformes |
-| Récupération de métadonnées Open Graph | Casse la promesse hors-ligne et la contrainte de coût zéro |
+| Contenus embarqués (lire le post dans l'app) | Lourd, fragile, souvent bloqué par les plateformes. La WebView cachée sert uniquement à lire légende et miniature au partage (ARCHITECTURE.md §6) |
+| Récupération de métadonnées côté serveur | IP de datacenter bloquées (Edge Function Supabase testée et abandonnée) et contrainte de coût zéro. Les métadonnées sont lues sur l'appareil, une seule fois, au partage |
 | Compte obligatoire | Contredit la promesse « utile dès la première seconde » |

@@ -14,6 +14,7 @@
 ```bash
 git clone <url-du-repo>
 cd postkeep
+nvm use        # Node 22, épinglé dans .nvmrc
 npm install
 ```
 
@@ -74,6 +75,7 @@ Exception : les fichiers de route `expo-router` suivent la convention du router
 | Composant d'interface générique (RNR) | `src/components/ui/` — généré par le CLI, modifiable |
 | Helper autonome | `src/lib/` |
 | Hook réutilisable | `src/hooks/` |
+| Store Zustand (état d'interface uniquement) | `src/stores/` |
 | Schéma & accès base | `src/db/` |
 
 **Règle importante** : `src/app/` ne contient **que** des routes. Chaque fichier y devient
@@ -81,12 +83,12 @@ une URL. Un écran qui dépasse ~80 lignes doit être déplacé dans `src/screen
 contentant de le rendre :
 
 ```tsx
-// src/app/(tabs)/index.tsx
-import { PostList } from '@/screens/post-list';
+// src/app/(tabs)/collections.tsx
+import { CollectionsScreen } from '@/screens/collections';
 
-export default function PostListRoute() {
+export default function CollectionsRoute() {
   // Uniquement les préoccupations de routing ici (paramètres d'URL, etc.)
-  return <PostList />;
+  return <CollectionsScreen />;
 }
 ```
 
@@ -103,8 +105,23 @@ Tout le style passe par **NativeWind** (classes Tailwind via `className`) :
 
 - Utiliser les **couleurs du thème** (`bg-background`, `text-foreground`, `border-border`…),
   jamais des couleurs en dur — sinon le mode sombre casse
+  - Là où `className` ne s'applique pas (composants tiers comme `@gorhom/bottom-sheet`,
+    styles calculés), lire la couleur dans `THEME[colorScheme]` (`src/lib/theme.ts`) et la
+    passer en `style`
+  - Un nouveau jeton de couleur se déclare à **trois endroits**, avec les mêmes valeurs :
+    `global.css` (`:root` et `.dark:root`), `tailwind.config.js` et `THEME`
+  - Exceptions admises, pour ce qui ne doit pas changer avec le thème : couleurs de marque
+    des plateformes (`PLATFORM_META` dans `src/lib/share-url.ts`), texte blanc posé sur ces
+    fonds, ombres, surlignage de la recherche
+- **Rayons, espacements et hauteur des contrôles** : jetons de `src/lib/design.ts`
+  (`RADIUS`, `SPACE`, `CONTROL_HEIGHT`), pas de valeur inventée écran par écran
 - Pour les composants texte, utiliser `Text` de `@/components/ui/text`, **pas** celui de
   `react-native` : celui de RNR applique `text-foreground` automatiquement
+  - Exception : il impose aussi `text-base` (taille et hauteur de ligne), donc pour un texte
+    imbriqué qui doit hériter de la taille du parent, ou une puce compacte, prendre le `Text`
+    de `react-native` **avec une couleur explicite** issue de `THEME` — et laisser un
+    commentaire qui dit pourquoi (exemples : `src/components/collection-chip.tsx`,
+    `src/components/post-thumb.tsx`)
 
 > 🐛 **Piège vécu** : utiliser le `Text` brut de `react-native` donne du texte noir sur fond
 > noir en mode sombre, parce qu'il n'a aucune couleur par défaut.
@@ -119,6 +136,12 @@ npx @react-native-reusables/cli@latest add card --yes
 
 Le CLI **copie le code source** dans `src/components/ui/` — ce sont ensuite vos fichiers,
 modifiables librement.
+
+Pour les feuilles du bas et les confirmations, réutiliser `src/components/sheet-kit.tsx` :
+`sheetBackgroundStyle`, `SheetField`, `SheetActions`, et **`ConfirmDialog` pour toute
+confirmation — jamais `Alert.alert`** (natif, visuellement décalé du reste de l'app). Dans une
+feuille plein écran, le dialogue doit être rendu dans un `PortalHost` propre à la feuille,
+sinon il s'affiche dessous (voir `SHEET_PORTAL` dans `src/components/post-detail-sheet.tsx`).
 
 🚫 **Ne jamais lancer `react-native-reusables init`** : cette commande crée un nouveau
 projet (actuellement figé sur le SDK 56) et écraserait la configuration.
@@ -149,9 +172,13 @@ git checkout -b feat/save-screen
 | `docs/` | Documentation seule |
 | `refactor/` | Restructuration sans changement de comportement |
 
+Une fois validée sur appareil, la branche est fusionnée dans `master` en **fast-forward**
+(pas de commit de merge), comme `feat/redesign` pour la 0.2.0.
+
 ### Messages de commit
 
-Format [Conventional Commits](https://www.conventionalcommits.org/) :
+Format [Conventional Commits](https://www.conventionalcommits.org/), **en anglais**, sans
+scope :
 
 ```
 <type>: <résumé à l'impératif, en minuscule>
@@ -175,6 +202,7 @@ Quelqu'un qui lit ce commit dans six mois comprend la contrainte, pas seulement 
 ### Avant de proposer une modification
 
 - [ ] `npx expo-doctor` → 21/21
+- [ ] Tests unitaires verts (§5) si une logique pure a été touchée
 - [ ] L'app se lance et l'écran modifié fonctionne **sur un appareil réel**
 - [ ] Aucune couleur en dur (vérifier en mode clair **et** sombre)
 - [ ] Aucune donnée persistante stockée ailleurs que dans SQLite
@@ -186,8 +214,27 @@ Quelqu'un qui lit ce commit dans six mois comprend la contrainte, pas seulement 
 
 ## 5. Tester ses changements
 
-Il n'y a **pas encore de suite de tests automatisés** sur ce projet (voir
-[TODO.md](./TODO.md)). La validation se fait donc sur appareil réel.
+### Tests unitaires
+
+La logique pure (analyse d'URL, filtres et recherche, aperçus de dossiers, format de date,
+taille des tuiles…) est testée avec le **test runner natif de Node** (`node:test`, zéro
+dépendance), dans des fichiers `*.test.ts` placés à côté du module testé :
+
+```bash
+node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts
+```
+
+> ⚠️ `npm test` (`node --test` seul) **ne lance aucun test sous Node 22** — la version
+> épinglée dans `.nvmrc` — car la découverte automatique n'y inclut pas les fichiers `.ts`.
+> Il fonctionne sous Node 24 (44 tests). En attendant la correction (voir
+> [TODO.md](./TODO.md)), utiliser la commande ci-dessus.
+
+Une logique nouvelle qui ne dépend ni de React ni d'un module natif va dans `src/lib/` (ou à
+côté de son écran) **avec son test**.
+
+### Sur appareil réel
+
+Le reste (écrans, base, partage) se valide sur appareil réel.
 
 **Cas à ne pas oublier de tester manuellement :**
 
