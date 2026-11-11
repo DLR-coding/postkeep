@@ -14,6 +14,10 @@
 L'app doit fonctionner **hors ligne et sans compte**. Toutes les données vivent dans une base
 SQLite sur l'appareil. Il n'y a pas de serveur en V1.
 
+Depuis la V1.5, un **compte optionnel** synchronise cette base avec Supabase (§12). Ça ne
+change rien à la règle : la base locale reste la source de vérité pour l'affichage, la
+synchro tourne en arrière-plan, et l'app sans compte se comporte exactement comme avant.
+
 **Ce que ça implique concrètement :**
 
 - Aucun écran ne doit attendre le réseau pour s'afficher
@@ -40,7 +44,8 @@ la bibliothèque devient très grosse.
 |---|---|---|
 | **Données persistantes** | SQLite (via Drizzle) | posts, collections, notes |
 | **Préférences de l'appareil** | SQLite, magasin clé-valeur `expo-sqlite/kv-store` | thème (`theme`), affichage liste/grille de « All posts » (`postsLayout`) |
-| **État d'interface** | Zustand (`src/stores/`) | texte de recherche (`nav-search-store.ts`), post ouvert dans la feuille de détail (`post-detail-store.ts`) |
+| **Session du compte, état de synchro** | SQLite, magasin clé-valeur `expo-sqlite/kv-store` | session Supabase (écrite par le client lui-même), marques et curseurs `sync:<uid>:*` (§12) |
+| **État d'interface** | Zustand (`src/stores/`) | texte de recherche (`nav-search-store.ts`), post ouvert dans la feuille de détail (`post-detail-store.ts`), reflet du compte et de la synchro (`account-store.ts`) |
 | **État local d'un écran** | `useState` | saisie en cours dans un champ, filtre de plateforme, accordéon ouvert |
 
 🚫 **Ne jamais dupliquer des enregistrements de la base dans un store Zustand.**
@@ -59,6 +64,14 @@ d'AsyncStorage). Ce ne sont pas des tables Drizzle parce que ce sont des réglag
 un appareil, pas des données à synchroniser : elles ne portent donc pas les 5 colonnes du §4.
 Le décodage des valeurs (repli sur `system` / `list` pour une valeur inconnue) est en logique
 pure dans `src/lib/settings-logic.ts`, testée.
+
+**Session du compte : même magasin clé-valeur.** Le client Supabase (`src/lib/supabase.ts`)
+reçoit `expo-sqlite/kv-store` comme `storage` : la session (jetons d'accès et de
+rafraîchissement) est persistée dans SQLite, sans module natif ajouté ni AsyncStorage. Pas
+de chiffrement en plus : le fichier est dans le bac à sable de l'app, et le tutoriel Expo de
+Supabase présente le chiffrement comme optionnel. Les marques et curseurs de synchro vivent à
+côté, sous des clés préfixées par l'id du compte (`sync:<uid>:…`, §12). `account-store.ts`
+(Zustand) n'en est que le reflet pour les écrans : `userId`, `email`, état de la synchro.
 
 **Comment lire les données** : `useLiveQuery` de Drizzle. Le hook observe les changements
 SQLite et re-render automatiquement le composant. Pas besoin de gérer un état, pas besoin
@@ -103,6 +116,9 @@ migration future.
 **Conclusion** : `expo-sqlite` est le chemin documenté et standard, `useLiveQuery` y
 fonctionne, et il n'y a aucune perte pour la V1.5.
 
+**Suite (11 novembre 2026)** : PowerSync a finalement été écarté au profit d'une synchro
+maison sur `expo-sqlite` (§12). La question du driver ne se pose donc plus.
+
 ---
 
 ## 4. Schéma de données — 5 colonnes obligatoires
@@ -125,7 +141,9 @@ maintenant.
 **Conséquences pratiques :**
 
 - Générer les identifiants côté client (`crypto.randomUUID()` ou équivalent)
-- Ne jamais faire de `DELETE FROM` — mettre `deleted_at` à jour
+- Ne jamais faire de `DELETE FROM` — mettre `deleted_at` à jour. Seules exceptions, voulues
+  et limitées au compte : le vidage de l'appareil à la déconnexion et à la suppression du
+  compte, et la cascade côté serveur à la suppression du compte (§12)
 - **Toutes les requêtes de lecture doivent filtrer `WHERE deleted_at IS NULL`** (piège classique :
   oublier ce filtre et voir réapparaître des éléments supprimés)
 
@@ -198,8 +216,10 @@ synchronisation.
 `useLiveQuery` couvre déjà le besoin : observer les changements et re-render. TanStack Query
 ferait doublon pour de la donnée purement locale.
 
-TanStack Query reviendra en **V1.5** via `@powersync/react-query`, mais pour un autre besoin :
-l'état **réseau** (synchronisation en cours, erreurs de connexion, conflits).
+Il était prévu de l'ajouter en **V1.5** via `@powersync/react-query` pour l'état **réseau**
+(synchronisation en cours, erreurs). PowerSync écarté (§12), ce besoin tient en trois
+champs (`status`, `lastSyncedAt`, `error`) dans `src/stores/account-store.ts` : toujours pas
+de TanStack Query.
 
 ---
 
@@ -366,6 +386,11 @@ utilisable : `expo-share-intent` contient du code natif.
 EAS builde depuis le `HEAD` git : committer avant `eas build`. Les artefacts EAS expirent
 (un build de deux mois est « Expired ») — c'est la GitHub Release qui conserve l'APK.
 
+`.env.local` n'est pas commité, donc pas envoyé à EAS : chaque profil d'`eas.json` désigne
+son environnement EAS (`"environment": "development"` / `"preview"` / `"production"`), où
+sont définies `EXPO_PUBLIC_SUPABASE_URL` et `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+(DEVELOPMENT.md §7). Sans elles, `src/lib/supabase.ts` lève une erreur au démarrage.
+
 Le plan EAS gratuit a un **quota mensuel de builds** (15 builds Android). Au-delà, les builds
 sont bloqués jusqu'au renouvellement (jamais facturés automatiquement). D'où la règle :
 **grouper les changements natifs** plutôt que reconstruire à chaque ajout.
@@ -376,7 +401,8 @@ sont bloqués jusqu'au renouvellement (jamais facturés automatiquement). D'où 
 
 Pour éviter de re-débattre à chaque itération :
 
-- Compte utilisateur, backend, synchronisation → V1.5
+- Compte utilisateur, backend, synchronisation → V1.5 : **livré** (branche
+  `feat/account-sync`, §12), compte **optionnel**
 - Contenus embarqués (lire le post dans l'app) → jamais prévu : lourd, fragile, souvent
   bloqué par les plateformes. La seule WebView de l'app est invisible et sert uniquement à
   lire légende et miniature au partage (§6)
@@ -385,8 +411,8 @@ Pour éviter de re-débattre à chaque itération :
   lues sur l'appareil, une seule fois, au partage (§6)
 - iOS → après la V1 Android
 
-Le compte utilisateur, quand il arrivera, sera **optionnel** — jamais un mur d'inscription
-au lancement.
+Le compte utilisateur est **optionnel** — jamais un mur d'inscription au lancement, ni de
+rappel insistant : il ne se montre que dans la section « Account » des Paramètres.
 
 ---
 
@@ -433,3 +459,166 @@ le système de design. Il est rendu par portail (`@rn-primitives/portal`) :
 
 Connu et accepté : en édition, le pied de la feuille n'est pas assombri sous le dialogue de
 suppression.
+
+---
+
+## 12. Compte et synchronisation (V1.5, novembre 2026)
+
+Conception : `docs/superpowers/specs/2026-11-11-comptes-synchro-design.md` ; plan :
+`docs/superpowers/plans/2026-11-11-comptes-synchro.md`. Le code fait foi là où il diverge
+du plan (marque de push, rattachement avant chaque push, déconnexion) : les écarts sont
+expliqués en place ci-dessous.
+
+Un compte **optionnel** (email + mot de passe) sauvegarde posts et collections dans
+Supabase et les synchronise entre les appareils **du même compte**. Pas de partage entre
+personnes, pas de temps réel.
+
+### Décision : synchro maison, pas PowerSync
+
+PowerSync était la piste de la roadmap. Écarté le 11 novembre 2026 au profit d'une synchro
+maison sur les colonnes du §4 :
+
+- PowerSync instancie **sa propre** base (§3) : il aurait fallu remplacer la connexion
+  `expo-sqlite` de l'app, donc la réactivité `useLiveQuery` de Drizzle sur laquelle reposent
+  tous les écrans (§2) ;
+- il ajoute un module natif (nouveau build, §9) et un service de plus entre l'app et
+  Postgres, à configurer et à garder dans un tier gratuit ;
+- le besoin est petit : un seul utilisateur par compte, trois tables qui portent déjà
+  `updated_at` / `deleted_at` / `user_id`. Un push/pull par delta avec « dernière écriture
+  gagnante » suffit, et sa logique se teste en pur avec `node --test`.
+
+Résultat : `@supabase/supabase-js` seul, **100 % JavaScript** — aucun module natif ajouté,
+aucun build nécessaire.
+
+### Côté serveur (Supabase)
+
+Migration : `supabase/migrations/20261111000000_account_sync.sql`.
+
+- Tables `collections`, `posts`, `post_collections` : mêmes colonnes qu'en local, dates en
+  millisecondes (`bigint`), plus `user_id uuid not null references auth.users on delete
+  cascade` et **`server_updated_at`** (heure du serveur à chaque écriture réelle, curseur
+  du pull, indépendant des horloges des téléphones). Clés étrangères `post_collections` →
+  `posts` / `collections` : d'où l'ordre fixe `collections`, `posts`, `post_collections` au
+  push comme au pull.
+- **Dernière écriture gagnante** : trigger `sync_last_write_wins` (`BEFORE INSERT OR
+  UPDATE`). Une mise à jour dont `updated_at` n'est pas plus récent que la ligne en place
+  est ignorée **sans erreur** : l'upsert réussit, la ligne est simplement absente de la
+  réponse et inchangée en base. C'est aussi ce qui empêche le rebond entre appareils (une
+  ligne renvoyée telle qu'elle a été reçue ne « rajeunit » pas).
+- **RLS** sur les trois tables, politique « own rows » : `user_id = auth.uid()` pour toute
+  opération de `authenticated`.
+- **Droits** : ce projet Supabase accorde par défaut **tous** les droits (`DELETE` compris)
+  à `anon` et `authenticated` sur toute nouvelle table de `public`. La migration fait donc
+  `revoke all` puis accorde seulement `select, insert, update` à `authenticated` — pas de
+  `DELETE` (suppression logique, §4) — et `select` sur `collections` à `anon` pour le ping de
+  réveil (la RLS ne lui renvoie aucune ligne). **Toute nouvelle table synchronisée doit
+  reprendre ce `revoke` / `grant`.**
+- `delete_my_account()` (`security definer`, exécutable par `authenticated` seulement) :
+  supprime l'utilisateur d'`auth.users`, ses lignes partent en cascade.
+- Réglages d'authentification : `mailer_autoconfirm: true` (pas de confirmation d'email) et
+  `password_min_length: 8`. Raison : le service d'email intégré de Supabase n'envoie qu'aux
+  membres de l'équipe du projet, 2 emails par heure — avec la confirmation, personne d'autre
+  ne pourrait s'inscrire. Conséquences : pas de « mot de passe oublié » (réinitialisation à
+  la main, DEVELOPMENT.md), et rien ne prouve que l'adresse appartient à celui qui
+  s'inscrit. Un SMTP + un domaine sont à brancher avant d'ouvrir l'app à d'autres (TODO).
+
+### Côté appareil
+
+| Fichier | Rôle |
+|---|---|
+| `src/lib/supabase.ts` | Client Supabase : session dans le kv-store (§2), rafraîchissement du jeton au premier plan seulement |
+| `src/lib/sync/logic.ts` | Logique pure, testée : conversion des lignes, comparaison `updated_at`, curseur, plan de fusion des invités, messages d'erreur |
+| `src/lib/sync/engine.ts` | I/O : push, pull, fusion, `sync()` |
+| `src/lib/sync/account.ts` | Connexion, inscription, déconnexion, suppression du compte |
+| `src/hooks/use-account-sync.ts` | Session → `account-store`, déclencheurs de synchro (monté une fois dans `_layout.tsx`) |
+| `src/components/settings-sheet.tsx`, `account-sheet.tsx` | Section « Account » des Paramètres, feuille de connexion |
+
+Clés du kv-store, par compte : `sync:<uid>:push` (marque de push), `sync:<uid>:pull:<table>`
+(curseur de pull), `sync:<uid>:bootstrapped` (première synchro faite sur cet appareil).
+
+**Push** (`push(uid)`) :
+
+1. **Rattachement** : toute ligne locale `user_id IS NULL`, des trois tables, pierres
+   tombales comprises, reçoit `user_id = uid` et `updated_at = maintenant`. Fait avant
+   **chaque** push, pas seulement à la connexion : les écritures locales ne posent jamais
+   `user_id`, donc une ligne créée pendant la session est aussi « sans compte ».
+2. Envoi (upsert sur `id`, paquets de 500) des lignes `user_id = uid` et
+   `updated_at >= marque`.
+3. Marque = **heure de l'appareil au début du push**, enregistrée après succès. Pas le plus
+   grand `updated_at` envoyé : une ligne reçue d'un téléphone à l'horloge en avance aurait
+   porté la marque dans le futur, et les modifications locales suivantes ne seraient plus
+   parties. `>=` plutôt que `>` : une écriture dans la même milliseconde repart au push
+   suivant (le serveur ignore le doublon).
+
+**Pull** (`pull(uid)`) : par table, pages de 500 triées `(server_updated_at, id)` après le
+curseur. Le `ts` du curseur reste la **chaîne** renvoyée par le serveur (un `Date` JS
+perdrait les microsecondes). Application en transaction :
+`insert … on conflict(id) do update … where excluded.updated_at > updated_at`, avec
+`updated_at` fourni explicitement (sinon `$onUpdate` de Drizzle le remplacerait).
+
+**Rafraîchissement des écrans** : `useLiveQuery` n'écoute que la table racine de sa requête ;
+un rangement reçu seul ne rafraîchirait ni les listes ni les compteurs. Après un pull qui a
+changé quelque chose, une ligne de `posts` et une de `collections` sont réécrites à
+l'identique (`UPDATE posts SET url = url WHERE id IN (SELECT id FROM posts LIMIT 1)`, idem
+`collections.name`) : chaque écouteur est notifié, `updated_at` ne bouge pas, donc pas de push.
+
+**Première synchro d'un compte sur l'appareil** (`sync:<uid>:bootstrapped` absent) : marque de
+push posée à maintenant → pull complet → **fusion des invités** (`planGuestMerge`) → push →
+`bootstrapped`. La fusion évite les doublons quand on a utilisé l'app sans compte sur deux
+téléphones : une collection invitée du même nom (casse et espaces ignorés) qu'une du compte
+y est fusionnée ; un post invité de même URL qu'un du compte aussi (rangements repointés sans
+doublon de paire, notes accolées si elles diffèrent) ; la copie invitée passe en
+`deleted_at`. Hors de ce moment, un même post sauvegardé hors ligne sur deux appareils peut
+donner un doublon : accepté. Cette première synchro part des déclencheurs dès que la session
+apparaît, pas de `signIn()` lui-même.
+
+**`sync()`** : push puis pull, une seule exécution à la fois (une demande pendant une synchro
+en relance une après). N'échoue jamais : l'erreur va dans `account-store`
+(`status: 'error'`), nouvel essai au prochain déclencheur. Hors ligne, rien ne casse.
+
+**Déclencheurs** (seulement avec une session, après les migrations) : au lancement et à la
+connexion, au retour au premier plan, et 3 s après une écriture en base
+(`addDatabaseChangeListener`) — **seulement si `hasLocalChanges(uid)`** (ligne sans
+`user_id`, ou ligne du compte avec `updated_at >= marque`). Ce filtre empêche les écritures
+du pull de relancer une synchro en boucle ; une ligne reçue plus récente que la marque en
+relance une seule, qui la renvoie, que le serveur ignore : ça converge.
+
+**Déconnexion** (`signOut()`) : synchro complète (push **et** pull) d'abord. Échec → erreur
+« Connect to the internet to sign out — some changes aren't synced yet. », on reste connecté
+(aucune écriture non poussée n'est perdue). Succès → `supabase.auth.signOut({ scope: 'local' })`
+→ vidage local. `scope: 'local'` et non `global` : `global` déconnecterait aussi les autres
+appareils du compte, et la sortie ne doit plus dépendre du réseau une fois tout poussé.
+
+**Suppression du compte** (`deleteAccount()`) : attend la fin d'une synchro en cours (elle
+réécrirait des lignes après le nettoyage), `rpc('delete_my_account')`, `signOut` local (le
+jeton d'un compte supprimé reste valide jusqu'à expiration), vidage local.
+
+### Exceptions à « jamais de vrai `DELETE` »
+
+| Où | Quoi | Pourquoi ce n'est pas une perte |
+|---|---|---|
+| Appareil, déconnexion et suppression du compte | `DELETE` des trois tables locales (`wipeLocalData`, `src/lib/sync/account.ts`) + oubli des clés `sync:<uid>:*` | À la déconnexion, tout est poussé avant : les données restent dans le compte, pierres tombales comprises. C'est le cache de l'appareil qu'on vide |
+| Serveur, suppression du compte | `delete from auth.users`, cascade sur les trois tables | Voulu : droit à l'effacement, confirmé par un `ConfirmDialog` destructif |
+
+Partout ailleurs, la règle du §4 tient, y compris côté serveur (aucun droit `DELETE`).
+
+### Réveil du projet Supabase
+
+Le tier gratuit se met en pause après 7 jours sans requête.
+`.github/workflows/supabase-keepalive.yml` lit `collections` avec la clé publishable tous les
+3 jours (`0 6 */3 * *`, plus lancement manuel) ; secrets GitHub `SUPABASE_URL` et
+`SUPABASE_PUBLISHABLE_KEY`. Limite : GitHub désactive un workflow planifié après 60 jours
+sans activité sur le dépôt (DEVELOPMENT.md). S'il s'arrête, la synchro échoue proprement
+jusqu'à la remise en route du projet depuis le tableau de bord.
+
+### Risques connus, acceptés
+
+- **Horloges des appareils** : la dernière écriture gagnante compare des `updated_at` pris
+  sur les téléphones. Un téléphone en retard perd face à une modification plus ancienne mais
+  horodatée plus tard. Accepté : un compte n'est modifié que par une personne.
+- **Transactions serveur qui se croisent** : le curseur peut manquer une ligne validée après
+  une plus récente (`shortcut:` dans `engine.ts`). Négligeable à un utilisateur.
+- **Session terminée sans notre `signOut()`** (jeton de rafraîchissement révoqué, par
+  exemple) : les lignes de l'ancien compte restent sur le téléphone et s'afficheraient sous
+  un autre compte connecté ensuite (les lectures ne filtrent pas sur `user_id`). Elles ne
+  partent pas dans ce compte (le push ne prend que `user_id = uid` ou `NULL`). Ouvert (TODO).

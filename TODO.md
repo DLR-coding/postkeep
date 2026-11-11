@@ -23,6 +23,48 @@ Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage 
 
 ---
 
+## 🟠 Compte et synchronisation — branche `feat/account-sync` (non publiée)
+
+Code livré le 11 novembre 2026 (59 tests unitaires au vert), pas encore vérifié sur
+appareil. Fonctionnement : [ARCHITECTURE.md](./ARCHITECTURE.md) §12 ; procédures (migration,
+mot de passe, keepalive, sauvegarde de la base) : [DEVELOPMENT.md](./DEVELOPMENT.md) §9.
+
+**Vérification sur appareil** — compte de test dédié, **jamais le vrai compte** pour les
+tests destructifs, et base du téléphone sauvegardée hors du dépôt avant la première
+connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
+
+- [ ] Sans compte : l'app se comporte comme avant (rien de plus hors des Paramètres)
+- [ ] Création de compte avec des posts existants → tout est rattaché, visible dans Supabase
+- [ ] Modification sur le téléphone → poussée en quelques secondes
+- [ ] Modification simulée d'un « autre appareil » (curl avec le jeton du compte,
+      `updated_at` plus récent) → visible après retour au premier plan, liste rafraîchie seule
+- [ ] Mode avion : modification sans erreur bloquante ; déconnexion refusée avec le message
+- [ ] Réseau revenu → synchro, puis déconnexion → téléphone vide ; reconnexion → tout revient
+- [ ] Deuxième compte : ne voit rien du premier
+- [ ] Suppression du compte de test → plus rien côté serveur ni sur le téléphone
+- [ ] `npx expo-doctor@1.20.5` 21/21, doctor RNR, types, lint, tests
+- [ ] Premier passage planifié du workflow keepalive, une fois la branche fusionnée dans
+      `master` (un `schedule` ne part que de la branche par défaut)
+
+**À faire avant d'ouvrir les comptes à d'autres personnes :**
+
+- [ ] **SMTP + nom de domaine** (Resend, par exemple) branchés sur Supabase. Permet de
+      réactiver la confirmation d'email (`mailer_autoconfirm` repassé à `false`) et
+      d'ajouter « mot de passe oublié ». Aujourd'hui : rien ne prouve qu'une adresse
+      appartient à celui qui s'inscrit, et un mot de passe oublié se réinitialise à la main
+      depuis le tableau de bord (DEVELOPMENT.md §9)
+
+**Risque connu, ouvert :**
+
+- [ ] **Session terminée sans notre `signOut()`** (jeton de rafraîchissement révoqué,
+      session expirée côté serveur…) : l'app passe en mode sans compte sans vider la base.
+      Les lignes de l'ancien compte restent sur le téléphone et s'afficheraient sous un autre
+      compte connecté ensuite (les lectures ne filtrent pas sur `user_id` ; le push, lui, ne
+      les enverrait pas dans ce compte). Piste : vider la base, ou la marquer, quand la
+      session disparaît sans passer par `signOut()`
+
+---
+
 ## 🟡 Phase 6 — Distribution
 
 - [x] **`eas.json` : ajouter `"buildType": "apk"` au profil `production`** (4 septembre 2026)
@@ -81,7 +123,7 @@ Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage 
 - [x] `scrapeMetaTags` (`src/lib/oembed.ts`) : code mort depuis l'abandon du scraping
       Instagram/TikTok au profit de la WebView cachée — supprimé (11 novembre 2026)
 - [ ] `npm test` (`node --test`) lance 0 test sous Node 22.13 — en attendant :
-      `node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts`
+      `node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/lib/sync/*.test.ts src/screens/collections/tile-size.test.ts`
 - [x] Erreur lint dans `src/hooks/use-color-scheme.web.ts` (`react-hooks/set-state-in-effect`)
       — `useSyncExternalStore` à la place de l'effet (11 novembre 2026)
 - [x] [ARCHITECTURE.md](./ARCHITECTURE.md) §4 : la normalisation d'URL décrite ne dit pas que
@@ -100,7 +142,7 @@ Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage 
 Après la V1 (phases 6 et 7 closes), sans rien en installer avant — détail dans
 [ROADMAP.md](./ROADMAP.md) :
 
-- **V1.5** : comptes et synchronisation Supabase, phase de conception d'abord
+- **V1.5** : rétention (rappels, triage). Comptes et synchronisation : avancés, voir plus haut
 - **Montée vers le SDK 58**, sur une branche séparée
 
 ---

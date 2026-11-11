@@ -1,3 +1,4 @@
+import { isNotNull } from 'drizzle-orm';
 import { db } from '@/db';
 import { collections, postCollections, posts } from '@/db/schema';
 import { supabase } from '@/lib/supabase';
@@ -28,10 +29,13 @@ export async function signUp(email: string, password: string): Promise<void> {
  * pierres tombales comprises ; c'est l'appareil qu'on vide, pas une suppression de données.
  */
 function wipeLocalData(uid: string): void {
+  // `WHERE id IS NOT NULL` toujours vrai, mais indispensable : un DELETE sans WHERE
+  // passe par l'« optimisation truncate » de SQLite, qui ne prévient pas l'écouteur de
+  // changements — `useLiveQuery` continuait d'afficher les posts effacés.
   db.transaction((tx) => {
-    tx.delete(postCollections).run();
-    tx.delete(posts).run();
-    tx.delete(collections).run();
+    tx.delete(postCollections).where(isNotNull(postCollections.id)).run();
+    tx.delete(posts).where(isNotNull(posts.id)).run();
+    tx.delete(collections).where(isNotNull(collections.id)).run();
   });
   forgetSyncState(uid);
 }

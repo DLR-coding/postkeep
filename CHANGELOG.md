@@ -18,6 +18,24 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 ### Ajouté
 
 - Filtre **Threads** dans les pilules de « All posts ».
+- **Compte optionnel** (email + mot de passe, 8 caractères minimum) dans la section
+  « Account » des Paramètres, qui remplace « Sign in — Coming soon ». Sans compte, rien ne
+  change.
+- **Synchronisation et sauvegarde** des posts et collections entre les appareils d'un même
+  compte (Supabase) : au lancement, au retour dans l'app et quelques secondes après une
+  modification ; état affiché dans les Paramètres (« Synced 2 min ago », « Syncing… », ou
+  l'erreur). Hors ligne, rien ne bloque : la synchro reprend plus tard. À la première
+  connexion, les posts déjà présents rejoignent le compte, et les doublons (même URL, même
+  nom de collection) sont fusionnés.
+- **Déconnexion** : tout est envoyé d'abord (refusée hors ligne s'il reste des
+  modifications), puis les posts sont retirés du téléphone — ils restent dans le compte.
+- **Suppression du compte**, avec confirmation : le compte et tous ses posts sont effacés
+  du serveur et du téléphone.
+- Workflow GitHub Actions `supabase-keepalive.yml` : une requête tous les 3 jours pour que
+  le projet Supabase gratuit ne se mette pas en pause.
+- Migration serveur `supabase/migrations/20261111000000_account_sync.sql`, `.env.example`,
+  variables d'environnement EAS par profil (`environment` dans `eas.json`). Procédures dans
+  DEVELOPMENT.md §9.
 
 ### Modifié
 

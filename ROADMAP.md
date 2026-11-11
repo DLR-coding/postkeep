@@ -24,7 +24,7 @@ pas six écrans à moitié en parallèle — on termine un parcours avant d'ouvr
 | 6 | Distribution — APK public | 🟡 v0.1.0 puis v0.2.0 publiées ; restent icône/splash et test par un tiers |
 | 7 | Polish — améliorations UI/UX en attente | 🟡 Refonte livrée en v0.2.0 ; reste l'icône « + » du picker |
 | — | Livré hors plan initial (aperçu, paramètres, Reddit, grille…) | ✅ Publié en v0.2.0 |
-| V1.5 | Rétention + synchronisation multi-appareils | 🔒 Verrouillée jusqu'à la fin de V1 |
+| V1.5 | Rétention + synchronisation multi-appareils | 🟡 Synchro livrée sur la branche `feat/account-sync`, pas encore publiée ; rétention verrouillée jusqu'à la fin de V1 |
 
 ---
 
@@ -272,9 +272,10 @@ Détail : [TODO.md](./TODO.md) et `git log v0.1.0..v0.2.0`.
 
 ---
 
-## V1.5 — Rétention & synchronisation 🔒
+## V1.5 — Rétention & synchronisation 🟡
 
-**Ne rien installer de tout ça avant la fin de la V1.**
+**Rétention : ne rien installer avant la fin de la V1.** La synchronisation a été avancée
+(décision du 11 novembre 2026) et livrée sur une branche, voir plus bas.
 
 ### Rétention
 
@@ -287,28 +288,47 @@ le problème même qu'elle prétend résoudre.
 
 Critère de fin : recevoir un rappel pertinent et pouvoir trier dix posts en moins d'une minute.
 
-### Synchronisation
+### Synchronisation ✅ (branche `feat/account-sync`, non publiée)
 
-**Phase de conception obligatoire avant d'écrire du code** : comptes, rattachement des données
-existantes et moteur de synchro sont à concevoir et trancher d'abord. Pile pressentie, pas
-encore décidée — **Supabase** comme backend, **PowerSync** envisagé pour la synchro :
+Livrée le 11 novembre 2026 sur la branche `feat/account-sync`, **pas encore fusionnée ni
+publiée** : reste la vérification sur appareil ([TODO.md](./TODO.md)). Conception :
+`docs/superpowers/specs/2026-11-11-comptes-synchro-design.md` ; fonctionnement et décisions :
+[ARCHITECTURE.md](./ARCHITECTURE.md) §12.
+
+- **Compte optionnel**, email + mot de passe, dans la section « Account » des Paramètres
+  (remplace « Sign in — Coming soon »)
+- **Synchro + sauvegarde** entre les appareils d'un même compte : push/pull par delta,
+  dernière écriture gagnante, au lancement, au retour au premier plan et quelques secondes
+  après une modification
+- **Données d'avant le compte rattachées** à la connexion, doublons fusionnés (même nom de
+  collection, même URL de post)
+- **Déconnexion** (le téléphone est vidé, les données restent dans le compte) et
+  **suppression du compte**
+
+Pile réellement utilisée :
 
 ```
-Supabase                     Postgres + authentification + RLS
-@powersync/react-native      moteur de synchronisation SQLite ↔ Postgres
-@powersync/drizzle-driver    conserve la syntaxe Drizzle de la V1
-@powersync/react-query       état réseau (synchro en cours, erreurs)
+Supabase                     Postgres + authentification (email + mot de passe) + RLS
+@supabase/supabase-js        client, 100 % JS — aucun module natif, aucun rebuild
+expo-sqlite/kv-store         session et état de synchro (déjà utilisé pour le thème)
+src/lib/sync/                synchro maison sur updated_at / deleted_at / user_id
 GitHub Actions (cron)        ping tous les 3 jours — évite la mise en pause du tier gratuit Supabase
 ```
 
-**Le compte utilisateur sera optionnel** — jamais un mur d'inscription au lancement.
-Les données créées avant inscription seront rattachées a posteriori, d'où la colonne
-`user_id` nullable prévue dès la V1. Un emplacement « Sign in — Coming soon » (désactivé)
-figure déjà dans les paramètres depuis la v0.2.0.
+**PowerSync écarté** (pressenti jusque-là, avec `@powersync/drizzle-driver` et
+`@powersync/react-query`) : il instancie sa propre base, donc remplace la connexion
+`expo-sqlite` et la réactivité `useLiveQuery` de tous les écrans ; il ajoute un module natif
+et un service de plus entre l'app et Postgres. Pour un seul utilisateur par compte et trois
+tables qui portaient déjà les colonnes de synchro, une synchro maison suffit. TanStack Query
+n'est pas venu non plus : l'état de synchro tient dans un store Zustand.
 
-**Ce qui rend cette phase possible** : le schéma respecte les règles de synchronisation
-depuis le premier jour ([ARCHITECTURE.md](./ARCHITECTURE.md) §4). Sans ça, il faudrait
-migrer le schéma sur des appareils contenant déjà des données réelles.
+Restent avant d'ouvrir les comptes à d'autres personnes : un SMTP + un nom de domaine
+(confirmation d'email, mot de passe oublié) — voir [TODO.md](./TODO.md).
+
+**Ce qui a rendu cette phase possible** : le schéma respecte les règles de synchronisation
+depuis le premier jour ([ARCHITECTURE.md](./ARCHITECTURE.md) §4) — `user_id` nullable
+compris, qui sert au rattachement des données d'avant le compte. La synchro n'a demandé
+**aucune migration du schéma local**.
 
 ---
 

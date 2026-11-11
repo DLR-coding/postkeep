@@ -55,6 +55,17 @@ Il va chercher le JavaScript à distance, sur le serveur **Metro** qui tourne su
    ```bash
    npm install
    ```
+5. **Le fichier `.env.local`** (compte et synchronisation, §9) — ignoré par git :
+   ```bash
+   cp .env.example .env.local
+   # puis y mettre l'URL du projet et la clé publishable : tableau de bord Supabase →
+   # Project Settings → API Keys (clé « publishable », sb_publishable_…)
+   ```
+   Sans lui, l'app lève une erreur dès le démarrage (`EXPO_PUBLIC_SUPABASE_URL /
+   EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY manquants`). Les variables `EXPO_PUBLIC_*` sont
+   inlinées dans le bundle par Metro : après une modification, relancer Metro avec `--clear`.
+   La clé publishable est publique par conception (la RLS protège les données) ; ne jamais
+   mettre ici la clé secrète (`sb_secret_…`, ex-`service_role`).
 
 > ⚠️ **Expo Go ne fonctionnera jamais sur ce projet.** Expo Go est un dev client générique qui
 > ne contient que les modules du SDK Expo standard. PostKeep utilise `expo-share-intent`,
@@ -274,6 +285,25 @@ npx @react-native-reusables/cli doctor --yes
 - **Les artefacts EAS expirent** (un build de deux mois est marqué « Expired » et n'est plus
   téléchargeable). L'APK à garder est donc celui attaché à la **GitHub Release** (§8).
 
+### Variables d'environnement des builds
+
+`.env.local` n'est pas commité, donc **pas envoyé à EAS**. Les builds lisent
+`EXPO_PUBLIC_SUPABASE_URL` et `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` dans les variables
+d'environnement EAS, créées (visibilité `plaintext`) pour les trois environnements
+`development`, `preview` et `production`. Chaque profil d'`eas.json` désigne le sien
+(`"environment": "production"`, etc.).
+
+```bash
+npx eas-cli env:list --environment production          # vérifier
+npx eas-cli env:set --name EXPO_PUBLIC_SUPABASE_URL --value 'https://<ref>.supabase.co' \
+  --environment development --environment preview --environment production \
+  --visibility plaintext                                # créer ou modifier
+# (env:create, utilisé à la mise en place, est déprécié au profit d'env:set)
+```
+
+Une nouvelle variable `EXPO_PUBLIC_*` se crée dans les trois environnements, sinon un
+seul profil la verra.
+
 ### Construire un dev client (rare)
 
 Nécessaire seulement dans les cas du §4, ou pour installer l'app sur un nouveau téléphone.
@@ -342,7 +372,89 @@ Ne pas laisser l'APK téléchargé dans le dossier du projet.
 
 ---
 
-## 9. Vérifier que le projet est sain
+## 9. Compte et synchronisation (Supabase)
+
+Fonctionnement et décisions : [ARCHITECTURE.md](./ARCHITECTURE.md) §12. Projet Supabase
+`xrzubssvamvmfjeokbyy` (tier gratuit). `@supabase/supabase-js` est 100 % JavaScript :
+toucher à la synchro ne demande jamais de rebuild.
+
+### Appliquer une migration
+
+Les migrations SQL versionnées vivent dans `supabase/migrations/`
+(`AAAAMMJJHHMMSS_nom.sql`). Pas de `supabase db push` : on les applique par l'**API de
+gestion**, avec le jeton personnel de `~/.supabase/access-token` (pas besoin du mot de
+passe de la base) :
+
+```bash
+REF=xrzubssvamvmfjeokbyy
+curl -fsS -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
+  -H "Authorization: Bearer $(cat ~/.supabase/access-token)" \
+  -H "Content-Type: application/json" \
+  --data "$(jq -Rs '{query: .}' supabase/migrations/<fichier>.sql)"
+```
+
+Ou coller le fichier dans l'éditeur SQL du tableau de bord (SQL Editor). Une migration
+n'est appliquée qu'une fois : en écrire une nouvelle plutôt que de modifier une ancienne.
+
+> ⚠️ **Toute nouvelle table de `public` reçoit par défaut tous les droits** (`DELETE`
+> compris) pour `anon` et `authenticated` sur ce projet. Une table créée par migration doit
+> donc `revoke all … from anon, authenticated`, puis accorder le strict utile, et activer la
+> RLS — comme `20261111000000_account_sync.sql`.
+
+### Réinitialiser un mot de passe
+
+Il n'y a pas de « mot de passe oublié » dans l'app : la confirmation d'email est coupée
+(`mailer_autoconfirm: true`) faute de SMTP — le service d'email intégré de Supabase
+n'envoie qu'aux membres de l'équipe du projet, 2 emails par heure (TODO). Pour un
+utilisateur qui a oublié le sien, depuis le tableau de bord → SQL Editor :
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('<nouveau mot de passe, 8 caractères min.>', extensions.gen_salt('bf'))
+where email = '<email du compte>';
+```
+
+Puis lui transmettre le mot de passe par un autre canal. Ne jamais commiter ni coller ce
+mot de passe dans un fichier du dépôt.
+
+### Réveil du projet (keepalive)
+
+Le tier gratuit se met en pause après 7 jours sans requête. Le workflow
+`.github/workflows/supabase-keepalive.yml` lit l'API REST tous les 3 jours, avec les
+secrets GitHub `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` (`gh secret set`).
+
+```bash
+gh workflow run supabase-keepalive.yml                  # lancer à la main
+gh run list --workflow supabase-keepalive.yml -L 5      # derniers passages
+gh workflow enable supabase-keepalive.yml               # le réactiver
+```
+
+- Un déclencheur `schedule` ne tourne que depuis la **branche par défaut** (`master`) : rien
+  ne part tant que la branche `feat/account-sync` n'est pas fusionnée.
+- **GitHub désactive un workflow planifié après 60 jours sans activité sur le dépôt.** Il
+  prévient par email ; `gh workflow enable` (ou le bouton de l'onglet Actions) le relance.
+- Projet déjà en pause : la synchro échoue proprement (erreur dans la ligne d'état des
+  Paramètres). Le relancer depuis le tableau de bord Supabase (Restore project).
+
+### Sauvegarder la base du téléphone avant un test destructif
+
+Déconnexion et suppression de compte **vident la base locale**. Avant de les tester, ou
+avant la première connexion d'un téléphone qui a de vraies données : utiliser un compte de
+test dédié, et copier la base **hors du dépôt** (même `ADB` qu'au §3) :
+
+```bash
+mkdir -p ~/backups/postkeep
+$ADB exec-out run-as com.thejohninc.postkeep cat files/SQLite/postkeep.db \
+  > ~/backups/postkeep/postkeep-$(date +%F).db
+```
+
+`run-as` ne marche que sur un build débogable (le dev client), pas sur l'APK de
+production. Si `files/SQLite/postkeep.db-wal` existe, le copier aussi (app arrêtée
+d'abord) : il peut contenir les dernières écritures.
+
+---
+
+## 10. Vérifier que le projet est sain
 
 Trois commandes à connaître. À lancer après toute installation, et avant tout commit important.
 
@@ -364,21 +476,22 @@ C'est normal et sans danger : Expo publie des versions patch régulièrement.
 
 ### Tests unitaires
 
-Les tests (`node:test`, logique pure de `src/lib/` et du calcul de tuiles) se lancent avec :
+Les tests (`node:test`, logique pure de `src/lib/`, de `src/lib/sync/` et du calcul de
+tuiles) se lancent avec :
 
 ```bash
-node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/screens/collections/tile-size.test.ts
-# → tests 44, pass 44
+node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/lib/sync/*.test.ts src/screens/collections/tile-size.test.ts
+# → tests 59, pass 59
 ```
 
 ⚠️ **`npm test` lance 0 test sous Node 22.13** (la version de `.nvmrc`) et affiche quand
 même un succès : le script est un simple `node --test`, et Node 22.13 ne ramasse pas les
 fichiers `.ts` sans `--experimental-strip-types`. Sous Node 24, `npm test` trouve bien les
-44 tests. Utiliser la commande explicite ci-dessus.
+tests. Utiliser la commande explicite ci-dessus.
 
 ---
 
-## 10. Règles strictes — ne jamais faire
+## 11. Règles strictes — ne jamais faire
 
 | Interdit | Pourquoi |
 |---|---|
@@ -391,7 +504,7 @@ fichiers `.ts` sans `--experimental-strip-types`. Sous Node 24, `npm test` trouv
 
 ---
 
-## 11. Carte du projet
+## 12. Carte du projet
 
 ```
 postkeep/
@@ -407,7 +520,7 @@ postkeep/
 │   │       └── collections.tsx #     Collections
 │   ├── screens/                # Corps des écrans complexes (save-post, collections, collection)
 │   ├── components/             # post-card, post-grid-cell, post-detail-sheet, settings-sheet,
-│   │   │                       # sheet-kit (feuilles + ConfirmDialog)…
+│   │   │                       # account-sheet, sheet-kit (feuilles + ConfirmDialog)…
 │   │   └── ui/                 # Composants React Native Reusables (copiés, modifiables)
 │   ├── db/
 │   │   ├── index.ts            #   Ouverture de la base (enableChangeListener)
@@ -416,9 +529,14 @@ postkeep/
 │   │   └── migrations/         #   Migrations générées par drizzle-kit
 │   ├── lib/                    # Logique pure, testée (*.test.ts) : share-url, post-filters,
 │   │   │                       # format-date… + design.ts (jetons), theme.ts (THEME, NAV_THEME)
-│   │   └── webview-metadata.tsx #  Légende + miniature Instagram/TikTok (WebView cachée)
+│   │   ├── webview-metadata.tsx #  Légende + miniature Instagram/TikTok (WebView cachée)
+│   │   ├── supabase.ts         #   Client Supabase (session dans le kv-store)
+│   │   └── sync/               #   Synchro : logic.ts (pur, testé), engine.ts, account.ts
 │   ├── stores/                 # Zustand — état d'interface uniquement
-│   └── hooks/
+│   └── hooks/                  # dont use-account-sync.ts (déclencheurs de synchro)
+├── supabase/migrations/        # Migrations SQL du serveur (appliquées à la main, §9)
+├── .github/workflows/          # supabase-keepalive.yml (réveil du projet Supabase)
+├── .env.example                # Modèle de .env.local (non commité)
 ├── global.css                  # Directives Tailwind + variables CSS du thème
 ├── tailwind.config.js          # Mapping couleurs → variables CSS. content: ./src/**
 ├── metro.config.js             # Bundler + NativeWind (inlineRem: 16) + .sql (Drizzle)
@@ -449,7 +567,7 @@ Créer un fichier dans `src/app/` suffit à créer la route — aucune config à
 
 ---
 
-## 12. Règles de code spécifiques au projet
+## 13. Règles de code spécifiques au projet
 
 Les règles complètes et leurs justifications sont dans
 [ARCHITECTURE.md](./ARCHITECTURE.md) — **source de vérité**, ne pas dupliquer ici.
@@ -461,13 +579,14 @@ Le rappel minimal pour le travail quotidien :
 - **5 colonnes obligatoires** sur toute table : `id` (TEXT, UUID client), `created_at`,
   `updated_at`, `deleted_at`, `user_id` → [détail et raisons](./ARCHITECTURE.md#4-schéma-de-données--5-colonnes-obligatoires).
 - **Jamais de vrai `DELETE`** — mettre `deleted_at` à jour, et filtrer
-  `WHERE deleted_at IS NULL` dans **toutes** les lectures.
+  `WHERE deleted_at IS NULL` dans **toutes** les lectures. Seules exceptions : le vidage de
+  l'appareil à la déconnexion / suppression du compte (ARCHITECTURE.md §12).
 - **Couleurs du thème uniquement** (`bg-background`, `text-foreground`…), jamais de couleur
   en dur : sinon le mode sombre casse.
 
 ---
 
-## 13. Dépannage
+## 14. Dépannage
 
 | Symptôme | Cause probable | Solution |
 |---|---|---|
@@ -477,7 +596,7 @@ Le rappel minimal pour le travail quotidien :
 | Le dev client plante à l'ouverture d'un deep link (« App react context shouldn't be created before… ») | Processus de l'app resté vivant | `adb shell am force-stop com.thejohninc.postkeep`, puis relancer le deep link (§3) |
 | Un build ne contient pas un module natif pourtant installé | Le module n'était pas commité : EAS builde depuis `HEAD` | Commiter, relancer le build (§7) |
 | Lien de téléchargement d'un vieux build « Expired » | Les artefacts EAS expirent | Prendre l'APK de la GitHub Release (§8) |
-| `npm test` affiche 0 test | Node 22.13 ne ramasse pas les `.ts` | Commande explicite du §9 |
+| `npm test` affiche 0 test | Node 22.13 ne ramasse pas les `.ts` | Commande explicite du §10 |
 | `Unable to resolve module ...` | Paquet installé pendant que Metro tournait | `Ctrl+C` puis `npx expo start --dev-client --clear` |
 | Les classes Tailwind ne s'appliquent pas | Cache Metro | `npx expo start --clear` |
 | L'app crash au démarrage après un `npm install` | Module natif ajouté sans rebuild | Refaire un `eas build --profile development` |
@@ -489,10 +608,13 @@ Le rappel minimal pour le travail quotidien :
 | Un partage n'ouvre pas l'écran attendu | Un seul des deux chemins de réception est câblé | Vérifier `+native-intent.tsx` **et** `ShareIntentProvider` racine (ARCHITECTURE §7) |
 | `useLiveQuery` ne se met jamais à jour | Base ouverte sans `enableChangeListener: true` | Corriger l'ouverture de la base dans `src/db/` |
 | Des éléments supprimés réapparaissent | Requête sans filtre sur la suppression logique | Ajouter `WHERE deleted_at IS NULL` |
+| Erreur au démarrage « `EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY manquants` » | Pas de `.env.local` (dev) ou pas de variables EAS pour l'environnement du profil (build) | Créer `.env.local` puis `npx expo start --dev-client --clear` (§2) ; pour un build, `eas env:list` (§7) |
+| La synchro reste en erreur alors que le réseau marche | Projet Supabase en pause (keepalive désactivé) | Le relancer depuis le tableau de bord, réactiver le workflow (§9) |
+| Un utilisateur a oublié son mot de passe | Pas de « mot de passe oublié » sans SMTP | Réinitialisation à la main (§9) |
 
 ---
 
-## 14. Résumé — la journée type
+## 15. Résumé — la journée type
 
 ```bash
 # 1. Démarrer (une fois le matin) — --tunnel sous WSL, voir §3
