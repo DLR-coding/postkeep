@@ -178,7 +178,7 @@ function CollectionActionsSheet({
       </BottomSheetModal>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-3xl border-0 bg-surface">
           <DialogHeader>
             <DialogTitle>{`Delete "${collection.name}"?`}</DialogTitle>
             <DialogDescription>The posts it contains are not deleted.</DialogDescription>
