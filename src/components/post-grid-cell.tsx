@@ -5,11 +5,14 @@ import { HighlightedText, PostThumb } from '@/components/post-thumb';
 import type { PostListItem } from '@/db/posts';
 import { usePostDetailStore } from '@/stores/post-detail-store';
 
-/** Écart entre les cellules de la grille (maquette « Grille 3 colonnes »). */
-export const GRID_GAP = 4;
+/** Mesures de la maquette « Grille 3 colonnes » (téléphone de 282 px : cases de 86 px,
+ *  écart 4, coins 10, marge 8, légende 9,5) remises à l'échelle d'un écran de 360 dp —
+ *  les reprendre en valeurs brutes rendait la grille plus serrée et moins ronde. */
+export const GRID_GAP = 5;
 export const GRID_COLUMNS = 3;
-/** Marge latérale de la grille : plus serrée que la liste, comme sur la maquette. */
-export const GRID_SIDE = 8;
+export const GRID_SIDE = 10;
+const GRID_RADIUS_RATIO = 10 / 86;
+const CAPTION_RATIO = 9.5 / 86;
 
 export function gridCellWidth(screenWidth: number): number {
   return Math.floor((screenWidth - GRID_SIDE * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS);
@@ -35,7 +38,7 @@ export function PostGridCell({
       onPress={() => usePostDetailStore.getState().open(item.id)}
       accessibilityLabel={text ?? 'Post'}
       style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
-      <PostThumb post={item} width={width} highlightQuery={highlightQuery} stickerAt="top-right" radius={12}>
+      <PostThumb post={item} width={width} highlightQuery={highlightQuery} stickerAt="top-right" radius={Math.round(width * GRID_RADIUS_RATIO)}>
         {!!text && (
           <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: height * 0.45 }}>
             <Svg width="100%" height="100%" style={{ position: 'absolute' }}>
@@ -57,8 +60,8 @@ export function PostGridCell({
                 right: 6,
                 bottom: 6,
                 color: '#fff',
-                fontSize: 10.5,
-                lineHeight: 13,
+                fontSize: Math.round(width * CAPTION_RATIO),
+                lineHeight: Math.round(width * CAPTION_RATIO * 1.25),
                 fontWeight: '600',
               }}
             />
