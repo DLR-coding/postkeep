@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
 import { FolderMinus, Trash2 } from 'lucide-react-native';
 
@@ -61,11 +63,27 @@ export function PostCard({
 
   const [confirm, setConfirm] = useState<'delete' | 'remove' | null>(null);
 
+  // Fondu de sortie à la suppression, piloté à la main (pas d'animation `exiting`) : la
+  // ligne s'efface, puis la suppression part. FlashList réutilise ensuite cette ligne pour
+  // un autre post → l'opacité revient à 1 à chaque changement de post.
+  const opacity = useSharedValue(1);
+  useEffect(() => {
+    opacity.set(1);
+  }, [item.id, opacity]);
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
+  const fadeOutThen = (action: () => void) => {
+    opacity.set(
+      withTiming(0, { duration: 180 }, (finished) => {
+        if (finished) scheduleOnRN(action);
+      })
+    );
+  };
+
   return (
-    // Pas d'animation Reanimated (entering / exiting / layout) sur la ligne : FlashList
+    // Pas d'animation Reanimated `entering` / `exiting` / `layout` sur la ligne : FlashList
     // recycle les lignes, et l'animation faisait glisser chaque ligne réutilisée vers sa
     // nouvelle taille pendant le défilement (cartes qui « se déplacent », vu sur appareil).
-    <View>
+    <Animated.View style={fadeStyle}>
       <Swipeable
         renderRightActions={() => (
           <View className="flex-row py-3">
@@ -140,12 +158,15 @@ export function PostCard({
           description={confirm === 'delete' ? 'It will disappear from PostKeep.' : 'It stays in "All posts".'}
           confirmLabel={confirm === 'delete' ? 'Delete' : 'Remove'}
           onConfirm={() => {
-            if (confirm === 'delete') softDeletePost(item.id);
-            else if (collectionId) removePostFromCollection(item.id, collectionId);
+            const kind = confirm;
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            fadeOutThen(() => {
+              if (kind === 'delete') softDeletePost(item.id);
+              else if (collectionId) removePostFromCollection(item.id, collectionId);
+            });
           }}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }

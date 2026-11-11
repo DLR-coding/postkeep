@@ -27,7 +27,7 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - Un nom de collection très long est tronqué au lieu de faire déborder sa puce de l'écran.
 - Défilement de la liste des posts : les lignes ne « glissent » plus et ne s'affichent plus
   un instant au mauvais endroit (animation de mise en page retirée des lignes recyclées par
-  FlashList). La suppression par balayage n'a plus de fondu.
+  FlashList). La suppression par balayage garde son fondu, piloté à la main.
 - Les lignes de « All posts » n'affichent que 3 collections, puis « +N » (le détail du
   post les montre toutes).
 
