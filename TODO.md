@@ -51,10 +51,10 @@ sur le vrai compte de l'utilisateur.
 - [x] Release SDK 58 : **v0.4.0** publiée le 12 novembre 2026 (APK release vérifié sur le
       Galaxy S23 : pas de crash R8, partage avec l'app tuée OK, Home pendant « Saving… » OK).
 - [ ] L'utilisateur installe la v0.4.2 et se reconnecte à son compte.
-- [ ] Réparer les 4 posts du compte de l'utilisateur touchés par le mélange de métadonnées
+- [x] Réparer les 4 posts du compte de l'utilisateur touchés par le mélange de métadonnées
       (`/p/DeBxWSHjHhu/`, `/reel/DehO5gjSPgM/`, `/p/De2kpfnCFeH/`, `/reel/DeEb3wAoK-Z/`) :
-      vider légende + miniature côté serveur pour que le rattrapage corrigé (v0.4.2) les
-      reprenne — avec l'accord de l'utilisateur.
+      légende + miniature vidées côté serveur le 12 novembre 2026 (accord de l'utilisateur) ;
+      le rattrapage corrigé (v0.4.2) les recomplète à la reconnexion — à vérifier.
 
 ## 🟠 À vérifier sur l'APK v0.2.0 (usage réel)
 
