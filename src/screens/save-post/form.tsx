@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { BackHandler, StyleSheet, useColorScheme, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, BackHandler, StyleSheet, useColorScheme, View } from 'react-native';
 import { useShareIntentContext } from 'expo-share-intent';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useForm } from 'react-hook-form';
@@ -39,9 +39,21 @@ export function SavePostForm({
   });
   const [isSaving, setIsSaving] = useState(false);
 
+  // Android suspend les timers JS quand l'app passe en arrière-plan : si l'utilisateur
+  // quitte pendant l'enregistrement, le `onHide` du toast ne part qu'à la réouverture
+  // suivante et `exitApp()` fermerait alors l'app qu'il vient d'ouvrir.
+  const leftDuringSave = useRef(false);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') leftDuringSave.current = true;
+    });
+    return () => sub.remove();
+  }, []);
+
   const onSubmit = useCallback(
     async (values: PostFormValues) => {
       setIsSaving(true);
+      leftDuringSave.current = false;
 
       // Récupération des métadonnées selon la plateforme :
       // - Instagram/TikTok : WebView (les plateformes rendent les og:* côté client)
@@ -85,7 +97,8 @@ export function SavePostForm({
         visibilityTime: 1200,
         onHide: () => {
           resetShareIntent();
-          BackHandler.exitApp();
+          // Déjà quittée : on reste sur l'accueil au lieu de refermer l'app.
+          if (!leftDuringSave.current) BackHandler.exitApp();
         },
       });
     },

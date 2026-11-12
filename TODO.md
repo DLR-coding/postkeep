@@ -26,7 +26,10 @@ le vrai compte.
       (le `MetadataExtractorProvider` et la WebView cachée sont-ils prêts ?), réseau lent.
       À reproduire sur le build de dev avec de vrais liens Instagram/TikTok, app **fermée**
       puis app **ouverte**, en lisant les logs `[WebView]` de Metro.
-- [ ] **Partage avec l'app fermée → l'app se ferme toute seule à l'ouverture suivante** :
+- [x] **Partage avec l'app fermée → l'app se ferme toute seule à l'ouverture suivante**
+      (corrigé : Android gèle les timers JS en arrière-plan ; si l'utilisateur quittait
+      pendant l'enregistrement, le `onHide` du toast partait à la réouverture et appelait
+      `exitApp()`. On ne quitte plus si l'app est passée en arrière-plan entre-temps.) :
       on enregistre un post depuis Instagram/TikTok alors que PostKeep est fermé ; plus tard,
       en ouvrant PostKeep depuis le lanceur, l'app se ferme d'elle-même ; à la réouverture,
       le toast « Saved » s'affiche. Lié au cycle de vie de l'intention de partage
