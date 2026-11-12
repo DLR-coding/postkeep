@@ -46,8 +46,12 @@ const MOBILE_USER_AGENT =
  * Script injecté après le chargement de la page. Instagram/TikTok injectent les
  * balises og:* dynamiquement via JavaScript après le DOMContentLoaded initial.
  * On attend jusqu'à 5s que og:image apparaisse (polling toutes les 200ms).
+ *
+ * `id` : numéro de la requête, renvoyé dans le message. Instagram déclenche `onLoadEnd` deux
+ * fois, donc deux scripts et deux messages : sans ce numéro, le second répondait à la requête
+ * suivante (le post suivant recevait la légende et la miniature du précédent).
  */
-const INJECTED_JS = `
+const injectedJs = (id: number) => `
 (function() {
   function getMeta(property) {
     const el = document.querySelector('meta[property="' + property + '"]') ||
@@ -66,6 +70,7 @@ const INJECTED_JS = `
   function send(data) {
     window.ReactNativeWebView.postMessage(JSON.stringify({
       type: 'metadata',
+      id: ${id},
       caption: data.caption,
       thumbnailUrl: data.ogImage
     }));
@@ -87,6 +92,7 @@ true;
 `;
 
 type ExtractRequest = {
+  id: number;
   resolve: (result: ExtractedMetadata) => void;
   reject: (error: Error) => void;
   timeoutId: ReturnType<typeof setTimeout>;
@@ -102,6 +108,7 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const pendingRequest = useRef<ExtractRequest | null>(null);
   const webViewRef = useRef<ExtractorWebViewInstance>(null);
+  const lastRequestId = useRef(0);
 
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     console.log('[WebView] onMessage:', event.nativeEvent.data.slice(0, 200));
@@ -109,7 +116,9 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
 
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'metadata') {
+      if (data.type === 'metadata' && data.id !== pendingRequest.current.id) {
+        console.log('[WebView] Ignoring a message from a previous request');
+      } else if (data.type === 'metadata') {
         console.log('[WebView] Metadata extracted:', { caption: data.caption?.slice(0, 50), thumbnailUrl: data.thumbnailUrl?.slice(0, 80) });
         const { resolve, timeoutId } = pendingRequest.current;
         clearTimeout(timeoutId);
@@ -159,7 +168,8 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
         }
       }, TIMEOUT_MS);
 
-      pendingRequest.current = { resolve, reject, timeoutId };
+      lastRequestId.current += 1;
+      pendingRequest.current = { id: lastRequestId.current, resolve, reject, timeoutId };
       setCurrentUrl(url);
     });
   }, []);
@@ -171,8 +181,8 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
       <View style={styles.hidden} pointerEvents="none">
         {currentUrl && (
           <ExtractorWebView
-            // Remontée à chaque URL : un message tardif de la page précédente ne doit
-            // pas répondre à la requête suivante.
+            // Remontée à chaque URL (page précédente détruite). Les messages déjà partis
+            // de cette page sont écartés par leur numéro de requête (`injectedJs`).
             key={currentUrl}
             ref={webViewRef}
             source={{ uri: currentUrl }}
@@ -180,7 +190,8 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
             onLoadEnd={() => {
               console.log('[WebView] Page loaded, injecting script');
               // Injecter le script d'extraction après le chargement complet
-              webViewRef.current?.injectJavaScript(INJECTED_JS);
+              const id = pendingRequest.current?.id;
+              if (id !== undefined) webViewRef.current?.injectJavaScript(injectedJs(id));
             }}
             onMessage={handleMessage}
             onError={handleError}
