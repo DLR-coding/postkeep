@@ -12,11 +12,9 @@ Dernière mise à jour : 11 novembre 2026
 
 ## 🔴 Bugs ouverts — à traiter en priorité (signalés le 12 novembre 2026)
 
-**État au moment du passage de relais** : branche `feat/sdk-58` (SDK 58 testé sur appareil,
-pas encore fusionnée dans `master`, R8 pas encore vérifié sur un APK release). Téléphone :
-build de dev SDK 58 + **compte de dev** (`postkeep-dev@example.com`). Le vrai compte de
-l'utilisateur (45 posts) est déconnecté, ses données sont sur Supabase. Ne jamais tester sur
-le vrai compte.
+**État au 12 novembre 2026** : tout est fusionné dans `master` et publié en **v0.4.1**.
+Les tests sur appareil se font sur le **compte de dev** (`postkeep-dev@example.com`), jamais
+sur le vrai compte de l'utilisateur.
 
 - [x] **Carte de post : poubelle visible au toucher + défilement bloqué** (corrigé le
       12 novembre 2026, vérifié sur le Galaxy S23) : retour d'appui opaque
@@ -52,22 +50,22 @@ le vrai compte.
 - [x] Fusionner `feat/sdk-58` dans `master` (fast-forward, 12 novembre 2026).
 - [x] Release SDK 58 : **v0.4.0** publiée le 12 novembre 2026 (APK release vérifié sur le
       Galaxy S23 : pas de crash R8, partage avec l'app tuée OK, Home pendant « Saving… » OK).
-- [ ] L'utilisateur se reconnecte à son compte (le téléphone a l'APK v0.4.0, compte de dev).
+- [ ] L'utilisateur installe la v0.4.1 et se reconnecte à son compte.
 
 ## 🟠 À vérifier sur l'APK v0.2.0 (usage réel)
 
 Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage quotidien :
 
-- [ ] **L'écran de partage ne se rouvre plus** au rechargement : l'intention de partage est
-      réinitialisée au démontage de l'écran — correctif à confirmer sur l'APK de production
+- [x] **L'écran de partage ne se rouvre plus** : vérifié sur l'APK release v0.4.0 (partage
+      avec l'app tuée puis réouverture : l'accueil s'affiche, 12 novembre 2026)
 - [ ] **Édition d'un post** : enregistrer après avoir coché/décoché des collections, et
       « + New » depuis l'édition (non testé sur appareil pendant la refonte)
-- [ ] **Légende et miniature Instagram/TikTok** récupérées par la WebView cachée sur des
-      partages réels
+- [x] **Légende et miniature Instagram/TikTok** récupérées par la WebView cachée sur des
+      partages réels — vérifié en v0.4.0 (12 novembre 2026), après le correctif `instagram://`
 
 ---
 
-## 🟠 Compte et synchronisation — branche `feat/account-sync` (non publiée)
+## 🟠 Compte et synchronisation — publié en v0.3.0
 
 Code livré le 11 novembre 2026 (59 tests unitaires au vert), pas encore vérifié sur
 appareil. Fonctionnement : [ARCHITECTURE.md](./ARCHITECTURE.md) §12 ; procédures (migration,
@@ -98,8 +96,10 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 - [x] Suppression du compte de test → plus rien côté serveur ni sur le téléphone ; base du
       téléphone restaurée ensuite depuis la sauvegarde
 - [x] `npx expo-doctor@1.20.5` 21/21, doctor RNR, types, lint, 59 tests
-- [ ] Premier passage planifié du workflow keepalive, une fois la branche fusionnée dans
-      `master` (un `schedule` ne part que de la branche par défaut)
+- [ ] Premier passage planifié du workflow keepalive : le workflow est actif sur `master`
+      et un lancement manuel réussit (12 novembre 2026) ; le cron `0 6 */3 * *` part les
+      jours 1, 4, 7, 10, 13… du mois, premier passage attendu le **13 novembre à 06:00 UTC**
+      (`gh run list --workflow supabase-keepalive.yml`, événement `schedule`)
 
 **À faire avant d'ouvrir les comptes à d'autres personnes :**
 
@@ -160,6 +160,10 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       balayage et à la suppression d'une collection ; plus aucun `Alert.alert` dans `src/`
       (11 novembre 2026, livré en v0.2.0)
   - Connu et accepté : en édition, le pied de la feuille n'est pas assombri sous le dialog
+- [ ] **Recherche : la fiche s'ouvre derrière le clavier** — avec le clavier ouvert, taper un
+      résultat ouvre la feuille de détail sous le clavier (vu le 12 novembre 2026, existait
+      avant v0.4.1)
+- [ ] **Une carte ouverte (actions visibles) reste ouverte pendant le défilement** de la liste
 
 ## 🟢 Aperçu des posts — par plateforme
 
@@ -214,8 +218,8 @@ Après la V1 (phases 6 et 7 closes), sans rien en installer avant — détail da
 [ROADMAP.md](./ROADMAP.md) :
 
 - **V1.5** : rétention (rappels, triage). Comptes et synchronisation : avancés, voir plus haut
-- **Montée vers le SDK 58** : faite sur la branche `feat/sdk-58` (React Native 0.88,
-  gesture-handler 3, NativeWind 4.2.7 ; `expo-doctor` 20/20, doctor RNR OK). Avant fusion :
+- **Montée vers le SDK 58** : faite et publiée en v0.4.0 (React Native 0.88,
+  gesture-handler 3, NativeWind 4.2.7 ; `expo-doctor` 20/20, doctor RNR OK) :
   - [x] Nouveau dev build (le natif a changé), puis test sur appareil (12 novembre 2026,
         Galaxy S23, compte de dev) : défilement filmé, balayage + fondu de suppression
         (`ReanimatedSwipeable`, `scheduleOnRN`), aperçu et édition `@gorhom/bottom-sheet`,
@@ -223,8 +227,8 @@ Après la V1 (phases 6 et 7 closes), sans rien en installer avant — détail da
         synchro, dossiers, grille. Non revu : le passage au champ mot de passe (Enter) et
         l'extraction WebView Instagram/TikTok. Bruit connu : avertissements Reanimated
         « Dependencies should only be used on the web » (bottom-sheet, upstream #2785)
-  - [ ] Minification R8 (activée par défaut en release depuis le SDK 58) vérifiée sur un APK
-        release
+  - [x] Minification R8 (activée par défaut en release depuis le SDK 58) vérifiée sur
+        l'APK release v0.4.0 : lancement à froid sans crash (12 novembre 2026)
 
 ---
 
