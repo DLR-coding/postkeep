@@ -18,7 +18,9 @@ build de dev SDK 58 + **compte de dev** (`postkeep-dev@example.com`). Le vrai co
 l'utilisateur (45 posts) est déconnecté, ses données sont sur Supabase. Ne jamais tester sur
 le vrai compte.
 
-- [ ] **Légende / miniature Instagram-TikTok parfois absentes** (vu en usage réel sur la
+- [x] **Légende / miniature Instagram-TikTok parfois absentes** (corrigé : la WebView
+      ouvrait `instagram://media/…` via `Linking`, l'app Instagram passait devant et
+      l'extraction gelée finissait en délai dépassé ; schémas non web refusés) (vu en usage réel sur la
       v0.3.0, SDK 57) : certains posts enregistrés n'ont ni légende ni miniature ; repartagés
       plus tard, ils les ont. Pistes à vérifier (`src/lib/webview-metadata.tsx`,
       `src/screens/save-post/form.tsx`) : délais (sondage 200 ms jusqu'à 5 s, délai global

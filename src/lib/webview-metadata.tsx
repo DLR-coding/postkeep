@@ -185,8 +185,12 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
             sharedCookiesEnabled={false}
             incognito
             cacheEnabled={false}
-            // Empêcher les redirections vers l'app store (liens universels)
-            originWhitelist={['https://*', 'http://*']}
+            // La page Instagram redirige vers `instagram://media/…` : react-native-webview
+            // ouvre via `Linking` toute URL hors `originWhitelist`, ce qui lançait l'app
+            // Instagram par-dessus PostKeep et gelait l'extraction. On laisse tout passer
+            // la liste blanche et on refuse ici, sans rien ouvrir, ce qui n'est pas du web.
+            originWhitelist={['*']}
+            onShouldStartLoadWithRequest={({ url }) => /^(https?|about):/.test(url)}
             // Pas de media autoplay
             mediaPlaybackRequiresUserAction
             allowsInlineMediaPlayback={false}

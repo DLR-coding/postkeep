@@ -15,6 +15,20 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Corrigé
+
+- **Légende et miniature Instagram parfois absentes** : la page Instagram chargée dans la
+  WebView cachée redirige vers `instagram://media/…`, que `react-native-webview` ouvrait via
+  `Linking` (URL hors `originWhitelist`). L'app Instagram passait devant PostKeep,
+  l'extraction restait gelée et finissait en délai dépassé, donc sans métadonnées. Les
+  schémas non web sont maintenant refusés sans être ouverts.
+- **L'app se fermait toute seule à l'ouverture suivante** après un partage : quand PostKeep
+  passait en arrière-plan pendant l'enregistrement (cas ci-dessus, ou utilisateur qui quitte),
+  le minuteur du toast « Saved » ne partait qu'à la réouverture et appelait
+  `BackHandler.exitApp()`. On ne quitte plus si l'app a été quittée entre-temps.
+- Quand aucune légende n'était récupérée, le paramètre de suivi du lien partagé
+  (`?igsh=…`) devenait la légende.
+
 ### Modifié
 
 - **Expo SDK 58** (branche `feat/sdk-58`) : React Native 0.88.1, React 19.3.0, Reanimated
