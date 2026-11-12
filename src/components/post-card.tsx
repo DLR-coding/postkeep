@@ -115,7 +115,9 @@ export function PostCard({
           onPress={() => usePostDetailStore.getState().open(item.id)}
           // Style objet et non fonction : avec `className`, NativeWind ignorait le style
           // fonction (carte sans marge ni coins arrondis, vu sur appareil).
-          className="flex-row gap-3.5 bg-surface active:opacity-70"
+          // Retour d'appui opaque : une opacité laissait voir le bouton de suppression, rendu
+          // derrière la carte par `ReanimatedSwipeable` (comme si le balayage commençait).
+          className="flex-row gap-3.5 bg-surface active:bg-muted"
           style={{ padding: CARD_PADDING, borderRadius: RADIUS.card, borderCurve: 'continuous' }}>
           {/* Rayon concentrique à celui de la carte (rayon de la carte − marge intérieure). */}
           <PostThumb
