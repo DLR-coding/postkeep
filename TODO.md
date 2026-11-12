@@ -41,8 +41,9 @@ le vrai compte.
       l'ancien bug « l'écran de partage se rouvre ». Reproduire : `adb shell am force-stop`,
       partage réel (ou `am start -a android.intent.action.SEND …`), enregistrer, puis rouvrir
       depuis le lanceur ; filmer l'écran.
-- [ ] Puis : fusionner `feat/sdk-58` dans `master`, release SDK 58 (vérifie R8), et
-      l'utilisateur se reconnecte à son compte.
+- [x] Fusionner `feat/sdk-58` dans `master` (fast-forward, 12 novembre 2026).
+- [ ] Release SDK 58 (vérifie R8 sur l'APK release, partage avec l'app **tuée** inclus : pas
+      testable sur le build de dev), puis l'utilisateur se reconnecte à son compte.
 
 ## 🟠 À vérifier sur l'APK v0.2.0 (usage réel)
 
