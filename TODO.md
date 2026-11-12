@@ -10,6 +10,35 @@ Dernière mise à jour : 11 novembre 2026
 
 ---
 
+## 🔴 Bugs ouverts — à traiter en priorité (signalés le 12 novembre 2026)
+
+**État au moment du passage de relais** : branche `feat/sdk-58` (SDK 58 testé sur appareil,
+pas encore fusionnée dans `master`, R8 pas encore vérifié sur un APK release). Téléphone :
+build de dev SDK 58 + **compte de dev** (`postkeep-dev@example.com`). Le vrai compte de
+l'utilisateur (45 posts) est déconnecté, ses données sont sur Supabase. Ne jamais tester sur
+le vrai compte.
+
+- [ ] **Légende / miniature Instagram-TikTok parfois absentes** (vu en usage réel sur la
+      v0.3.0, SDK 57) : certains posts enregistrés n'ont ni légende ni miniature ; repartagés
+      plus tard, ils les ont. Pistes à vérifier (`src/lib/webview-metadata.tsx`,
+      `src/screens/save-post/form.tsx`) : délais (sondage 200 ms jusqu'à 5 s, délai global
+      10 s), une seule extraction à la fois, démarrage à froid quand l'app était fermée
+      (le `MetadataExtractorProvider` et la WebView cachée sont-ils prêts ?), réseau lent.
+      À reproduire sur le build de dev avec de vrais liens Instagram/TikTok, app **fermée**
+      puis app **ouverte**, en lisant les logs `[WebView]` de Metro.
+- [ ] **Partage avec l'app fermée → l'app se ferme toute seule à l'ouverture suivante** :
+      on enregistre un post depuis Instagram/TikTok alors que PostKeep est fermé ; plus tard,
+      en ouvrant PostKeep depuis le lanceur, l'app se ferme d'elle-même ; à la réouverture,
+      le toast « Saved » s'affiche. Lié au cycle de vie de l'intention de partage
+      (`expo-share-intent`, `src/app/+native-intent.tsx`, `ShareIntentProvider`, la
+      réinitialisation de l'intention au démontage de `src/screens/save-post/index.tsx`, la
+      fermeture de l'activité après enregistrement) et au toast différé. Même famille que
+      l'ancien bug « l'écran de partage se rouvre ». Reproduire : `adb shell am force-stop`,
+      partage réel (ou `am start -a android.intent.action.SEND …`), enregistrer, puis rouvrir
+      depuis le lanceur ; filmer l'écran.
+- [ ] Puis : fusionner `feat/sdk-58` dans `master`, release SDK 58 (vérifie R8), et
+      l'utilisateur se reconnecte à son compte.
+
 ## 🟠 À vérifier sur l'APK v0.2.0 (usage réel)
 
 Livré et installé (Galaxy S23, APK release), mais pas encore exercé en usage quotidien :
