@@ -15,6 +15,15 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+## [0.4.2] — 12 novembre 2026
+
+### Corrigé
+
+- **Un post pouvait recevoir la légende et la miniature d'un autre** lors du rattrapage :
+  Instagram charge sa page deux fois, et le second résultat de la page précédente répondait
+  à la requête suivante. Chaque résultat porte maintenant le numéro de sa requête ; un
+  résultat d'une autre requête est ignoré.
+
 ## [0.4.1] — 12 novembre 2026
 
 ### Corrigé
@@ -357,7 +366,8 @@ APK : [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/ta
 - **Expo Go est définitivement inutilisable** sur ce projet à cause d'`expo-share-intent`
   (module natif hors du périmètre d'Expo Go). Un *development build* est obligatoire
 
-[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.4.1...HEAD
+[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/DLR-coding/postkeep/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/DLR-coding/postkeep/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/DLR-coding/postkeep/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/DLR-coding/postkeep/compare/v0.2.0...v0.3.0
