@@ -15,6 +15,17 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Ajouté
+
+- **Verre liquide sur la barre flottante** : la barre réfracte en direct ce qui défile derrière
+  elle, et une bulle de verre glisse entre Posts et Collections. Repris de budget-app (shader
+  d'après webgl-apple-liquid-glass, MIT). Le flou d'avant reste en repli sans GPU.
+
+### Modifié
+
+- Android 8.0 (API 26) minimum, exigé par la capture en direct (`react-native-webgpu`).
+- Correctifs Expo alignés : `expo` 58.0.25, `expo-dev-client` 58.0.20, `expo-sqlite` 58.0.17.
+
 ## [0.4.2] — 12 novembre 2026
 
 ### Corrigé

@@ -325,6 +325,14 @@ pièges :
   `BlurTargetView`, pas dedans : la barre est donc rendue en frère du `BlurTargetView` qui
   enveloppe les onglets, et lit l'onglet actif via `usePathname` (navigation par
   `router.navigate`).
+- **Verre liquide** (repris de budget-app) : `src/components/liquid-glass.ts` (shader SkSL,
+  modèle « V2 » de webgl-apple-liquid-glass, MIT) réfracte une capture en direct du
+  `BlurTargetView` (`src/components/glass-backdrop.ts`, `react-native-webgpu`
+  `drawElementImageToTexture`, 3 textures en rotation). Skia ne voit pas les vues natives,
+  d'où la capture ; la barre étant hors du conteneur capturé, elle ne se capture pas
+  elle-même. Deux surfaces : la pilule des onglets (avec la bulle qui glisse, tête + traîne)
+  et la pilule de recherche. Le flou `expo-blur` reste en repli tant que la première capture
+  n'est pas prête, ou sans GPU. Matériau figé (réglages finaux de budget-app).
 - En edge-to-edge la fenêtre n'est pas redimensionnée par le clavier : la barre suit le clavier
   avec `useAnimatedKeyboard` (Reanimated).
 - Le texte de recherche vit dans un store d'interface (`src/stores/nav-search-store.ts`), vidé à
@@ -354,11 +362,13 @@ le provider racine, le partage arrive mais rien ne se passe.
 |---|---|---|
 | `nativewind` | 4.2.7 | La v5 supprime `tailwind.config.js` (configuration CSS-first) → le CLI React Native Reusables en dépend et échoue. Patch 4.2.6 → 4.2.7 (avec `react-native-css-interop` 0.2.7) validé le 11 novembre 2026 pour le SDK 58 |
 | `tailwindcss` | 3.4.19 | La v4 impose la même configuration CSS-first → même conséquence |
-| `expo` | ~58.0.24 | Socle SDK 58 (React Native 0.88.1, React 19.3.0), `expo-doctor` 20/20. Les patchs du même SDK se suivent avec `npx expo install --fix` — c'est le **mineur** (SDK 59) qui demande une décision |
+| `expo` | ~58.0.25 | Socle SDK 58 (React Native 0.88.1, React 19.3.0), `expo-doctor` 20/20. Les patchs du même SDK se suivent avec `npx expo install --fix` — c'est le **mineur** (SDK 59) qui demande une décision |
 | `expo-share-intent` | 9.0.0 | Version requise pour SDK 58 (la 8.0.1 exige `expo` ^57 en peer et bloque `npm install` ; le plugin vérifie et refuse un décalage) |
 | `react-native-reanimated` | 4.7.1 | Version fournie par le SDK 58 |
 | `react-native-gesture-handler` | ~3.3.0 | Version fournie par le SDK 58. Majeure : `Swipeable` a disparu, `post-card.tsx` utilise `ReanimatedSwipeable` (`react-native-gesture-handler/ReanimatedSwipeable`) |
 | `expo-blur` | ~58.0.6 | Module natif (refonte) : flou de la barre flottante. Sur Android, `BlurTargetView` + `blurTarget`, `blurMethod="dimezisBlurViewSdk31Plus"` |
+| `react-native-skia` | 3.9.1 | Skia **v3** (paquet `react-native-skia`, pas `@shopify/react-native-skia` 2.x que propose le SDK 58) : verre liquide de la barre flottante. Mêmes versions que budget-app (RN 0.88.1, Reanimated 4.7.1, Worklets 0.13.0), où il tourne. Build natif lourd : voir DEVELOPMENT.md §7 |
+| `react-native-webgpu` | 0.21.1 | Capture en direct de l'écran derrière la barre (`drawElementImageToTexture`). Exige `minSdkVersion` 26 (plugin `expo-build-properties`) |
 | `react-native-webview` | 14.0.1 | Version fournie par le SDK 58. Module natif : lecture des balises `og:` d'Instagram/TikTok dans une WebView cachée (`src/lib/webview-metadata.tsx`). Ses types racine déclarent `class WebView<P = undefined>` → props `never` : contourné par `WebView<object>` (commentaire `shortcut:`), à retirer quand les types upstream seront corrigés |
 | `react-native-svg` | 15.16.0 | Version fournie par le SDK 58. Module natif : dégradés de la refonte (sticker Instagram, fonds de repli Instagram/TikTok des vignettes et de la feuille de détail, voile sous le texte d'une case de la grille) |
 

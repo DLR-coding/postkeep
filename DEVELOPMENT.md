@@ -315,6 +315,11 @@ npx eas-cli build --profile development --platform android
 Le build se fait **dans le cloud** (pas besoin d'Android Studio ni d'une machine puissante).
 À la fin, un QR code et un lien s'affichent : ouvrir le lien **sur le téléphone** pour installer l'APK.
 
+> **Skia (verre liquide) rend le build natif lourd** : compilé pour 4 ABI et en parallèle, le
+> démon Gradle manquait de mémoire sur la machine EAS (vu dans budget-app). Les profils
+> d'`eas.json` limitent donc le build à `arm64-v8a` et à un seul worker Gradle (variables
+> `env` de chaque profil). Ne pas les retirer.
+
 > Le plan EAS gratuit a un quota mensuel de builds (15 builds Android ; à notre connaissance,
 > le même quota pour tous les profils — ce n'est pas documenté explicitement). Une fois
 > atteint, les builds sont **bloqués jusqu'au renouvellement** — jamais facturés

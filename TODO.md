@@ -188,7 +188,9 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
 ## 🔜 Plus tard (demandé le 11 novembre 2026)
 
-- [ ] **Verre liquide sur la barre flottante**, repris de budget-app (branche
+- [ ] **Verre liquide sur la barre flottante** — *code porté sur la branche
+      `worktree-liquid-glass` (verre seul, sans écran de réglages), reste : dev build EAS, test
+      sur appareil (fluidité filmée au défilement, clavier, thèmes clair/sombre)* — repris de budget-app (branche
       `worktree-liquid-glass-skia`, commit `e9ab1ae`) : shader SkSL d'après le modèle « V2 » de
       `webgl-apple-liquid-glass` (MIT, attribution à garder), capture de l'écran derrière la
       barre, bulle qui glisse entre Posts et Collections, et écran « Verre liquide » de réglages
