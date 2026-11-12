@@ -42,8 +42,9 @@ le vrai compte.
       partage réel (ou `am start -a android.intent.action.SEND …`), enregistrer, puis rouvrir
       depuis le lanceur ; filmer l'écran.
 - [x] Fusionner `feat/sdk-58` dans `master` (fast-forward, 12 novembre 2026).
-- [ ] Release SDK 58 (vérifie R8 sur l'APK release, partage avec l'app **tuée** inclus : pas
-      testable sur le build de dev), puis l'utilisateur se reconnecte à son compte.
+- [x] Release SDK 58 : **v0.4.0** publiée le 12 novembre 2026 (APK release vérifié sur le
+      Galaxy S23 : pas de crash R8, partage avec l'app tuée OK, Home pendant « Saving… » OK).
+- [ ] L'utilisateur se reconnecte à son compte (le téléphone a l'APK v0.4.0, compte de dev).
 
 ## 🟠 À vérifier sur l'APK v0.2.0 (usage réel)
 
