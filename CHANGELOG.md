@@ -15,7 +15,17 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Ajouté
+
+- **Rattrapage des légendes et miniatures** Instagram/TikTok manquantes : au lancement et au
+  retour dans l'app, jusqu'à 3 essais par post. Répare aussi les posts déjà enregistrés sans
+  miniature.
+
 ### Corrigé
+
+- **Un post pouvait être perdu** si PostKeep passait en arrière-plan ou était tué pendant
+  « Saving… » : il est maintenant enregistré avant la récupération des métadonnées, puis
+  complété.
 
 - **Légende et miniature Instagram parfois absentes** : la page Instagram chargée dans la
   WebView cachée redirige vers `instagram://media/…`, que `react-native-webview` ouvrait via

@@ -227,11 +227,19 @@ de TanStack Query.
 
 - **Ouvrir un post** → `Linking.openURL()` → le système ouvre Instagram/TikTok directement
 - **Aperçu d'un post** → miniature + caption quand disponibles, sinon badge de plateforme
-- **Récupération** : une seule fois, à l'enregistrement depuis l'écran de partage
-  (`src/screens/save-post/form.tsx`), aiguillée par plateforme. Un échec n'empêche jamais la
-  sauvegarde : toutes les méthodes résolvent à vide plutôt que d'échouer. Résultat stocké
-  dans `posts.caption` / `posts.thumbnail_url` ; lors d'un re-partage d'un post existant, un
-  échec (`null`) n'efface pas les métadonnées déjà enregistrées.
+- **Récupération** : à l'enregistrement depuis l'écran de partage
+  (`src/screens/save-post/form.tsx`), aiguillée par plateforme. Le post est **écrit avant**
+  la récupération, puis complété (`setPostMetadata`) : si l'app passe en arrière-plan pendant
+  « Saving… » (Android y gèle les timers JS) ou est tuée, le post n'est pas perdu. Un échec
+  n'empêche jamais la sauvegarde : toutes les méthodes résolvent à vide plutôt que d'échouer.
+  Résultat stocké dans `posts.caption` / `posts.thumbnail_url` ; un échec (`null`) n'efface
+  pas les métadonnées déjà enregistrées.
+- **Rattrapage** (`src/components/metadata-backfill.tsx`) : au lancement et à chaque retour
+  au premier plan, les posts Instagram/TikTok sans miniature sont repassés dans la WebView,
+  un à la fois, au plus 3 essais par post (`MAX_ATTEMPTS`, `src/lib/metadata-backfill.ts`).
+  Compteur dans le kv-store local (clé `metadata-backfill-attempts`), pas synchronisé : un
+  nombre d'essais n'a pas de sens sur un autre appareil. Un essai interrompu (app quittée,
+  partage arrivé) ne compte pas. Les miniatures expirées (URL signée) ne sont pas rattrapées.
 
 ### État de la récupération par plateforme (novembre 2026)
 
@@ -270,8 +278,11 @@ User-Agent mobile.
 écran, `incognito`, sans cache ni lecture automatique des médias). La page est chargée avec un
 User-Agent mobile ; à `onLoadEnd`, un script injecté interroge les balises `og:image` et
 `og:description` (repli `og:title`) toutes les 200 ms pendant au plus 5 s, puis renvoie le
-résultat via `postMessage`. Délai global de 10 secondes. Une seule extraction à la fois : un
-appel concurrent reçoit un résultat vide.
+résultat via `postMessage`. Délai global de 10 secondes. Une seule extraction à la fois, la
+plus récente gagne : la requête en cours reçoit un résultat vide (un partage passe devant le
+rattrapage), et la WebView est remontée à chaque URL. Les navigations hors `http(s)`/`about:`
+sont refusées sans être ouvertes : la page Instagram redirige vers `instagram://media/…`, que
+`react-native-webview` ouvrirait sinon via `Linking` (l'app Instagram passait devant PostKeep).
 
 Architecture :
 ```

@@ -11,7 +11,7 @@ import { sheetBackgroundStyle } from '@/components/sheet-kit';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { PostFieldsForm, type PostFormValues } from '@/components/post-fields-form';
-import { savePost } from '@/db/posts';
+import { savePost, setPostMetadata } from '@/db/posts';
 import { extractCaptionFromText, PLATFORM_META, type AnalyzedUrl } from '@/lib/share-url';
 import { fetchOEmbed } from '@/lib/oembed';
 import { useExtractMetadata } from '@/lib/webview-metadata';
@@ -55,38 +55,36 @@ export function SavePostForm({
       setIsSaving(true);
       leftDuringSave.current = false;
 
+      // Enregistré tout de suite, avant la récupération des métadonnées : si l'app passe
+      // en arrière-plan (timers gelés) ou est tuée pendant « Saving… », le post existe
+      // déjà ; le rattrapage (`src/components/metadata-backfill.tsx`) le complétera.
+      // Caption priority:
+      // 1. Metadata from WebView/oEmbed — most accurate (applied below)
+      // 2. meta.title from Android EXTRA_TITLE — some apps set this
+      // 3. Caption extracted from shared text (text minus URL)
+      const captionFromText = extractCaptionFromText(sharedText, analyzed?.url);
+      const postId = savePost({
+        id: prefill.postId,
+        url: analyzed?.url ?? null,
+        note: values.note.trim() || null,
+        collectionIds: values.collectionIds,
+        // undefined : un re-partage n'efface pas les métadonnées d'un post déjà enregistré.
+        caption: metaTitle ?? captionFromText ?? undefined,
+      });
+
       // Récupération des métadonnées selon la plateforme :
       // - Instagram/TikTok : WebView (les plateformes rendent les og:* côté client)
       // - X/Twitter : oEmbed API (fonctionne)
       // - Reddit : flux RSS du post (titre + miniature), sinon oEmbed (titre)
       // - Autres : pas de récupération
-      let metadata = { caption: null as string | null, thumbnailUrl: null as string | null };
-
+      // Échec de récupération (null) → rien n'est remplacé (`setPostMetadata`).
       if (analyzed?.url) {
         if (analyzed.platform === 'instagram' || analyzed.platform === 'tiktok') {
-          metadata = await extractMetadata(analyzed.url);
+          await setPostMetadata(postId, await extractMetadata(analyzed.url));
         } else if (analyzed.platform === 'x' || analyzed.platform === 'reddit') {
-          metadata = await fetchOEmbed(analyzed.url, analyzed.platform);
+          await setPostMetadata(postId, await fetchOEmbed(analyzed.url, analyzed.platform));
         }
       }
-
-      // Caption priority:
-      // 1. Metadata from WebView/oEmbed — most accurate
-      // 2. meta.title from Android EXTRA_TITLE — some apps set this
-      // 3. Caption extracted from shared text (text minus URL)
-      const captionFromText = extractCaptionFromText(sharedText, analyzed?.url);
-      const caption = metadata.caption ?? metaTitle ?? captionFromText ?? undefined;
-
-      savePost({
-        id: prefill.postId,
-        url: analyzed?.url ?? null,
-        note: values.note.trim() || null,
-        collectionIds: values.collectionIds,
-        // Échec de récupération (null) → undefined : un re-partage raté n'efface
-        // pas les métadonnées d'un post déjà enregistré.
-        caption,
-        thumbnailUrl: metadata.thumbnailUrl ?? undefined,
-      });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // `resetShareIntent()` déclenche `hasShareIntent: false` chez le parent,
       // qui redirige vers `/` — repoussé à la fin du toast pour ne pas couper

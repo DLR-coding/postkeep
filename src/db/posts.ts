@@ -135,6 +135,27 @@ export async function markPostOpened(postId: string): Promise<void> {
   await db.update(posts).set({ openedAt: new Date() }).where(eq(posts.id, postId));
 }
 
+/** Posts actifs avec URL mais sans miniature — candidats au rattrapage des métadonnées. */
+export async function findPostsMissingThumbnail(): Promise<{ id: string; url: string }[]> {
+  const rows = await db
+    .select({ id: posts.id, url: posts.url })
+    .from(posts)
+    .where(and(isNull(posts.thumbnailUrl), isNull(posts.deletedAt)));
+  return rows.filter((row): row is { id: string; url: string } => row.url !== null);
+}
+
+/** Complète un post déjà enregistré ; une valeur absente (null) ne remplace rien. */
+export async function setPostMetadata(
+  postId: string,
+  metadata: { caption: string | null; thumbnailUrl: string | null }
+): Promise<void> {
+  if (!metadata.caption && !metadata.thumbnailUrl) return;
+  await db
+    .update(posts)
+    .set({ caption: metadata.caption ?? undefined, thumbnailUrl: metadata.thumbnailUrl ?? undefined })
+    .where(eq(posts.id, postId));
+}
+
 /**
  * Suppression logique (ARCHITECTURE.md §4) — jamais de vrai DELETE.
  *

@@ -140,10 +140,13 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
 
   const extractMetadata = useCallback((url: string): Promise<ExtractedMetadata> => {
     console.log('[WebView] extractMetadata called for:', url);
-    // Refuser les appels concurrents — un seul à la fois
+    // Une seule extraction à la fois, la plus récente gagne : un partage qui arrive
+    // pendant un rattrapage en arrière-plan passe devant (le rattrapage reçoit vide).
     if (pendingRequest.current) {
-      console.log('[WebView] Skipping: concurrent request in progress');
-      return Promise.resolve(EMPTY);
+      console.log('[WebView] Replacing the request in progress');
+      clearTimeout(pendingRequest.current.timeoutId);
+      pendingRequest.current.resolve(EMPTY);
+      pendingRequest.current = null;
     }
 
     return new Promise((resolve, reject) => {
@@ -168,6 +171,9 @@ export function MetadataExtractorProvider({ children }: { children: ReactNode })
       <View style={styles.hidden} pointerEvents="none">
         {currentUrl && (
           <ExtractorWebView
+            // Remontée à chaque URL : un message tardif de la page précédente ne doit
+            // pas répondre à la requête suivante.
+            key={currentUrl}
             ref={webViewRef}
             source={{ uri: currentUrl }}
             userAgent={MOBILE_USER_AGENT}

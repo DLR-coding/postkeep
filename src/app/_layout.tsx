@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 
 import { PortalHost } from '@rn-primitives/portal';
 
+import { MetadataBackfill } from '@/components/metadata-backfill';
 import { PostDetailSheet } from '@/components/post-detail-sheet';
 import { db } from '@/db';
 import { useAccountSync } from '@/hooks/use-account-sync';
@@ -100,6 +101,7 @@ export default function RootLayout() {
                 {/* Le partage n'est routé qu'une fois les migrations passées : l'écran de
                     sauvegarde lit les collections dès son montage. */}
                 {success && <ShareIntentRedirect />}
+                {success && <MetadataBackfill />}
                 <Stack>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                   <Stack.Screen name="shareintent" options={{ presentation: 'modal', headerShown: false }} />
