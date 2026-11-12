@@ -3,6 +3,7 @@ import { Pressable, useColorScheme, useWindowDimensions, View } from 'react-nati
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Bookmark, LayoutGrid, List, Settings } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -105,6 +106,9 @@ export function PostsScreen() {
       )}
 
       <FlashList<PostListItem>
+        // Défilement géré par gesture-handler : sinon le balayage d'une carte (PostCard)
+        // prend la main dès 10 dp horizontaux et bloque le défilement en diagonale.
+        renderScrollComponent={ScrollView}
         // Glisser la liste ferme le clavier : sans ça, pendant une recherche, les
         // derniers résultats restent sous le clavier et la barre (edge-to-edge).
         keyboardDismissMode="on-drag"

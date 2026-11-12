@@ -109,6 +109,9 @@ export function PostCard({
           </View>
         )}
         overshootRight={false}
+        // Aucune action à gauche : un geste vers la droite n'a pas à capter le toucher.
+        dragOffsetFromLeft={Number.MAX_SAFE_INTEGER}
+        dragOffsetFromRight={-30}
         // La carte glisse jusque dans la marge latérale au lieu d'être coupée net à gauche.
         containerStyle={{ overflow: 'visible' }}>
         <Pressable

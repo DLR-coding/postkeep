@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
@@ -24,6 +25,9 @@ export function CollectionScreen() {
     <View className="flex-1 bg-background">
       <Stack.Title>{name ?? 'Collection'}</Stack.Title>
       <FlashList<PostListItem>
+        // Défilement géré par gesture-handler : sinon le balayage d'une carte (PostCard)
+        // prend la main dès 10 dp horizontaux et bloque le défilement en diagonale.
+        renderScrollComponent={ScrollView}
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard item={item} collectionId={isUncategorized ? undefined : id} />}

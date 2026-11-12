@@ -15,6 +15,15 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Corrigé
+
+- **Toucher une carte faisait apparaître le bouton de suppression** : l'effet d'appui rendait
+  la carte translucide et laissait voir le bouton placé derrière. L'appui change maintenant la
+  couleur de fond.
+- **Le défilement se bloquait** quand le geste était un peu en diagonale : la carte
+  s'ouvrait à la place. La liste défile désormais, un balayage horizontal ouvre toujours la
+  suppression.
+
 ## [0.4.0] — 12 novembre 2026
 
 ### Ajouté

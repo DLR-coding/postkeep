@@ -18,25 +18,13 @@ build de dev SDK 58 + **compte de dev** (`postkeep-dev@example.com`). Le vrai co
 l'utilisateur (45 posts) est déconnecté, ses données sont sur Supabase. Ne jamais tester sur
 le vrai compte.
 
-- [ ] **Carte de post : poubelle visible au toucher + défilement bloqué** (signalé le
-      12 novembre 2026, diagnostic en cours, branche `worktree-fix-card-swipe`) :
-      - *Poubelle visible au toucher* — **cause reproduite** : `active:opacity-70` rendait
-        toute la carte translucide et le panneau d'actions de `ReanimatedSwipeable`, rendu
-        derrière, apparaissait au travers (la carte ne glisse pas). Correctif commité
-        (`active:bg-muted`), **pas encore vérifié sur appareil**. Test : doigt posé sans
-        bouger (`adb shell input motionevent DOWN 540 1490`, capture, puis `UP`), compter
-        les pixels rouges sur la moitié droite de la carte (critère R−G > 25 et R−B > 25) :
-        ~93 000 avant le correctif, ~15 au repos.
-      - *Défilement bloqué* — **reproduit** : un balayage vertical un peu en diagonale
-        (`input swipe 700 1700 450 900 300`) active le pan du Swipeable (seuil 10 dp
-        horizontaux, `activeOffsetX`, pas de `failOffsetY` exposé en gesture-handler 3.3)
-        au lieu de faire défiler : 17 balayages sur 20 bloqués ; la carte s'ouvre, puis
-        chaque geste qui part d'elle est capté. Vertical pur : 0 blocage. Pistes, dans
-        l'ordre : relever `dragOffsetFromRight` (ex. −40) et neutraliser
-        `dragOffsetFromLeft` (aucune action à gauche) ; sinon `ScrollView` de
-        gesture-handler en `renderScrollComponent` de FlashList avec
-        `simultaneousWith`/`requireToFail`. Vérifier qu'un balayage horizontal ouvre
-        toujours la poubelle.
+- [x] **Carte de post : poubelle visible au toucher + défilement bloqué** (corrigé le
+      12 novembre 2026, vérifié sur le Galaxy S23) : retour d'appui opaque
+      (`active:bg-muted`) au lieu d'`active:opacity-70`, qui laissait voir le bouton rendu
+      derrière la carte ; listes en `renderScrollComponent={ScrollView}` de gesture-handler
+      pour que le défilement l'emporte sur le balayage des cartes (les balayages en diagonale
+      ouvraient la carte et bloquaient la liste : 17/20 → 0/20). Seuil d'ouverture à 30 dp,
+      balayage vers la droite neutralisé (aucune action à gauche).
 
 - [x] **Légende / miniature Instagram-TikTok parfois absentes** (corrigé : la WebView
       ouvrait `instagram://media/…` via `Linking`, l'app Instagram passait devant et
