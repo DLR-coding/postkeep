@@ -85,16 +85,14 @@ export function extractCaptionFromText(
 ): string | null {
   if (!text) return null;
 
-  // Remove the URL from the text
-  let caption = text;
+  // Remove every full URL first (tracking links, and the shared URL with its query
+  // string: `webUrl` is the normalized URL, so replacing it first left "?igsh=…").
+  let caption = text.replace(/https?:\/\/[^\s]+/gi, '').trim();
+
+  // Then the given URL, in case it appears without a scheme
   if (webUrl) {
     caption = caption.replace(webUrl, '').trim();
   }
-
-  // Also remove any other URLs that might be in the text (tracking links, etc.)
-  caption = caption
-    .replace(/https?:\/\/[^\s]+/gi, '')
-    .trim();
 
   // Clean up multiple newlines/spaces
   caption = caption

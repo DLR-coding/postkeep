@@ -76,6 +76,11 @@ test('extractCaptionFromText renvoie null si pas de texte au-delà de l\'URL', (
   assert.equal(extractCaptionFromText('https://instagram.com/reel/abc', 'https://instagram.com/reel/abc'), null);
   assert.equal(extractCaptionFromText(null, null), null);
   assert.equal(extractCaptionFromText('', null), null);
+  // Le formulaire passe l'URL normalisée : le paramètre de suivi ne doit pas devenir la légende.
+  assert.equal(
+    extractCaptionFromText('https://www.instagram.com/p/abc/?igsh=MTc4MmM1YmI2Ng==', 'https://www.instagram.com/p/abc/'),
+    null
+  );
 });
 
 test('extractCaptionFromText gère les URLs de tracking supplémentaires', () => {
