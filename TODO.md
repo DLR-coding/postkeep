@@ -23,8 +23,8 @@ le vrai compte.
       (`active:bg-muted`) au lieu d'`active:opacity-70`, qui laissait voir le bouton rendu
       derrière la carte ; listes en `renderScrollComponent={ScrollView}` de gesture-handler
       pour que le défilement l'emporte sur le balayage des cartes (les balayages en diagonale
-      ouvraient la carte et bloquaient la liste : 17/20 → 0/20). Seuil d'ouverture à 30 dp,
-      balayage vers la droite neutralisé (aucune action à gauche).
+      ouvraient la carte et bloquaient la liste : 17/20 → 0/20). Seuil d'ouverture à 30 dp.
+      Une seule carte ouverte à la fois (en ouvrir une autre referme la précédente).
 
 - [x] **Légende / miniature Instagram-TikTok parfois absentes** (corrigé : la WebView
       ouvrait `instagram://media/…` via `Linking`, l'app Instagram passait devant et

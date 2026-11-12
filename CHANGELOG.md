@@ -23,6 +23,8 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - **Le défilement se bloquait** quand le geste était un peu en diagonale : la carte
   s'ouvrait à la place. La liste défile désormais, un balayage horizontal ouvre toujours la
   suppression.
+- **Une seule carte ouverte à la fois** : commencer à balayer une carte referme celle qui
+  était ouverte.
 
 ## [0.4.0] — 12 novembre 2026
 

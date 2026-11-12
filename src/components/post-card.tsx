@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 // `Swipeable` (non Reanimated) a disparu de gesture-handler 3 (SDK 58).
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
@@ -47,6 +47,9 @@ function SwipeAction({
 // (le détail du post les montre toutes).
 const MAX_CHIPS = 3;
 
+// Carte dont les actions sont ouvertes (une seule à la fois, toutes listes confondues).
+let openCard: SwipeableMethods | null = null;
+
 /** Ligne « Fiche » de la refonte (spec, objectif 2) : vignette 9:16 à gauche, à droite
  *  « Plateforme · date », légende, note, puces de collection. `collectionId` : présent
  *  dans une vue collection, ajoute le balayage « Retirer de la collection »
@@ -65,6 +68,7 @@ export function PostCard({
   const platformLabel = platform ? PLATFORM_META[platform].label : 'Text';
 
   const [confirm, setConfirm] = useState<'delete' | 'remove' | null>(null);
+  const swipeRef = useRef<SwipeableMethods>(null);
 
   // Fondu de sortie à la suppression, piloté à la main (pas d'animation `exiting`) : la
   // ligne s'efface, puis la suppression part. FlashList réutilise ensuite cette ligne pour
@@ -109,9 +113,18 @@ export function PostCard({
           </View>
         )}
         overshootRight={false}
-        // Aucune action à gauche : un geste vers la droite n'a pas à capter le toucher.
-        dragOffsetFromLeft={Number.MAX_SAFE_INTEGER}
         dragOffsetFromRight={-30}
+        ref={swipeRef}
+        // Une seule carte ouverte à la fois : commencer à en ouvrir une ferme la précédente.
+        onSwipeableOpenStartDrag={() => {
+          if (openCard !== swipeRef.current) openCard?.close();
+        }}
+        onSwipeableWillOpen={() => {
+          openCard = swipeRef.current;
+        }}
+        onSwipeableClose={() => {
+          if (openCard === swipeRef.current) openCard = null;
+        }}
         // La carte glisse jusque dans la marge latérale au lieu d'être coupée net à gauche.
         containerStyle={{ overflow: 'visible' }}>
         <Pressable
