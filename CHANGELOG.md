@@ -15,6 +15,8 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+## [0.4.0] — 12 novembre 2026
+
 ### Ajouté
 
 - **Rattrapage des légendes et miniatures** Instagram/TikTok manquantes : au lancement et au
@@ -26,7 +28,6 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - **Un post pouvait être perdu** si PostKeep passait en arrière-plan ou était tué pendant
   « Saving… » : il est maintenant enregistré avant la récupération des métadonnées, puis
   complété.
-
 - **Légende et miniature Instagram parfois absentes** : la page Instagram chargée dans la
   WebView cachée redirige vers `instagram://media/…`, que `react-native-webview` ouvrait via
   `Linking` (URL hors `originWhitelist`). L'app Instagram passait devant PostKeep,
@@ -44,7 +45,7 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 - **Expo SDK 58** (branche `feat/sdk-58`) : React Native 0.88.1, React 19.3.0, Reanimated
   4.7.1, Worklets 0.13.0, FlashList 2.3.2, `react-native-webview` 14.0.1,
   `react-native-svg` 15.16.0, paquets `expo-*` en 58.x. Nécessite un nouveau dev build ;
-  pas encore testé sur appareil.
+  testé sur appareil (Galaxy S23).
 - **gesture-handler 3.3.0** (majeure) : `Swipeable` retiré, la carte de post utilise
   `ReanimatedSwipeable`. `@gorhom/bottom-sheet` reste en 5.2.14, sans support officiel de
   gesture-handler 3 (cast de type dans la feuille de compte).
@@ -343,7 +344,8 @@ APK : [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/ta
 - **Expo Go est définitivement inutilisable** sur ce projet à cause d'`expo-share-intent`
   (module natif hors du périmètre d'Expo Go). Un *development build* est obligatoire
 
-[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.3.0...HEAD
+[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/DLR-coding/postkeep/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/DLR-coding/postkeep/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/DLR-coding/postkeep/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DLR-coding/postkeep/releases/tag/v0.1.0
