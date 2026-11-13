@@ -1,5 +1,9 @@
+import Storage from 'expo-sqlite/kv-store';
 import { processColor } from 'react-native';
+import { makeMutable } from 'react-native-reanimated';
 import { Skia } from 'react-native-skia';
+
+import { type GlassSettings, parseGlass } from '@/lib/glass-settings';
 
 // Verre liquide de la barre flottante : transposition en SkSL du modèle optique « V2 » de
 // webgl-apple-liquid-glass (Oliver Nemo, licence MIT,
@@ -9,7 +13,7 @@ import { Skia } from 'react-native-skia';
 // bulle de l'onglet actif (deux pilules fusionnées par smooth min, tête et traîne) et la pilule
 // de recherche (« side »). Coordonnées en dp ; pd ne sert qu'aux largeurs d'anticrénelage.
 // Écarts avec l'original : pas de mipmaps (flous approchés par une lecture), pas de conversion
-// sRGB, un seul jeu de formes fixe, réglages du matériau figés (valeurs finales de budget-app).
+// sRGB, un seul jeu de formes fixe, pas de bulle qu'on tient au doigt.
 
 const GLASS_SKSL = `
 uniform shader backdrop;
@@ -239,27 +243,44 @@ const effect = Skia.RuntimeEffect.Make(GLASS_SKSL);
 if (!effect) throw new Error('Invalid liquid glass shader');
 export const GLASS = effect;
 
-// Matériau figé : valeurs finales réglées dans budget-app (écran « Verre liquide » non repris).
-// La lumière vient du haut à gauche (136°, axe y vers le bas).
-const LIGHT_ANGLE = (136 * Math.PI) / 180;
-export const MATERIAL = {
-  mRefraction: 84,
-  mRefractionHeld: 17,
-  mDispersion: 2,
-  mEdgeReach: 0.14,
-  mEdgeWidth: 0.21,
-  mSquash: 0.85,
-  mSquashAxes: [1, 0.76],
-  mBody: 0.72,
-  mAbsorption: 0.58,
-  mRim: 0.24,
-  mReflection: 0.31,
-  mHighlight: 0.34,
-  mEcho: 0.28,
-  mHairline: 0.92,
-  mHairWidth: 0.52,
-  lightDir: [Math.cos(LIGHT_ANGLE), -Math.sin(LIGHT_ANGLE)],
-};
+// Réglages du verre, partagés avec le thread UI : la barre les lit à chaque image, l'écran
+// « Liquid glass » (src/screens/glass) les modifie en direct. Kv-store local, comme le thème.
+const STORAGE_KEY = 'glass-settings';
+export const glassSettings = makeMutable<GlassSettings>(parseGlass(Storage.getItemSync(STORAGE_KEY)));
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+export function setGlassSettings(next: GlassSettings) {
+  glassSettings.value = next;
+  // Enregistré après une pause du curseur, pas à chaque image du geste.
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => Storage.setItemSync(STORAGE_KEY, JSON.stringify(next)), 400);
+}
+
+/** Uniformes du matériau (worklet : appelé par la barre sur le thread UI). La lumière vient de
+ *  lightAngle (136° = en haut à gauche, axe y vers le bas). Bulle tenue (non reprise) : valeurs
+ *  de budget-app figées. */
+export function materialUniforms(s: GlassSettings) {
+  'worklet';
+  const a = (s.lightAngle * Math.PI) / 180;
+  return {
+    mRefraction: s.refraction,
+    mRefractionHeld: 17,
+    mDispersion: s.dispersion,
+    mEdgeReach: s.edgeReach,
+    mEdgeWidth: s.edgeWidth,
+    mSquash: 0.85,
+    mSquashAxes: [1, 0.76],
+    mBody: s.body,
+    mAbsorption: s.absorption,
+    mRim: s.rim,
+    mReflection: s.reflection,
+    mHighlight: s.highlight,
+    mEcho: s.echo,
+    mHairline: s.hairline,
+    mHairWidth: s.hairWidth,
+    lightDir: [Math.cos(a), -Math.sin(a)],
+  };
+}
 
 /** Teinte d'une surface pour le shader : couleur du thème (tout format CSS que React Native
  *  comprend) en rgb 0–1, et opacité de teinte. */

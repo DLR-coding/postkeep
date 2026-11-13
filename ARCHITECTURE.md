@@ -332,7 +332,11 @@ pièges :
   d'où la capture ; la barre étant hors du conteneur capturé, elle ne se capture pas
   elle-même. Deux surfaces : la pilule des onglets (avec la bulle qui glisse, tête + traîne)
   et la pilule de recherche. Le flou `expo-blur` reste en repli tant que la première capture
-  n'est pas prête, ou sans GPU. Matériau figé (réglages finaux de budget-app).
+  n'est pas prête, ou sans GPU. Matériau, voiles et ressorts réglables dans l'écran
+  « Liquid glass » (Settings → Liquid glass, `src/screens/glass`), onglet caché pour que la
+  barre reste visible pendant qu'on règle ; valeurs (`src/lib/glass-settings.ts`, défauts =
+  réglages finaux de budget-app) dans une valeur partagée lue à chaque image, enregistrées
+  dans le kv-store local (clé `glass-settings`, pas synchronisée).
 - En edge-to-edge la fenêtre n'est pas redimensionnée par le clavier : la barre suit le clavier
   avec `useAnimatedKeyboard` (Reanimated).
 - Le texte de recherche vit dans un store d'interface (`src/stores/nav-search-store.ts`), vidé à

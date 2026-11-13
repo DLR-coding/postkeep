@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Canvas, Fill, ImageShader, Shader } from 'react-native-skia';
 
 import { type Strip, useLiveBackdrop } from '@/components/glass-backdrop';
-import { GLASS, MATERIAL, tintUniform } from '@/components/liquid-glass';
+import { GLASS, glassSettings, materialUniforms, tintUniform } from '@/components/liquid-glass';
 import { Icon } from '@/components/ui/icon';
 import { THEME } from '@/lib/theme';
 import { useNavSearchStore } from '@/stores/nav-search-store';
@@ -31,11 +31,6 @@ const TABS_WIDTH = 2 * TAB + TAB_GAP + 2 * TAB_PAD;
 // Bande capturée au-dessus et au-dessous de la barre (reflets, bulle qui déborde).
 const MARGIN = 16;
 const PD = PixelRatio.get();
-// Ressorts de la bulle et de sa traîne (valeurs finales de budget-app) ; au-delà d'un onglet,
-// le dépassement du ressort est amorti comme un élastique, plafonné à EDGE_GIVE dp.
-const SNAP = { stiffness: 320, damping: 22 };
-const LAG = { stiffness: 200, damping: 20 };
-const EDGE_GIVE = 6;
 
 /** Espace à réserver sous une liste pour que sa dernière ligne ne passe pas sous
  *  la barre : à additionner à `insets.bottom`. */
@@ -93,7 +88,8 @@ export function GlassTabBar({
   const colors = THEME[scheme];
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const onCollections = usePathname().startsWith('/collections');
+  const pathname = usePathname();
+  const onCollections = pathname.startsWith('/collections');
   const { query, setQuery, clear } = useNavSearchStore();
   const keyboard = useAnimatedKeyboard();
   const restingBottom = BAR_BOTTOM_MARGIN + insets.bottom;
@@ -129,15 +125,19 @@ export function GlassTabBar({
   }, [onCollections, clear]);
 
   // Bulle de l'onglet actif : tête et traîne (goutte qui s'étire en route), 0 = Posts, 1 = Collections.
+  // Ressorts réglables dans l'écran « Liquid glass » ; au-delà d'un onglet, le dépassement du
+  // ressort est amorti comme un élastique, plafonné à edgeGive dp.
   const progress = useSharedValue(onCollections ? 1 : 0);
   const lag = useSharedValue(onCollections ? 1 : 0);
   useEffect(() => {
-    progress.value = withSpring(onCollections ? 1 : 0, SNAP);
-    lag.value = withSpring(onCollections ? 1 : 0, LAG);
+    const g = glassSettings.value;
+    progress.value = withSpring(onCollections ? 1 : 0, { stiffness: g.snapStiffness, damping: g.snapDamping });
+    lag.value = withSpring(onCollections ? 1 : 0, { stiffness: g.lagStiffness, damping: g.lagDamping });
   }, [onCollections, progress, lag]);
 
+  // Comparé au chemin réel : depuis l'écran « Liquid glass » (/glass), Posts doit rester cliquable.
   const go = (path: '/' | '/collections') => {
-    if ((path === '/collections') === onCollections) return;
+    if (pathname === path) return;
     router.navigate(path);
   };
 
@@ -147,10 +147,11 @@ export function GlassTabBar({
   const sideWidth = width - PILL_GAP - TABS_WIDTH;
   const firstTab = left + width - TABS_WIDTH + TAB_PAD + TAB / 2;
   const step = TAB + TAB_GAP;
-  const surfaceTint = tintUniform(colors.glass, 0.35);
-  const lensTint = tintUniform(colors.foreground, 0.16);
+  const surfaceColor = tintUniform(colors.glass, 1);
+  const lensColor = tintUniform(colors.foreground, 1);
   const uniforms = useDerivedValue(() => {
-    const give = EDGE_GIVE / step;
+    const g = glassSettings.value;
+    const give = Math.max(0.0001, g.edgeGive / step);
     const soft = (v: number) =>
       v < 0 ? (-give * -v) / (give - v) : v > 1 ? 1 + (give * (v - 1)) / (give + v - 1) : v;
     return {
@@ -162,11 +163,11 @@ export function GlassTabBar({
       lensH: [TAB / 2, TAB / 2],
       sideC: [left + sideWidth / 2, cy],
       sideH: [sideWidth / 2, BAR_HEIGHT / 2],
-      barTint: surfaceTint,
-      lensTint,
-      sideTint: surfaceTint,
+      barTint: [surfaceColor[0], surfaceColor[1], surfaceColor[2], g.barTint],
+      lensTint: [lensColor[0], lensColor[1], lensColor[2], g.lensTint],
+      sideTint: [surfaceColor[0], surfaceColor[1], surfaceColor[2], g.barTint],
       lensPress: 0,
-      ...MATERIAL,
+      ...materialUniforms(g),
     };
   });
 

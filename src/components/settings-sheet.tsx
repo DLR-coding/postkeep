@@ -9,7 +9,8 @@ import {
 import { PortalHost } from '@rn-primitives/portal';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
-import { ChevronRight, CodeXml, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
+import { ChevronRight, CodeXml, Droplet, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 import { AccountSheet } from '@/components/account-sheet';
 import { SectionLabel } from '@/components/post-fields-form';
@@ -208,6 +209,16 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
               );
             })}
           </View>
+          <Row
+            icon={Droplet}
+            label="Liquid glass"
+            detail="Tune"
+            onPress={() => {
+              sheetRef.current?.dismiss();
+              router.navigate('/glass');
+            }}
+            last
+          />
         </View>
 
         <AccountSection />

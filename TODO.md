@@ -188,8 +188,8 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
 ## 🔜 Plus tard (demandé le 11 novembre 2026)
 
-- [ ] **Verre liquide sur la barre flottante** — *dans `master` (verre seul, sans écran de
-      réglages), testé sur appareil le 13 novembre 2026 avec le dev client local « PostKeep
+- [ ] **Verre liquide sur la barre flottante** — *dans `master`, avec l'écran de réglages
+      Settings → Liquid glass (curseurs en direct, enregistrés, Reset), testé sur appareil le 13 novembre 2026 avec le dev client local « PostKeep
       Dev » : réfraction en direct au défilement, bulle entre Posts et Collections, clavier,
       thèmes clair/sombre ; 10,7 % d'images ratées en build debug (à remesurer en release).
       Reste : release (build EAS `production`). Connu : ~0,3 s de capture de l'écran précédent

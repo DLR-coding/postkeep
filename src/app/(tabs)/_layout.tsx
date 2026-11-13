@@ -21,6 +21,9 @@ export default function TabsLayout() {
           <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
             <Tabs.Screen name="index" />
             <Tabs.Screen name="collections" />
+            {/* Réglages du verre, ouverts depuis Settings : onglet sans bouton, pour garder la
+                barre visible (elle réfracte l'écran pendant qu'on règle). */}
+            <Tabs.Screen name="glass" />
           </Tabs>
         </View>
       </BlurTargetView>
