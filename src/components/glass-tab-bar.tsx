@@ -78,10 +78,17 @@ function Glass({
 
 /** Barre flottante de la refonte (spec, objectif 4) : recherche à gauche, onglets
  *  Posts / Collections à droite. Verre liquide (shader V2, `liquid-glass.ts`) qui réfracte
- *  une capture en direct de `blurTarget`, le conteneur des onglets ; repli sur le flou
- *  `expo-blur` tant que la première capture n'est pas prête ou sans GPU. Frère du
- *  `BlurTargetView` (voir `src/app/(tabs)/_layout.tsx`) : il ne se capture pas lui-même. */
-export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<ComponentRef<typeof View> | null> }) {
+ *  une capture en direct de `scene`, la vue qui contient les onglets ; repli sur le flou
+ *  `expo-blur` (`blurTarget`) tant que la première capture n'est pas prête ou sans GPU.
+ *  Frère du `BlurTargetView` (voir `src/app/(tabs)/_layout.tsx`) : il ne se capture pas
+ *  lui-même. */
+export function GlassTabBar({
+  blurTarget,
+  scene,
+}: {
+  blurTarget: RefObject<ComponentRef<typeof View> | null>;
+  scene: RefObject<ComponentRef<typeof View> | null>;
+}) {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const colors = THEME[scheme];
   const insets = useSafeAreaInsets();
@@ -100,20 +107,19 @@ export function GlassTabBar({ blurTarget }: { blurTarget: RefObject<ComponentRef
   const [width, setWidth] = useState(0);
   const [placement, setPlacement] = useState<Placement | null>(null);
   const measure = useCallback(() => {
-    const scene = blurTarget.current;
-    if (!scene || !wrap.current) return;
-    scene.measureInWindow((sx, sy, sw, sh) => {
+    if (!scene.current || !wrap.current) return;
+    scene.current.measureInWindow((sx, sy, sw, sh) => {
       wrap.current?.measureInWindow((wx, wy) => {
         const top = Math.max(0, wy - sy - MARGIN);
         const height = Math.min(BAR_HEIGHT + 2 * MARGIN, sh - top);
         if (sw > 0 && height > 0) setPlacement({ strip: { x: 0, y: top, width: sw, height }, left: wx - sx });
       });
     });
-  }, [blurTarget]);
+  }, [scene]);
   useEffect(() => {
     requestAnimationFrame(measure);
   }, [measure, width, insets.bottom]);
-  const { image, ready } = useLiveBackdrop(blurTarget, placement?.strip ?? null, lift);
+  const { image, ready } = useLiveBackdrop(scene, placement?.strip ?? null, lift);
   const glassOn = ready && placement !== null && width > 0;
 
   // Tout changement d'onglet vide la recherche, y compris par le retour Android

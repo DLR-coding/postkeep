@@ -10,15 +10,21 @@ import { GlassTabBar } from '@/components/glass-tab-bar';
  *  l'URL (`usePathname`), la navigation passe par `router.navigate`. */
 export default function TabsLayout() {
   const blurTarget = useRef<ComponentRef<typeof View>>(null);
+  // Vue capturée par le verre liquide : une View native simple (la ref du BlurTargetView
+  // n'expose ni measureInWindow ni une vue capturable), à fond opaque pour que la capture
+  // n'ait pas de trous transparents (noir sous le verre).
+  const scene = useRef<ComponentRef<typeof View>>(null);
   return (
     <View className="flex-1">
       <BlurTargetView ref={blurTarget} style={{ flex: 1 }}>
-        <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
-          <Tabs.Screen name="index" />
-          <Tabs.Screen name="collections" />
-        </Tabs>
+        <View ref={scene} collapsable={false} className="flex-1 bg-background">
+          <Tabs tabBar={() => null} screenOptions={{ headerShown: false }}>
+            <Tabs.Screen name="index" />
+            <Tabs.Screen name="collections" />
+          </Tabs>
+        </View>
       </BlurTargetView>
-      <GlassTabBar blurTarget={blurTarget} />
+      <GlassTabBar blurTarget={blurTarget} scene={scene} />
     </View>
   );
 }
