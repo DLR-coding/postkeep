@@ -46,6 +46,8 @@ example
 # generated native folders
 /ios
 /android
+# Empreinte du build local Windows (scripts/build-dev-android.ps1)
+.native-stamp
 
 # graphify - regenerate with /graphify
 graphify-out/

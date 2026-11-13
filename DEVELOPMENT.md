@@ -304,6 +304,34 @@ npx eas-cli env:set --name EXPO_PUBLIC_SUPABASE_URL --value 'https://<ref>.supab
 Une nouvelle variable `EXPO_PUBLIC_*` se crée dans les trois environnements, sinon un
 seul profil la verra.
 
+### Dev client en local, sur Windows (sans quota EAS)
+
+Le dev client se compile côté **Windows** (15,6 Go de RAM, contre 7,6 Go pour WSL), sans
+passer par EAS : `scripts/build-dev-android.ps1`. Il produit la variante **« PostKeep Dev »**
+(`com.thejohninc.postkeep.dev`, via `app.config.js` et `APP_VARIANT=development`), qui
+s'installe **à côté** de l'app publiée : un build local n'a pas la clé de signature EAS et ne
+pourrait pas la remplacer. Chaque app a sa propre base et sa propre session (compte de dev
+dans « PostKeep Dev », vrai compte dans PostKeep). Les **releases** restent sur EAS.
+
+Prérequis Windows (une fois) : chemins longs activés (`LongPathsEnabled=1`), Android Studio,
+SDK dans `%LOCALAPPDATA%\Android\Sdk` avec plateforme 37, build-tools 37.0.0,
+NDK 27.1.12297006 et CMake 3.30.5 (versions de RN 0.88 ; à installer avec
+`cmdline-tools\latest\bin\android.exe sdk install ndk/27.1.12297006 cmake/3.30.5 build-tools/37.0.0`
+— le nouveau CLI attend des noms de paquets en chemin, pas `ndk;…`), JDK 21 Temurin (celui
+d'Android Studio, en 25, est trop récent pour Kotlin 2.2), Node et Git.
+
+```powershell
+# PowerShell Windows, téléphone branché
+powershell -ExecutionPolicy Bypass -File \\wsl.localhost\Debian-dev\home\drakotomahefa\dev\zperso\postkeep\scripts\build-dev-android.ps1
+```
+
+Le script remet le clone de build `C:\dev\pk` à l'état de `master` du dépôt WSL (`-Branch` pour
+une autre branche, déjà commitée), ne relance `npm ci` + `expo prebuild --clean` que si
+`package-lock.json`, `app.json` ou `app.config.js` ont changé (`-Clean` pour forcer), compile
+`assembleDebug` pour `arm64-v8a` seulement avec le cache Gradle, puis installe l'APK. Le JS
+reste servi par Metro dans WSL, comme avant ; ouvrir l'app avec
+`adb shell am start -a android.intent.action.VIEW -d "exp+postkeep://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081" com.thejohninc.postkeep.dev`.
+
 ### Construire un dev client (rare)
 
 Nécessaire seulement dans les cas du §4, ou pour installer l'app sur un nouveau téléphone.
