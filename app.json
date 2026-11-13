@@ -2,7 +2,7 @@
   "expo": {
     "name": "PostKeep",
     "slug": "postkeep",
-    "version": "0.4.2",
+    "version": "0.5.0-beta",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "postkeep",
@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.thejohninc.postkeep",
+      "versionCode": 7,
       "adaptiveIcon": {
         "backgroundColor": "#5048e0",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

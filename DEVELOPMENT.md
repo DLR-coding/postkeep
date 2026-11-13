@@ -306,6 +306,13 @@ seul profil la verra.
 
 ### Dev client en local, sur Windows (sans quota EAS)
 
+> **APK release local** : même script avec `-Release` (clone `C:\dev\pkr`) → APK autonome de
+> l'app (`com.thejohninc.postkeep`, JS embarqué, R8), copié en `C:\dev\pkr\postkeep-v<version>.apk`.
+> Signé avec la **clé de debug** du gabarit Expo, pas celle d'EAS : désinstaller l'app avant de
+> l'installer par-dessus un APK EAS (et inversement) ; un APK `-Release` suivant s'installe
+> par-dessus le précédent. `versionCode` fixé à la main dans `app.json` (`android.versionCode`,
+> ignoré par EAS en `appVersionSource: remote`). Utilisé pour la v0.5.0-beta.
+
 Le dev client se compile côté **Windows** (15,6 Go de RAM, contre 7,6 Go pour WSL), sans
 passer par EAS : `scripts/build-dev-android.ps1`. Il produit la variante **« PostKeep Dev »**
 (`com.thejohninc.postkeep.dev`, via `app.config.js` et `APP_VARIANT=development`), qui

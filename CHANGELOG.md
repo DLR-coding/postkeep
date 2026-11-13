@@ -15,6 +15,11 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+## [0.5.0-beta] — 13 novembre 2026
+
+APK construit en local (pas sur EAS) et signé avec la clé de debug : désinstaller une version
+précédente installée depuis une release EAS avant de l'installer.
+
 ### Ajouté
 
 - **Verre liquide sur la barre flottante** : la barre réfracte en direct ce qui défile derrière
@@ -381,7 +386,8 @@ APK : [GitHub Release v0.1.0](https://github.com/DLR-coding/postkeep/releases/ta
 - **Expo Go est définitivement inutilisable** sur ce projet à cause d'`expo-share-intent`
   (module natif hors du périmètre d'Expo Go). Un *development build* est obligatoire
 
-[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.4.2...HEAD
+[Non publié]: https://github.com/DLR-coding/postkeep/compare/v0.5.0-beta...HEAD
+[0.5.0-beta]: https://github.com/DLR-coding/postkeep/compare/v0.4.2...v0.5.0-beta
 [0.4.2]: https://github.com/DLR-coding/postkeep/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/DLR-coding/postkeep/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/DLR-coding/postkeep/compare/v0.3.0...v0.4.0
