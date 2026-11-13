@@ -21,6 +21,13 @@ export type GlassSettings = {
   echo: number;
   hairline: number;
   hairWidth: number;
+  // Bulle tenue (doigt posé sur les onglets)
+  refractionHeld: number;
+  heldHeight: number;
+  heldRatio: number;
+  squash: number;
+  squashLength: number;
+  squashHeight: number;
   // Mouvement de la bulle
   snapStiffness: number;
   snapDamping: number;
@@ -49,6 +56,12 @@ export const DEFAULT_GLASS: GlassSettings = {
   echo: 0.28,
   hairline: 0.92,
   hairWidth: 0.52,
+  refractionHeld: 17,
+  heldHeight: 1.125,
+  heldRatio: 1.35,
+  squash: 0.85,
+  squashLength: 0,
+  squashHeight: 0.24,
   snapStiffness: 320,
   snapDamping: 22,
   lagStiffness: 200,
@@ -85,6 +98,17 @@ export const GLASS_SECTIONS: { title: string; params: GlassParam[] }[] = [
       { key: 'echo', label: 'Echo', min: 0, max: 1.5, step: 0.01 },
       { key: 'hairline', label: 'Hairline', min: 0, max: 1.5, step: 0.01 },
       { key: 'hairWidth', label: 'Hairline width', min: 0, max: 1, step: 0.01 },
+    ],
+  },
+  {
+    title: 'Held bubble',
+    params: [
+      { key: 'refractionHeld', label: 'Refraction (held)', min: 0, max: 110, step: 1 },
+      { key: 'heldHeight', label: 'Height (× bar)', min: 1, max: 1.5, step: 0.005 },
+      { key: 'heldRatio', label: 'Min width (× height)', min: 1, max: 2.2, step: 0.01 },
+      { key: 'squash', label: 'Squash', min: 0, max: 0.95, step: 0.01 },
+      { key: 'squashLength', label: 'Squash held back lengthwise', min: 0, max: 1, step: 0.01 },
+      { key: 'squashHeight', label: 'Squash held back heightwise', min: 0, max: 1, step: 0.01 },
     ],
   },
   {

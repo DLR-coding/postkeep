@@ -13,7 +13,8 @@ import { type GlassSettings, parseGlass } from '@/lib/glass-settings';
 // bulle de l'onglet actif (deux pilules fusionnées par smooth min, tête et traîne) et la pilule
 // de recherche (« side »). Coordonnées en dp ; pd ne sert qu'aux largeurs d'anticrénelage.
 // Écarts avec l'original : pas de mipmaps (flous approchés par une lecture), pas de conversion
-// sRGB, un seul jeu de formes fixe, pas de bulle qu'on tient au doigt.
+// sRGB, un seul jeu de formes fixe. L'appui (bulle tenue qui gonfle et écrase ce qu'on voit au
+// travers) reprend playground/main.js et src/controls.js de la même référence.
 
 const GLASS_SKSL = `
 uniform shader backdrop;
@@ -257,19 +258,19 @@ export function setGlassSettings(next: GlassSettings) {
 }
 
 /** Uniformes du matériau (worklet : appelé par la barre sur le thread UI). La lumière vient de
- *  lightAngle (136° = en haut à gauche, axe y vers le bas). Bulle tenue (non reprise) : valeurs
- *  de budget-app figées. */
+ *  lightAngle (136° = en haut à gauche, axe y vers le bas). mSquash < 1 pour ne pas replier
+ *  l'image ; mSquashAxes = 1 - retenue de l'écrasement par axe. */
 export function materialUniforms(s: GlassSettings) {
   'worklet';
   const a = (s.lightAngle * Math.PI) / 180;
   return {
     mRefraction: s.refraction,
-    mRefractionHeld: 17,
+    mRefractionHeld: s.refractionHeld,
     mDispersion: s.dispersion,
     mEdgeReach: s.edgeReach,
     mEdgeWidth: s.edgeWidth,
-    mSquash: 0.85,
-    mSquashAxes: [1, 0.76],
+    mSquash: s.squash,
+    mSquashAxes: [1 - s.squashLength, 1 - s.squashHeight],
     mBody: s.body,
     mAbsorption: s.absorption,
     mRim: s.rim,

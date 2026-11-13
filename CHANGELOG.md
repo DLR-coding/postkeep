@@ -18,7 +18,8 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 ### Ajouté
 
 - **Verre liquide sur la barre flottante** : la barre réfracte en direct ce qui défile derrière
-  elle, et une bulle de verre glisse entre Posts et Collections. Repris de budget-app (shader
+  elle, et une bulle de verre glisse entre Posts et Collections ; on peut la tenir : elle
+  gonfle, suit le doigt et se cale sur l'onglet au relâchement. Repris de budget-app (shader
   d'après webgl-apple-liquid-glass, MIT). Le flou d'avant reste en repli sans GPU.
 - **Réglages du verre** (Settings → Liquid glass) : réfraction, dispersion, matière, lumière et
   mouvement de la bulle, appliqués en direct sur la barre visible en bas, enregistrés sur le

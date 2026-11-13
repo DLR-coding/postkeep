@@ -330,7 +330,10 @@ pièges :
   `BlurTargetView` (`src/components/glass-backdrop.ts`, `react-native-webgpu`
   `drawElementImageToTexture`, 3 textures en rotation). Skia ne voit pas les vues natives,
   d'où la capture ; la barre étant hors du conteneur capturé, elle ne se capture pas
-  elle-même. Deux surfaces : la pilule des onglets (avec la bulle qui glisse, tête + traîne)
+  elle-même. Deux surfaces : la pilule des onglets (avec la bulle qui glisse, tête + traîne ;
+  un `PanResponder` sur la pilule la fait gonfler sous le doigt et le suivre, puis la cale sur
+  l'onglet le plus proche au relâchement — les onglets restent accessibles par l'action
+  « activate »)
   et la pilule de recherche. Le flou `expo-blur` reste en repli tant que la première capture
   n'est pas prête, ou sans GPU. Matériau, voiles et ressorts réglables dans l'écran
   « Liquid glass » (Settings → Liquid glass, `src/screens/glass`), onglet caché pour que la
