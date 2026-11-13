@@ -68,7 +68,9 @@ try {
 
   $apk = 'android\app\build\outputs\apk\debug\app-debug.apk'
   Step "Installation sur le téléphone ($apk)"
-  Run "$sdk\platform-tools\adb.exe" @('install', '-r', $apk)
+  # Même adb que le reste du poste s'il existe : deux versions d'adb se coupent leur serveur.
+  $adb = @("$env:LOCALAPPDATA\platform-tools\adb.exe", "$sdk\platform-tools\adb.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+  Run $adb @('install', '-r', $apk)
 } finally { Pop-Location }
 
 Step ("Terminé en {0:mm\:ss}. Metro dans WSL : npx expo start --dev-client, puis adb reverse tcp:8081 tcp:8081" -f ((Get-Date) - $started))
