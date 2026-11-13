@@ -320,6 +320,14 @@ NDK 27.1.12297006 et CMake 3.30.5 (versions de RN 0.88 ; à installer avec
 — le nouveau CLI attend des noms de paquets en chemin, pas `ndk;…`), JDK 21 Temurin (celui
 d'Android Studio, en 25, est trop récent pour Kotlin 2.2), Node et Git.
 
+**Piège ninja** : le `ninja.exe` livré avec les CMake du SDK (1.10.2) ignore les chemins longs,
+et la compilation C++ de l'app dépasse 260 caractères (erreur
+`ninja: error: mkdir(…rngesturehandler_codegen…): No such file or directory`). Remplacer le
+`ninja.exe` de **chaque** `%LOCALAPPDATA%\Android\Sdk\cmake\<version>\bin` par ninja ≥ 1.12
+(release officielle `ninja-build/ninja` v1.12.1, `ninja-win.zip`), en gardant l'ancien sous
+`ninja-1.10.2.exe`. Gradle installe lui-même CMake 3.22.1 (C++ de l'app) au premier build, en
+plus de 3.30.5 : vérifier `ninja.exe --version` dans les deux après ce premier build.
+
 ```powershell
 # PowerShell Windows, téléphone branché
 powershell -ExecutionPolicy Bypass -File \\wsl.localhost\Debian-dev\home\drakotomahefa\dev\zperso\postkeep\scripts\build-dev-android.ps1
