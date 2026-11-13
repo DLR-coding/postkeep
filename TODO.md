@@ -188,12 +188,11 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
 ## 🔜 Plus tard (demandé le 11 novembre 2026)
 
-- [ ] **Verre liquide sur la barre flottante** — *dans `master`, avec l'écran de réglages
-      Settings → Liquid glass (curseurs en direct, enregistrés, Reset), testé sur appareil le 13 novembre 2026 avec le dev client local « PostKeep
-      Dev » : réfraction en direct au défilement, bulle entre Posts et Collections, clavier,
-      thèmes clair/sombre ; 10,7 % d'images ratées en build debug (à remesurer en release).
-      Reste : release (build EAS `production`). Connu : ~0,3 s de capture de l'écran précédent
-      au changement d'onglet* — repris de budget-app (branche
+- [x] **Verre liquide sur la barre flottante** — *publié en **v0.5.0-beta** (13 novembre 2026,
+      APK release local, R8) avec l'écran Settings → Liquid glass et le geste tenir + glisser ;
+      vérifié sur le Galaxy S23 : pas de crash après R8, réfraction en direct, 7 % d'images
+      ratées en release (10,7 % en debug). Connu : ~0,3 s de capture de l'écran précédent au
+      changement d'onglet* — repris de budget-app (branche
       `worktree-liquid-glass-skia`, commit `e9ab1ae`) : shader SkSL d'après le modèle « V2 » de
       `webgl-apple-liquid-glass` (MIT, attribution à garder), capture de l'écran derrière la
       barre, bulle qui glisse entre Posts et Collections, et écran « Verre liquide » de réglages
