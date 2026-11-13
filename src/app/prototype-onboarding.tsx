@@ -1,7 +1,7 @@
 // PROTOTYPE — jetable. Cinq variantes du parcours d'onboarding complet (bienvenue → épingler
 // PostKeep → premier post → compte obligatoire), choisies par `?variant=A..E`.
 // Ouvrir : `npm run prototype:onboarding` (deep link sur le dev client).
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -31,6 +31,8 @@ export default function PrototypeOnboarding() {
   const [step, setStep] = useState('');
   const onStep = useCallback((s: string) => setStep(s), []);
   const Variant = VARIANTS[key].C;
+  // Le geste retour faisait quitter le prototype en plein parcours.
+  usePreventRemove(true, () => {});
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
