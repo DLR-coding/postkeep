@@ -148,6 +148,13 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
 ---
 
+## 🟠 Onboarding — prochaine tâche (demandée le 13 novembre 2026)
+
+- [ ] **Onboarding au premier lancement** : expliquer comment enregistrer un post (Partager
+      depuis Instagram/TikTok/X/Threads/Reddit → PostKeep) et proposer le compte (synchro,
+      sauvegarde). Contenu, forme (écrans, tutoriel du partage) et moment d'affichage à définir
+      avec l'utilisateur avant de coder. Prérequis pour « Ouverture à des testeurs ».
+
 ## 🟢 Phase 7 — Polish UI/UX (repérées le 31 août 2026)
 
 - [x] **Écran d'édition plein écran — réagencer** (fait dans la refonte, 10 novembre 2026) : collections en pastilles sur 2 lignes
