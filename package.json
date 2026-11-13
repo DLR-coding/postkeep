@@ -77,7 +77,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/lib/sync/*.test.ts src/screens/collections/tile-size.test.ts"
+    "test": "node --experimental-strip-types --no-warnings --test src/lib/*.test.ts src/lib/sync/*.test.ts src/screens/collections/tile-size.test.ts",
+    "prototype:onboarding": "\"${ADB:-/mnt/c/Users/drakotomahefa/AppData/Local/platform-tools/adb.exe}\" shell am start -a android.intent.action.VIEW -d \"postkeep://prototype-onboarding?variant=${VARIANT:-A}\" com.thejohninc.postkeep.dev"
   },
   "private": true
 }

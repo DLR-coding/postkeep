@@ -1,0 +1,68 @@
+// PROTOTYPE — jetable. Cinq variantes du parcours d'onboarding complet (bienvenue → épingler
+// PostKeep → premier post → compte obligatoire), choisies par `?variant=A..E`.
+// Ouvrir : `npm run prototype:onboarding` (deep link sur le dev client).
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
+import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { VariantA } from '@/screens/prototype-onboarding/variant-a';
+import { VariantB } from '@/screens/prototype-onboarding/variant-b';
+import { VariantC } from '@/screens/prototype-onboarding/variant-c';
+import { VariantD } from '@/screens/prototype-onboarding/variant-d';
+import { VariantE } from '@/screens/prototype-onboarding/variant-e';
+
+const VARIANTS = {
+  A: { name: 'Carousel', C: VariantA },
+  B: { name: 'Checklist', C: VariantB },
+  C: { name: 'Chat', C: VariantC },
+  D: { name: 'Stories', C: VariantD },
+  E: { name: 'Account first + coach', C: VariantE },
+} as const;
+type Key = keyof typeof VARIANTS;
+const KEYS = Object.keys(VARIANTS) as Key[];
+
+export default function PrototypeOnboarding() {
+  const params = useLocalSearchParams<{ variant?: string }>();
+  const key: Key = KEYS.includes(params.variant as Key) ? (params.variant as Key) : 'A';
+  const [step, setStep] = useState('');
+  const onStep = useCallback((s: string) => setStep(s), []);
+  const Variant = VARIANTS[key].C;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      {/* `key` : changer de variante repart de zéro */}
+      <Variant key={key} onStep={onStep} />
+      {__DEV__ && <PrototypeSwitcher current={key} step={step} />}
+    </>
+  );
+}
+
+function PrototypeSwitcher({ current, step }: { current: Key; step: string }) {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const go = (d: number) => router.setParams({ variant: KEYS[(KEYS.indexOf(current) + d + KEYS.length) % KEYS.length] });
+  return (
+    <View pointerEvents="box-none" className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 16 }}>
+      <View
+        className="flex-row items-center rounded-full px-2 py-1.5"
+        style={{ backgroundColor: '#ff00aa', gap: 4, elevation: 20 }}>
+        <Pressable onPress={() => go(-1)} hitSlop={10} className="p-2 active:opacity-60">
+          <Icon as={ChevronLeft} size={20} color="#fff" />
+        </Pressable>
+        <View className="items-center" style={{ minWidth: 170 }}>
+          <Text className="text-sm font-bold text-white">
+            {current} · {VARIANTS[current].name}
+          </Text>
+          <Text className="text-[11px] text-white/80">{step}</Text>
+        </View>
+        <Pressable onPress={() => go(1)} hitSlop={10} className="p-2 active:opacity-60">
+          <Icon as={ChevronRight} size={20} color="#fff" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
