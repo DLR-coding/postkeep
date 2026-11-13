@@ -645,8 +645,9 @@ Partout ailleurs, la règle du §4 tient, y compris côté serveur (aucun droit 
 ### Réveil du projet Supabase
 
 Le tier gratuit se met en pause après 7 jours sans requête.
-`.github/workflows/supabase-keepalive.yml` lit `collections` avec la clé publishable tous les
-3 jours (`0 6 */3 * *`, plus lancement manuel) ; secrets GitHub `SUPABASE_URL` et
+`.github/workflows/supabase-keepalive.yml` lit `collections` avec la clé publishable chaque
+jour (`17 6 * * *`, plus lancement manuel ; quotidien car GitHub saute parfois une exécution
+planifiée) ; secrets GitHub `SUPABASE_URL` et
 `SUPABASE_PUBLISHABLE_KEY`. Limite : GitHub désactive un workflow planifié après 60 jours
 sans activité sur le dépôt (DEVELOPMENT.md). S'il s'arrête, la synchro échoue proprement
 jusqu'à la remise en route du projet depuis le tableau de bord.

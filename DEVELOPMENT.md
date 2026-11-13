@@ -500,7 +500,8 @@ mot de passe dans un fichier du dépôt.
 ### Réveil du projet (keepalive)
 
 Le tier gratuit se met en pause après 7 jours sans requête. Le workflow
-`.github/workflows/supabase-keepalive.yml` lit l'API REST tous les 3 jours, avec les
+`.github/workflows/supabase-keepalive.yml` lit l'API REST chaque jour (06:17 UTC ; GitHub
+saute parfois une exécution planifiée, d'où la marge), avec les
 secrets GitHub `SUPABASE_URL` et `SUPABASE_PUBLISHABLE_KEY` (`gh secret set`).
 
 ```bash

@@ -100,10 +100,10 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 - [x] Suppression du compte de test → plus rien côté serveur ni sur le téléphone ; base du
       téléphone restaurée ensuite depuis la sauvegarde
 - [x] `npx expo-doctor@1.20.5` 21/21, doctor RNR, types, lint, 59 tests
-- [ ] Premier passage planifié du workflow keepalive : le workflow est actif sur `master`
-      et un lancement manuel réussit (12 novembre 2026) ; le cron `0 6 */3 * *` part les
-      jours 1, 4, 7, 10, 13… du mois, premier passage attendu le **13 novembre à 06:00 UTC**
-      (`gh run list --workflow supabase-keepalive.yml`, événement `schedule`)
+- [ ] Premier passage planifié du workflow keepalive : le créneau `0 6 */3 * *` du
+      13 novembre 2026 n'a jamais été lancé par GitHub. Passé en quotidien (`17 6 * * *`) ;
+      vérifier qu'un passage `schedule` apparaît dans les jours qui suivent
+      (`gh run list --workflow supabase-keepalive.yml`)
 
 **À faire avant d'ouvrir les comptes à d'autres personnes :**
 

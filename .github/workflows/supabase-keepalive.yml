@@ -1,13 +1,16 @@
 # Le projet Supabase gratuit se met en pause après 7 jours sans requête : une lecture
-# tous les 3 jours le garde éveillé (spec comptes-synchro, objectif 8). La RLS renvoie
+# quotidienne le garde éveillé (spec comptes-synchro, objectif 8). La RLS renvoie
 # une liste vide à la clé publishable, mais la requête atteint bien la base.
+# Quotidien et pas tous les 3 jours : GitHub retarde ou saute des exécutions planifiées
+# (le passage du 13 novembre 2026 n'a jamais eu lieu) ; à 06:17 plutôt qu'à l'heure pile,
+# créneau le plus chargé.
 # Limite : GitHub désactive un workflow planifié après 60 jours sans activité sur le
 # dépôt — il prévient par email, un clic le relance.
 name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: '0 6 */3 * *'
+    - cron: '17 6 * * *'
   workflow_dispatch:
 
 permissions: {}
