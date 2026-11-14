@@ -1,5 +1,5 @@
 // PROTOTYPE — jetable. Cinq variantes du parcours d'onboarding complet (bienvenue → épingler
-// PostKeep → premier post → compte obligatoire), choisies par `?variant=A..E`.
+// PostKeep → premier post → compte obligatoire), choisies par `?variant=A..F`.
 // Ouvrir : Settings → Onboarding prototypes (build de dev), ou `npm run prototype:onboarding`.
 import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
@@ -15,6 +15,7 @@ import { VariantB } from '@/screens/prototype-onboarding/variant-b';
 import { VariantC } from '@/screens/prototype-onboarding/variant-c';
 import { VariantD } from '@/screens/prototype-onboarding/variant-d';
 import { VariantE } from '@/screens/prototype-onboarding/variant-e';
+import { VariantF } from '@/screens/prototype-onboarding/variant-f';
 
 const VARIANTS = {
   A: { name: 'Carousel', C: VariantA },
@@ -22,13 +23,14 @@ const VARIANTS = {
   C: { name: 'Chat', C: VariantC },
   D: { name: 'Stories', C: VariantD },
   E: { name: 'Account first + coach', C: VariantE },
+  F: { name: 'Carousel → coach → account', C: VariantF },
 } as const;
 type Key = keyof typeof VARIANTS;
 const KEYS = Object.keys(VARIANTS) as Key[];
 
 export default function PrototypeOnboarding() {
   const params = useLocalSearchParams<{ variant?: string }>();
-  const key: Key = KEYS.includes(params.variant as Key) ? (params.variant as Key) : 'A';
+  const key: Key = KEYS.includes(params.variant as Key) ? (params.variant as Key) : 'F';
   const [step, setStep] = useState('');
   const onStep = useCallback((s: string) => setStep(s), []);
   const Variant = VARIANTS[key].C;

@@ -227,7 +227,7 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
         {__DEV__ && (
           <View>
             <SectionLabel>Onboarding prototypes</SectionLabel>
-            {(['A · Carousel', 'B · Checklist', 'C · Chat', 'D · Stories', 'E · Account first + coach'] as const).map(
+            {(['F · Carousel → coach → account', 'A · Carousel', 'B · Checklist', 'C · Chat', 'D · Stories', 'E · Account first + coach'] as const).map(
               (label, i, all) => (
                 <Row
                   key={label}

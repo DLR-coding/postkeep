@@ -25,18 +25,29 @@ import {
   type VariantProps,
 } from './shared';
 
-type Stage = 'account' | 'pin' | 'save' | 'waiting' | 'saved' | 'home' | 'done';
+export type CoachStage = 'account' | 'pin' | 'save' | 'waiting' | 'saved' | 'home' | 'done';
 
 export function VariantE({ onStep }: VariantProps) {
-  const [stage, setStage] = useState<Stage>('account');
+  const [stage, setStage] = useState<CoachStage>('account');
   useEffect(() => onStep(stage), [stage, onStep]);
 
   if (stage === 'done') return <FlowDone onRestart={() => setStage('account')} />;
   if (stage === 'account') return <SignUpGate onDone={() => setStage('pin')} />;
-  return <HomeWithCoach stage={stage} setStage={setStage} />;
+  return <HomeWithCoach stage={stage} setStage={setStage} onFinish={() => setStage('done')} />;
 }
 
-function SignUpGate({ onDone }: { onDone: () => void }) {
+const GATE_BODY =
+  'Save posts from Instagram, TikTok, X, Threads and Reddit, sort them into collections and find them anytime. Create your account to start: your posts are backed up and synced across your phones.';
+
+export function SignUpGate({
+  onDone,
+  title = 'Welcome to PostKeep',
+  body = GATE_BODY,
+}: {
+  onDone: () => void;
+  title?: string;
+  body?: string;
+}) {
   const insets = useSafeAreaInsets();
   return (
     <KeyboardAvoidingView behavior="padding" className="flex-1 bg-background">
@@ -46,10 +57,9 @@ function SignUpGate({ onDone }: { onDone: () => void }) {
         keyboardShouldPersistTaps="handled">
         <Image source={require('../../../assets/images/icon.png')} style={{ width: 72, height: 72, borderRadius: 20 }} />
         <View style={{ gap: 8 }}>
-          <Text className="text-3xl font-bold">Welcome to PostKeep</Text>
+          <Text className="text-3xl font-bold">{title}</Text>
           <Text variant="muted" className="text-base">
-            Save posts from Instagram, TikTok, X, Threads and Reddit, sort them into collections and find them
-            anytime. Create your account to start: your posts are backed up and synced across your phones.
+            {body}
           </Text>
         </View>
         <AccountFields onDone={onDone} cta="Create account" />
@@ -58,7 +68,15 @@ function SignUpGate({ onDone }: { onDone: () => void }) {
   );
 }
 
-function HomeWithCoach({ stage, setStage }: { stage: Stage; setStage: (s: Stage) => void }) {
+export function HomeWithCoach({
+  stage,
+  setStage,
+  onFinish,
+}: {
+  stage: CoachStage;
+  setStage: (s: CoachStage) => void;
+  onFinish: () => void;
+}) {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const hasPost = stage === 'saved' || stage === 'home';
@@ -126,7 +144,7 @@ function HomeWithCoach({ stage, setStage }: { stage: Stage; setStage: (s: Stage)
               <Text variant="muted" className="text-center">
                 That's it. Next time, just Share → PostKeep from any app.
               </Text>
-              <Button className="h-12 rounded-2xl" onPress={() => setStage('done')}>
+              <Button className="h-12 rounded-2xl" onPress={onFinish}>
                 <Text className="font-semibold">Got it</Text>
               </Button>
             </>
@@ -135,7 +153,7 @@ function HomeWithCoach({ stage, setStage }: { stage: Stage; setStage: (s: Stage)
       )}
       {stage === 'home' && (
         <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 110 }}>
-          <Button variant="outline" onPress={() => setStage('done')}>
+          <Button variant="outline" onPress={onFinish}>
             <Text>(coach dismissed) finish</Text>
           </Button>
         </View>
