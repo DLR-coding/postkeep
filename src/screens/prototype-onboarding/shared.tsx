@@ -24,6 +24,11 @@ const PLATFORM_URL: Record<Platform, string> = {
   reddit: 'https://www.reddit.com',
 };
 
+/** Post de test du coach : public, très connu (peu de risque de suppression), et il se
+ *  partage exactement comme un reel. shortcut: remplacer par un vrai reel choisi avant la
+ *  mise en production. */
+export const TEST_POST_URL = 'https://www.instagram.com/p/BsOGulcndj-/';
+
 const lastSavedQuery = db.select({ at: max(schema.posts.updatedAt) }).from(schema.posts);
 
 export type VariantProps = { onStep: (label: string) => void };

@@ -4,7 +4,7 @@
 // guide l'épinglage et le premier partage, sur place.
 import { Bookmark, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Image, KeyboardAvoidingView, Pressable, ScrollView, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Linking, Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,14 +18,15 @@ import {
   FakeShareSheet,
   FlowDone,
   openShareMenu,
-  PlatformRow,
   SavedBadge,
+  TEST_POST_URL,
   useColors,
   WaitingForPost,
   type VariantProps,
 } from './shared';
+import { ShareRehearsal, StepsStrip } from './share-rehearsal';
 
-export type CoachStage = 'account' | 'pin' | 'save' | 'waiting' | 'saved' | 'home' | 'done';
+export type CoachStage = 'account' | 'pin' | 'save' | 'practice' | 'real' | 'waiting' | 'saved' | 'home' | 'done';
 
 export function VariantE({ onStep }: VariantProps) {
   const [stage, setStage] = useState<CoachStage>('account');
@@ -102,9 +103,9 @@ export function HomeWithCoach({
           </View>
         )}
       </View>
-      {stage !== 'home' && (
+      {stage !== 'home' && stage !== 'practice' && (
         <Animated.View
-          key={stage === 'waiting' ? 'save' : stage}
+          key={stage}
           entering={SlideInDown.duration(350)}
           className="absolute inset-x-3 rounded-3xl border border-border bg-card p-5"
           style={{ bottom: insets.bottom + 96, gap: 14, elevation: 12 }}>
@@ -130,11 +131,34 @@ export function HomeWithCoach({
               </View>
             </>
           )}
-          {(stage === 'save' || stage === 'waiting') && (
+          {stage === 'save' && (
             <>
-              <Text className="text-xl font-semibold">Save your first post</Text>
-              <Text variant="muted">Pick an app, tap Share on a post, then PostKeep, then Save. You'll come back here.</Text>
-              <PlatformRow onPick={() => setStage('waiting')} />
+              <Text className="text-2xl font-bold">Save your first post</Text>
+              <Text className="text-base">
+                First, let's practice together. Then you'll do it for real on a test post.
+              </Text>
+              <Button className="h-14 rounded-2xl" onPress={() => setStage('practice')}>
+                <Text className="text-lg font-semibold">Start practice</Text>
+              </Button>
+            </>
+          )}
+          {(stage === 'real' || stage === 'waiting') && (
+            <>
+              <Text className="text-2xl font-bold">{stage === 'real' ? 'Well done! Now for real' : 'Do the 4 steps in Instagram'}</Text>
+              <Text className="text-base">
+                {stage === 'real'
+                  ? 'Instagram will open on a test post. Do the same 4 steps:'
+                  : 'When you tap Save, you will come back here.'}
+              </Text>
+              <StepsStrip />
+              <Button
+                className="h-14 rounded-2xl"
+                onPress={() => {
+                  setStage('waiting');
+                  Linking.openURL(TEST_POST_URL).catch(() => {});
+                }}>
+                <Text className="text-lg font-semibold">{stage === 'real' ? 'Open the test post' : 'Open the test post again'}</Text>
+              </Button>
               {stage === 'waiting' && <WaitingForPost onArrived={() => setStage('saved')} />}
             </>
           )}
@@ -151,6 +175,7 @@ export function HomeWithCoach({
           )}
         </Animated.View>
       )}
+      {stage === 'practice' && <ShareRehearsal onDone={() => setStage('real')} />}
       {stage === 'home' && (
         <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 110 }}>
           <Button variant="outline" onPress={onFinish}>
