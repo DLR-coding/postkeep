@@ -1,8 +1,9 @@
-// PROTOTYPE — jetable. Répétition guidée du partage sur un faux Reel Instagram, pour des
+// PROTOTYPE — jetable. Partage guidé : faux Reel Instagram puis vraie feuille de partage, pour des
 // utilisateurs qui ne connaissent pas le geste : un seul endroit touchable par écran,
 // entouré d'un anneau jaune qui pulse et montré par un doigt. Les écrans imitent ceux
-// relevés sur le Galaxy S23 (Reel : avion en papier à droite → rangée du bas « Share » ;
-// Android : feuille « Sharing link » → PostKeep ; PostKeep : Save).
+// relevés sur le Galaxy S23 (Reel : avion en papier à droite → rangée du bas « Share »).
+// Ensuite, la VRAIE feuille de partage Android s'ouvre : l'utilisateur y épingle PostKeep,
+// le touche et enregistre pour de vrai ; le prototype détecte le post enregistré.
 import {
   Bookmark,
   Heart,
@@ -18,7 +19,7 @@ import {
   SquarePlay,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Image, Platform, Pressable, Share, View } from 'react-native';
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -28,20 +29,34 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+
+import { DEMO_POST_URL, WaitingForPost } from './shared';
 
 const GLOW = '#facc15';
 
 const STEPS = [
   { title: 'Tap the paper plane', hint: 'It is on the right side of the video.' },
   { title: 'Tap “Share”', hint: 'It is at the bottom, on the right. Slide the row to the left if you can’t see it.' },
-  { title: 'Tap PostKeep', hint: 'It is in the list of apps.' },
-  { title: 'Tap Save', hint: 'That’s it: your post is saved.' },
+  { title: 'Now for real!', hint: 'Your phone’s share menu will open. Follow these steps:' },
 ];
+
+// Samsung (One UI) n'épingle pas par appui long : on passe par les « Favorite apps »
+// (More → crayon → cocher → Done), relevé sur le Galaxy S23. Ailleurs : appui long → Pin.
+const IS_SAMSUNG = String((Platform.constants as { Manufacturer?: string }).Manufacturer ?? '').toLowerCase() === 'samsung';
+const REAL_STEPS = IS_SAMSUNG
+  ? [
+      'Slide the row of apps to the end, then tap “More”',
+      'Tap the pencil ✏️ at the top',
+      'Tick PostKeep, then tap “Done”',
+      'Tap PostKeep',
+      'Tap Save',
+    ]
+  : ['Press and hold PostKeep', 'Tap “Pin”', 'Tap PostKeep', 'Tap Save'];
 
 /** Les 4 gestes, en petit : rappel à garder en tête pour la prochaine fois. */
 export function StepsStrip() {
@@ -73,7 +88,7 @@ export function StepsStrip() {
   );
 }
 
-/** Répétition plein écran. `onDone` : les 4 gestes ont été faits sur la maquette. */
+/** Partage guidé plein écran. `onDone` : un vrai post vient d'être enregistré. */
 export function ShareRehearsal({ onDone }: { onDone: () => void }) {
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
@@ -94,20 +109,22 @@ export function ShareRehearsal({ onDone }: { onDone: () => void }) {
       {/* Consigne */}
       <View className="mx-3 mt-2 rounded-3xl bg-white p-5" style={{ gap: 6 }}>
         <Text className="text-sm font-semibold text-neutral-500">
-          Practice · step {step + 1} of {STEPS.length}
+          Step {step + 1} of {STEPS.length}
         </Text>
         <Text className="text-2xl font-bold text-black">{STEPS[step].title}</Text>
         <Text className="text-base text-neutral-600">{STEPS[step].hint}</Text>
       </View>
-      {/* Maquette : toucher ailleurs que la cible affiche le rappel */}
-      <Pressable className="flex-1" onPress={wrongTap} style={{ paddingBottom: insets.bottom + 90 }}>
-        <Animated.View key={step} entering={FadeIn.duration(250)} className="flex-1">
-          {step === 0 && <FakeReel onTarget={next} />}
-          {step === 1 && <FakeInstagramPanel onTarget={next} />}
-          {step === 2 && <FakeAndroidSheet onTarget={next} />}
-          {step === 3 && <FakePostKeepSave onTarget={next} />}
-        </Animated.View>
-      </Pressable>
+      {step < 2 ? (
+        /* Maquette : toucher ailleurs que la cible affiche le rappel */
+        <Pressable className="flex-1" onPress={wrongTap} style={{ paddingBottom: insets.bottom + 90 }}>
+          <Animated.View key={step} entering={FadeIn.duration(250)} className="flex-1">
+            {step === 0 && <FakeReel onTarget={next} />}
+            {step === 1 && <FakeInstagramPanel onTarget={next} />}
+          </Animated.View>
+        </Pressable>
+      ) : (
+        <RealShareStep onDone={onDone} />
+      )}
       {/* Par-dessus la maquette : ne la décale pas sous le doigt */}
       {nudge && (
         <Animated.View
@@ -162,26 +179,24 @@ function FakeReel({ onTarget }: { onTarget: () => void }) {
       <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
         <Defs>
           <LinearGradient id="reel" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#f97316" />
-            <Stop offset="0.55" stopColor="#db2777" />
-            <Stop offset="1" stopColor="#4c1d95" />
+            <Stop offset="0" stopColor="#e5e7eb" />
+            <Stop offset="1" stopColor="#9ca3af" />
           </LinearGradient>
         </Defs>
         <Rect width="100%" height="100%" fill="url(#reel)" />
-        <Circle cx="40%" cy="38%" r="70" fill="#fde68a" opacity={0.85} />
-        <Circle cx="58%" cy="45%" r="44" fill="#fff" opacity={0.25} />
+        <Ellipse cx="50%" cy="42%" rx="80" ry="102" fill="#d9a066" />
       </Svg>
       <Text className="px-4 pt-3 text-xl font-bold text-white">Reels</Text>
       <View className="flex-1 flex-row items-end px-4 pb-3">
         <View className="flex-1 pb-2" style={{ gap: 8 }}>
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View className="h-9 w-9 rounded-full border-2 border-white bg-amber-300" />
-            <Text className="text-base font-semibold text-white">pasta.lover</Text>
+            <Text className="text-base font-semibold text-white">world_record_egg</Text>
             <View className="rounded-lg border border-white px-2.5 py-1">
               <Text className="text-xs font-semibold text-white">Follow</Text>
             </View>
           </View>
-          <Text className="text-sm text-white">Easy pasta in 10 minutes 🍝</Text>
+          <Text className="text-sm text-white">Let’s set a world record together 🥚</Text>
         </View>
         <View className="items-center" style={{ gap: 16 }}>
           {actions.map((a) => (
@@ -256,63 +271,31 @@ function FakeInstagramPanel({ onTarget }: { onTarget: () => void }) {
   );
 }
 
-function FakeAndroidSheet({ onTarget }: { onTarget: () => void }) {
-  const apps = [
-    { label: 'Quick Share', bg: '#2563eb' },
-    { label: 'PostKeep' },
-    { label: 'Drive', bg: '#10b981' },
-    { label: 'Gmail', bg: '#ea4335' },
-  ];
+/** Vraie feuille de partage : consignes numérotées en gros, puis ouverture du menu système
+ *  depuis PostKeep. Le post enregistré pour de vrai est détecté (`WaitingForPost`). */
+function RealShareStep({ onDone }: { onDone: () => void }) {
+  const insets = useSafeAreaInsets();
+  const [opened, setOpened] = useState(false);
   return (
-    <View className="flex-1 justify-end">
-      <View className="mx-2 rounded-3xl px-4 pb-6 pt-5" style={{ backgroundColor: '#1c1c1e', gap: 18 }}>
-        <Text className="text-lg font-semibold text-white">Sharing link</Text>
-        <View className="flex-row items-center rounded-2xl p-3 opacity-60" style={{ backgroundColor: '#2c2c2e', gap: 12 }}>
-          <View className="h-10 w-10 rounded-xl" style={{ backgroundColor: '#e4405f' }} />
-          <View>
-            <Text className="text-white">Instagram</Text>
-            <Text className="text-xs text-neutral-400">https://www.instagram.com/reel/…</Text>
+    <Animated.View entering={FadeIn.duration(250)} className="flex-1 px-4 pt-3" style={{ gap: 8, paddingBottom: insets.bottom + 96 }}>
+      {REAL_STEPS.map((t, i) => (
+        <View key={t} className="flex-row items-center rounded-2xl bg-neutral-900 px-4 py-3" style={{ gap: 14 }}>
+          <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: GLOW }}>
+            <Text className="text-lg font-bold text-black">{i + 1}</Text>
           </View>
+          <Text className="flex-1 text-lg font-semibold text-white">{t}</Text>
         </View>
-        <View className="flex-row items-start justify-between pb-6">
-          {apps.map((a) =>
-            a.label === 'PostKeep' ? (
-              <View key={a.label} className="items-center" style={{ gap: 6, width: 72 }}>
-                <Target onPress={onTarget}>
-                  <Image source={require('../../../assets/images/icon.png')} style={{ width: 52, height: 52, borderRadius: 14 }} />
-                </Target>
-                <Text className="mt-9 text-center text-xs font-bold text-white">PostKeep</Text>
-              </View>
-            ) : (
-              <View key={a.label} className="items-center opacity-40" style={{ gap: 6, width: 72 }}>
-                <View className="h-14 w-14 rounded-2xl" style={{ backgroundColor: a.bg }} />
-                <Text className="text-center text-xs text-white">{a.label}</Text>
-              </View>
-            )
-          )}
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function FakePostKeepSave({ onTarget }: { onTarget: () => void }) {
-  return (
-    <View className="flex-1 justify-end">
-      <View className="rounded-t-3xl bg-background px-5 pb-8 pt-5" style={{ gap: 14 }}>
-        <Text className="text-xl font-semibold">Save post</Text>
-        <View className="rounded-2xl bg-card p-3 opacity-60">
-          <Text className="text-sm text-muted-foreground">https://www.instagram.com/reel/pasta-in-10-min/</Text>
-        </View>
-        <View className="h-20 rounded-2xl bg-card opacity-60" />
-        <View className="items-center pb-10">
-          <Target onPress={onTarget} round={false}>
-            <Button className="h-12 w-64 rounded-2xl" onPress={onTarget}>
-              <Text className="text-base font-semibold">Save</Text>
-            </Button>
-          </Target>
-        </View>
-      </View>
-    </View>
+      ))}
+      <View className="flex-1" />
+      <Button
+        className="h-14 rounded-2xl bg-white"
+        onPress={() => {
+          setOpened(true);
+          Share.share({ message: DEMO_POST_URL }).catch(() => {});
+        }}>
+        <Text className="text-lg font-bold text-black">{opened ? 'Open the share menu again' : 'Open the share menu'}</Text>
+      </Button>
+      {opened && <WaitingForPost onArrived={onDone} />}
+    </Animated.View>
   );
 }

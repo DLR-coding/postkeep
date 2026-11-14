@@ -24,6 +24,9 @@ const PLATFORM_URL: Record<Platform, string> = {
   reddit: 'https://www.reddit.com',
 };
 
+/** Post réellement enregistré pendant l'onboarding : le faux Reel le reproduit (l'œuf). */
+export const DEMO_POST_URL = 'https://www.instagram.com/p/BsOGulcndj-/';
+
 const lastSavedQuery = db.select({ at: max(schema.posts.updatedAt) }).from(schema.posts);
 
 export type VariantProps = { onStep: (label: string) => void };

@@ -24,7 +24,7 @@ export function VariantF({ onStep }: VariantProps) {
   const setCoachStage = (s: CoachStage) => setStage(s === 'home' ? 'account' : s);
 
   if (stage === 'done') return <FlowDone onRestart={() => setStage('intro')} />;
-  if (stage === 'intro') return <IntroCarousel onDone={() => setStage('pin')} />;
+  if (stage === 'intro') return <IntroCarousel onDone={() => setStage('save')} />;
   if (stage === 'account')
     return (
       <SignUpGate

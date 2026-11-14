@@ -15,9 +15,7 @@ import { Text } from '@/components/ui/text';
 
 import {
   AccountFields,
-  FakeShareSheet,
   FlowDone,
-  openShareMenu,
   SavedBadge,
   useColors,
   type VariantProps,
@@ -31,7 +29,7 @@ export function VariantE({ onStep }: VariantProps) {
   useEffect(() => onStep(stage), [stage, onStep]);
 
   if (stage === 'done') return <FlowDone onRestart={() => setStage('account')} />;
-  if (stage === 'account') return <SignUpGate onDone={() => setStage('pin')} />;
+  if (stage === 'account') return <SignUpGate onDone={() => setStage('save')} />;
   return <HomeWithCoach stage={stage} setStage={setStage} onFinish={() => setStage('done')} />;
 }
 
@@ -109,26 +107,12 @@ export function HomeWithCoach({
           style={{ bottom: insets.bottom + 96, gap: 14, elevation: 12 }}>
           <View className="flex-row items-center justify-between">
             <Text variant="muted" className="text-xs font-semibold uppercase">
-              {stage === 'pin' ? 'Step 1 of 2' : stage === 'saved' ? 'All set' : 'Step 2 of 2'}
+              {stage === 'saved' ? 'All set' : 'Your first post'}
             </Text>
             <Pressable onPress={() => setStage('home')} hitSlop={12} className="active:opacity-60">
               <Icon as={X} size={18} color={colors.mutedForeground} />
             </Pressable>
           </View>
-          {stage === 'pin' && (
-            <>
-              <Text className="text-xl font-semibold">Pin PostKeep to your share menu</Text>
-              <FakeShareSheet showPin compact />
-              <View className="flex-row" style={{ gap: 8 }}>
-                <Button variant="outline" className="flex-1" onPress={openShareMenu}>
-                  <Text>Share menu</Text>
-                </Button>
-                <Button className="flex-1" onPress={() => setStage('save')}>
-                  <Text>It's pinned</Text>
-                </Button>
-              </View>
-            </>
-          )}
           {stage === 'save' && (
             <>
               <Text className="text-2xl font-bold">Save your first post</Text>
