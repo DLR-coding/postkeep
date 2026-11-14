@@ -55,7 +55,7 @@ export default function PrototypeOnboarding() {
       <Stack.Screen options={{ headerShown: false }} />
       {/* `key` : changer de variante repart de zéro */}
       <Variant key={key} onStep={onStep} />
-      {__DEV__ && <PrototypeSwitcher current={key} step={step} onExit={() => setExiting(true)} />}
+      <PrototypeSwitcher current={key} step={step} onExit={() => setExiting(true)} />
     </>
   );
 }

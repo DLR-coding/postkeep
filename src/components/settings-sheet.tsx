@@ -223,8 +223,8 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
 
         <AccountSection />
 
-        {/* PROTOTYPE onboarding — build de dev uniquement */}
-        {__DEV__ && (
+        {/* PROTOTYPE onboarding — visible aussi dans l'APK perso de la branche (jamais fusionnée) */}
+        {(
           <View>
             <SectionLabel>Onboarding prototypes</SectionLabel>
             {(['F · Carousel → coach → account', 'A · Carousel', 'B · Checklist', 'C · Chat', 'D · Stories', 'E · Account first + coach'] as const).map(
