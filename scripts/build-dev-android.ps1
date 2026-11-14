@@ -48,7 +48,9 @@ if (-not (Test-Path "$Clone\.git")) {
 Push-Location $Clone
 try {
   Run git ($git + @('fetch', 'origin'))
-  Run git ($git + @('checkout', '-B', $Branch, "origin/$Branch"))
+  # -f : expo prebuild réécrit les scripts de package.json dans le clone ; sans -f, changer de
+  # branche échoue sur cette modification générée.
+  Run git ($git + @('checkout', '-f', '-B', $Branch, "origin/$Branch"))
   Run git ($git + @('reset', '--hard', "origin/$Branch"))
 
   if ($Release) {
