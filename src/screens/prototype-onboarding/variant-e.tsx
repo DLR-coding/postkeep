@@ -138,7 +138,7 @@ export function HomeWithCoach({
           )}
         </Animated.View>
       )}
-      {stage === 'practice' && <ShareRehearsal onDone={() => setStage('saved')} />}
+      {stage === 'practice' && <ShareRehearsal onDone={() => setStage('saved')} onSkip={onFinish} />}
       {stage === 'home' && (
         <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 110 }}>
           <Button variant="outline" onPress={onFinish}>

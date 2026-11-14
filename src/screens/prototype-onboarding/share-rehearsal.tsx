@@ -1,25 +1,27 @@
-// PROTOTYPE — jetable. Partage guidé : faux Reel Instagram puis vraie feuille de partage, pour des
-// utilisateurs qui ne connaissent pas le geste : un seul endroit touchable par écran,
-// entouré d'un anneau jaune qui pulse et montré par un doigt. Les écrans imitent ceux
-// relevés sur le Galaxy S23 (Reel : avion en papier à droite → rangée du bas « Share »).
-// Ensuite, la VRAIE feuille de partage Android s'ouvre : l'utilisateur y épingle PostKeep,
-// le touche et enregistre pour de vrai ; le prototype détecte le post enregistré.
+// PROTOTYPE — jetable. Tutoriel du partage entièrement simulé, sur le modèle de l'onboarding
+// de Central Save (relevé le 14 novembre sur le Galaxy S23) : faux Reel → faux panneau
+// Instagram → fausse feuille de partage Android (PostKeep déjà présent, pas d'épinglage) →
+// fausse fiche Save pré-remplie. Sur chaque écran : le reste est assombri, la cible est
+// encadrée en pointillés et une bulle blanche « Tap … » pointe dessus avec une flèche.
 import {
+  ArrowDown,
+  ArrowRight,
   Bookmark,
   Heart,
   Home,
   Link,
   MessageCircle,
   PlusCircle,
-  Pointer,
   Repeat2,
   Search,
   Send,
   Share2,
   SquarePlay,
+  Upload,
+  UserRound,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Image, Platform, Pressable, Share, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -31,38 +33,19 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Ellipse, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { PlatformSticker } from '@/components/platform-sticker';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
-import { DEMO_POST_URL, WaitingForPost } from './shared';
+const ICON = require('../../../assets/images/icon.png');
+const DIM = 'rgba(0,0,0,0.55)';
 
-const GLOW = '#facc15';
-
-const STEPS = [
-  { title: 'Tap the paper plane', hint: 'It is on the right side of the video.' },
-  { title: 'Tap “Share”', hint: 'It is at the bottom, on the right. Slide the row to the left if you can’t see it.' },
-  { title: 'Now for real!', hint: 'Your phone’s share menu will open. Follow these steps:' },
-];
-
-// Samsung (One UI) n'épingle pas par appui long : on passe par les « Favorite apps »
-// (More → crayon → cocher → Done), relevé sur le Galaxy S23. Ailleurs : appui long → Pin.
-const IS_SAMSUNG = String((Platform.constants as { Manufacturer?: string }).Manufacturer ?? '').toLowerCase() === 'samsung';
-const REAL_STEPS = IS_SAMSUNG
-  ? [
-      'Slide the row of apps to the end, then tap “More”',
-      'Tap the pencil ✏️ at the top',
-      'Tick PostKeep, then tap “Done”',
-      'Tap PostKeep',
-      'Tap Save',
-    ]
-  : ['Press and hold PostKeep', 'Tap “Pin”', 'Tap PostKeep', 'Tap Save'];
-
-/** Les 4 gestes, en petit : rappel à garder en tête pour la prochaine fois. */
+/** Les 4 gestes, en petit : rappel pour la prochaine fois. */
 export function StepsStrip() {
   const items = [
     { icon: Send, label: 'Paper plane' },
-    { icon: Share2, label: 'Share' },
+    { icon: Share2, label: 'Share to' },
     { label: 'PostKeep' },
     { label: 'Save' },
   ];
@@ -74,7 +57,7 @@ export function StepsStrip() {
             {it.icon ? (
               <Icon as={it.icon} size={20} className="text-foreground" />
             ) : it.label === 'PostKeep' ? (
-              <Image source={require('../../../assets/images/icon.png')} style={{ width: 30, height: 30, borderRadius: 15 }} />
+              <Image source={ICON} style={{ width: 30, height: 30, borderRadius: 15 }} />
             ) : (
               <Text className="text-xs font-bold">Save</Text>
             )}
@@ -88,94 +71,95 @@ export function StepsStrip() {
   );
 }
 
-/** Partage guidé plein écran. `onDone` : un vrai post vient d'être enregistré. */
-export function ShareRehearsal({ onDone }: { onDone: () => void }) {
+/** Tutoriel plein écran. `onDone` : les 4 gestes faits ; `onSkip` : « Skip ». */
+export function ShareRehearsal({ onDone, onSkip }: { onDone: () => void; onSkip: () => void }) {
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
-  const [nudge, setNudge] = useState(false);
-
-  const next = () => {
-    setNudge(false);
-    if (step === STEPS.length - 1) onDone();
-    else setStep(step + 1);
-  };
-  const wrongTap = () => {
-    setNudge(true);
-    setTimeout(() => setNudge(false), 1800);
-  };
+  const next = () => (step === 3 ? onDone() : setStep(step + 1));
 
   return (
-    <View className="absolute inset-0 bg-black" style={{ paddingTop: insets.top }}>
-      {/* Consigne */}
-      <View className="mx-3 mt-2 rounded-3xl bg-white p-5" style={{ gap: 6 }}>
-        <Text className="text-sm font-semibold text-neutral-500">
-          Step {step + 1} of {STEPS.length}
-        </Text>
-        <Text className="text-2xl font-bold text-black">{STEPS[step].title}</Text>
-        <Text className="text-base text-neutral-600">{STEPS[step].hint}</Text>
-      </View>
-      {step < 2 ? (
-        /* Maquette : toucher ailleurs que la cible affiche le rappel */
-        <Pressable className="flex-1" onPress={wrongTap} style={{ paddingBottom: insets.bottom + 90 }}>
-          <Animated.View key={step} entering={FadeIn.duration(250)} className="flex-1">
-            {step === 0 && <FakeReel onTarget={next} />}
-            {step === 1 && <FakeInstagramPanel onTarget={next} />}
-          </Animated.View>
-        </Pressable>
-      ) : (
-        <RealShareStep onDone={onDone} />
-      )}
-      {/* Par-dessus la maquette : ne la décale pas sous le doigt */}
-      {nudge && (
+    <View className="absolute inset-0 bg-black">
+      <Animated.View key={step} entering={FadeIn.duration(250)} className="flex-1" style={{ marginBottom: insets.bottom + 84 }}>
+        {/* Le faux Reel reste en fond : les panneaux s'ouvrent par-dessus, comme dans Instagram */}
+        <FakeReel onTarget={next} active={step === 0} />
+        {step > 0 && <View className="absolute inset-0" style={{ backgroundColor: DIM }} />}
+        {step === 1 && <FakeInstagramPanel onTarget={next} />}
+        {step === 2 && <FakeAndroidSheet onTarget={next} />}
+        {step === 3 && <FakeSaveSheet onTarget={next} />}
+      </Animated.View>
+      <Pressable onPress={onSkip} hitSlop={12} className="absolute right-5 active:opacity-60" style={{ top: insets.top + 12 }}>
+        <Text className="text-base font-semibold text-white/80">Skip</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/** Cible : encadré en pointillés + bulle « Tap … » avec flèche, qui rebondit doucement. */
+function Target({
+  onPress,
+  callout,
+  side,
+  children,
+  radius = 999,
+}: {
+  onPress: () => void;
+  callout: string;
+  side: 'left' | 'top';
+  children: React.ReactNode;
+  radius?: number;
+}) {
+  const bounce = useSharedValue(0);
+  useEffect(() => {
+    bounce.value = withRepeat(withSequence(withTiming(1, { duration: 500 }), withTiming(0, { duration: 500 })), -1);
+  }, [bounce]);
+  const move = useAnimatedStyle(() =>
+    side === 'left' ? { transform: [{ translateX: -6 * bounce.value }] } : { transform: [{ translateY: -6 * bounce.value }] }
+  );
+  const bubble = (
+    <View className="rounded-xl bg-white px-4 py-2.5">
+      <Text className="text-base font-bold text-black" numberOfLines={1}>
+        {callout}
+      </Text>
+    </View>
+  );
+  return (
+    <View className="items-center">
+      <Pressable onPress={onPress} hitSlop={12} accessibilityRole="button" accessibilityLabel={callout}>
+        <View style={{ borderWidth: 2.5, borderStyle: 'dashed', borderColor: '#fff', borderRadius: radius, padding: 6 }}>{children}</View>
+      </Pressable>
+      {side === 'left' ? (
         <Animated.View
           pointerEvents="none"
-          entering={FadeIn.duration(150)}
-          className="absolute inset-x-3 rounded-2xl p-3"
-          style={{ top: insets.top + 150, backgroundColor: GLOW, elevation: 10 }}>
-          <Text className="text-center text-base font-bold text-black">Tap the yellow circle 👇</Text>
+          className="absolute flex-row items-center justify-end"
+          style={[{ right: '100%', top: 0, bottom: 0, width: 240, marginRight: 4 }, move]}>
+          {bubble}
+          <View style={{ width: 34, height: 2.5, backgroundColor: '#fff' }} />
+          <Icon as={ArrowRight} size={22} color="#fff" style={{ marginLeft: -12 }} />
+        </Animated.View>
+      ) : (
+        <Animated.View
+          pointerEvents="none"
+          className="absolute items-center"
+          style={[{ bottom: '100%', width: 260, left: '50%', marginLeft: -130, marginBottom: 2 }, move]}>
+          {bubble}
+          <View style={{ width: 2.5, height: 30, backgroundColor: '#fff' }} />
+          <Icon as={ArrowDown} size={22} color="#fff" style={{ marginTop: -12 }} />
         </Animated.View>
       )}
     </View>
   );
 }
 
-/** Cible : anneau jaune qui pulse + doigt qui rebondit dessous. */
-function Target({ onPress, children, round = true }: { onPress: () => void; children: React.ReactNode; round?: boolean }) {
-  const pulse = useSharedValue(0);
-  const bounce = useSharedValue(0);
-  useEffect(() => {
-    pulse.value = withRepeat(withTiming(1, { duration: 1100 }), -1);
-    bounce.value = withRepeat(withSequence(withTiming(-10, { duration: 450 }), withTiming(0, { duration: 450 })), -1);
-  }, [pulse, bounce]);
-  const ring = useAnimatedStyle(() => ({ opacity: 1 - pulse.value, transform: [{ scale: 1 + pulse.value * 0.6 }] }));
-  const finger = useAnimatedStyle(() => ({ transform: [{ translateY: bounce.value }] }));
-  const radius = round ? 999 : 18;
-  return (
-    <View className="items-center">
-      <Pressable onPress={onPress} hitSlop={16} accessibilityRole="button" accessibilityLabel="Practice target">
-        <Animated.View
-          pointerEvents="none"
-          style={[{ position: 'absolute', top: -8, left: -8, right: -8, bottom: -8, borderRadius: radius, borderWidth: 4, borderColor: GLOW }, ring]}
-        />
-        <View style={{ borderRadius: radius, borderWidth: 3, borderColor: GLOW, padding: 4 }}>{children}</View>
-      </Pressable>
-      <Animated.View pointerEvents="none" style={[{ position: 'absolute', top: '100%', marginTop: 6 }, finger]}>
-        <Icon as={Pointer} size={36} color={GLOW} />
-      </Animated.View>
-    </View>
-  );
-}
-
 /** Faux Reel : vidéo plein écran, colonne d'actions à droite (comme l'app Instagram). */
-function FakeReel({ onTarget }: { onTarget: () => void }) {
+function FakeReel({ onTarget, active }: { onTarget: () => void; active: boolean }) {
   const actions = [
     { icon: Heart, count: '195K' },
     { icon: MessageCircle, count: '1,275' },
     { icon: Repeat2, count: '29.4K' },
   ];
+  const send = <Icon as={Send} size={30} color="#fff" />;
   return (
-    <View className="flex-1">
-      {/* « Vidéo » : dégradé + formes, rien à charger */}
+    <View className="absolute inset-0">
       <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
         <Defs>
           <LinearGradient id="reel" x1="0" y1="0" x2="1" y2="1">
@@ -186,38 +170,40 @@ function FakeReel({ onTarget }: { onTarget: () => void }) {
         <Rect width="100%" height="100%" fill="url(#reel)" />
         <Ellipse cx="50%" cy="42%" rx="80" ry="102" fill="#d9a066" />
       </Svg>
-      <Text className="px-4 pt-3 text-xl font-bold text-white">Reels</Text>
+      {/* Assombrit la vidéo pour faire ressortir la cible */}
+      {active && <View className="absolute inset-0" style={{ backgroundColor: DIM }} />}
       <View className="flex-1 flex-row items-end px-4 pb-3">
-        <View className="flex-1 pb-2" style={{ gap: 8 }}>
+        <View className="flex-1 pb-2 opacity-60" style={{ gap: 8 }}>
           <View className="flex-row items-center" style={{ gap: 10 }}>
             <View className="h-9 w-9 rounded-full border-2 border-white bg-amber-300" />
             <Text className="text-base font-semibold text-white">world_record_egg</Text>
-            <View className="rounded-lg border border-white px-2.5 py-1">
-              <Text className="text-xs font-semibold text-white">Follow</Text>
-            </View>
           </View>
           <Text className="text-sm text-white">Let’s set a world record together 🥚</Text>
         </View>
         <View className="items-center" style={{ gap: 16 }}>
           {actions.map((a) => (
-            <View key={a.count} className="items-center" style={{ gap: 2 }}>
+            <View key={a.count} className="items-center opacity-60" style={{ gap: 2 }}>
               <Icon as={a.icon} size={30} color="#fff" />
               <Text className="text-xs font-semibold text-white">{a.count}</Text>
             </View>
           ))}
           <View className="items-center" style={{ gap: 2 }}>
-            <Target onPress={onTarget}>
-              <Icon as={Send} size={30} color="#fff" />
-            </Target>
-            <Text className="mt-10 text-xs font-semibold text-white">26.6K</Text>
+            {active ? (
+              <Target onPress={onTarget} callout="Tap Share" side="left">
+                {send}
+              </Target>
+            ) : (
+              send
+            )}
+            <Text className="text-xs font-semibold text-white">26.6K</Text>
           </View>
-          <View className="items-center" style={{ gap: 2 }}>
+          <View className="items-center opacity-60" style={{ gap: 2 }}>
             <Icon as={Bookmark} size={30} color="#fff" />
             <Text className="text-xs font-semibold text-white">29.8K</Text>
           </View>
         </View>
       </View>
-      <View className="flex-row justify-around bg-black py-3 opacity-80">
+      <View className="flex-row justify-around bg-black py-3 opacity-60">
         {[Home, SquarePlay, Send, Search].map((I, i) => (
           <Icon key={i} as={I} size={24} color="#fff" />
         ))}
@@ -227,43 +213,51 @@ function FakeReel({ onTarget }: { onTarget: () => void }) {
   );
 }
 
+/** Faux panneau d'envoi Instagram : « Share to… » placé en 2e, visible sans faire défiler. */
 function FakeInstagramPanel({ onTarget }: { onTarget: () => void }) {
-  const row = [
-    { icon: PlusCircle, label: 'Add to story', bg: '#3a3a3c' },
-    { icon: Link, label: 'Copy link', bg: '#3a3a3c' },
-    { label: 'WhatsApp', bg: '#25d366' },
-  ];
+  const round = (bg: string, icon?: typeof Link) => (
+    <View className="h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: bg }}>
+      {icon && <Icon as={icon} size={24} color="#fff" />}
+    </View>
+  );
   return (
     <View className="flex-1 justify-end">
       <View className="rounded-t-3xl px-4 pb-6 pt-3" style={{ backgroundColor: '#1c1c1e', gap: 18 }}>
         <View className="h-1 w-10 self-center rounded-full bg-neutral-600" />
-        <View className="h-11 justify-center rounded-xl px-4" style={{ backgroundColor: '#2c2c2e' }}>
+        <View className="h-11 justify-center rounded-xl px-4 opacity-50" style={{ backgroundColor: '#2c2c2e' }}>
           <Text className="text-neutral-400">Search</Text>
         </View>
         <View className="flex-row justify-around opacity-40">
-          {['Friend 1', 'Friend 2', 'Friend 3'].map((f) => (
+          {[1, 2, 3].map((f) => (
             <View key={f} className="items-center" style={{ gap: 6 }}>
-              <View className="h-16 w-16 rounded-full bg-neutral-500" />
-              <Text className="text-xs text-white">{f}</Text>
+              <View className="h-16 w-16 items-center justify-center rounded-full bg-neutral-500">
+                <Icon as={UserRound} size={30} color="#d4d4d4" />
+              </View>
+              <View className="h-2 w-12 rounded-full bg-neutral-600" />
             </View>
           ))}
         </View>
+        <View className="h-10" />
         <View className="flex-row items-start justify-between">
-          {row.map((r) => (
-            <View key={r.label} className="items-center opacity-40" style={{ gap: 6, width: 64 }}>
-              <View className="h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: r.bg }}>
-                {r.icon && <Icon as={r.icon} size={22} color="#fff" />}
-              </View>
-              <Text className="text-center text-[11px] text-white">{r.label}</Text>
-            </View>
-          ))}
-          <View className="items-center" style={{ gap: 6, width: 64 }}>
-            <Target onPress={onTarget}>
-              <View className="h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: '#3a3a3c' }}>
-                <Icon as={Share2} size={22} color="#fff" />
+          <View className="items-center opacity-40" style={{ gap: 6, width: 70 }}>
+            {round('#3a3a3c', PlusCircle)}
+            <Text className="text-center text-[11px] text-white">Add to story</Text>
+          </View>
+          <View className="items-center" style={{ gap: 6, width: 86 }}>
+            <Target onPress={onTarget} callout="Tap Share to" side="top" radius={18}>
+              <View className="items-center" style={{ gap: 6 }}>
+                {round('#3a3a3c', Upload)}
+                <Text className="text-center text-[11px] text-white">Share to…</Text>
               </View>
             </Target>
-            <Text className="mt-9 text-center text-[11px] font-bold text-white">Share</Text>
+          </View>
+          <View className="items-center opacity-40" style={{ gap: 6, width: 70 }}>
+            {round('#3a3a3c', Link)}
+            <Text className="text-center text-[11px] text-white">Copy link</Text>
+          </View>
+          <View className="items-center opacity-40" style={{ gap: 6, width: 70 }}>
+            {round('#25d366')}
+            <Text className="text-center text-[11px] text-white">WhatsApp</Text>
           </View>
         </View>
       </View>
@@ -271,31 +265,91 @@ function FakeInstagramPanel({ onTarget }: { onTarget: () => void }) {
   );
 }
 
-/** Vraie feuille de partage : consignes numérotées en gros, puis ouverture du menu système
- *  depuis PostKeep. Le post enregistré pour de vrai est détecté (`WaitingForPost`). */
-function RealShareStep({ onDone }: { onDone: () => void }) {
-  const insets = useSafeAreaInsets();
-  const [opened, setOpened] = useState(false);
+/** Fausse feuille de partage Android (« Sharing link ») : PostKeep déjà dans la rangée. */
+function FakeAndroidSheet({ onTarget }: { onTarget: () => void }) {
+  const app = (label: string, bg: string) => (
+    <View key={label} className="items-center opacity-40" style={{ gap: 6, width: 64 }}>
+      <View className="h-12 w-12 rounded-full" style={{ backgroundColor: bg }} />
+      <Text className="text-center text-[11px] text-white">{label}</Text>
+    </View>
+  );
   return (
-    <Animated.View entering={FadeIn.duration(250)} className="flex-1 px-4 pt-3" style={{ gap: 8, paddingBottom: insets.bottom + 96 }}>
-      {REAL_STEPS.map((t, i) => (
-        <View key={t} className="flex-row items-center rounded-2xl bg-neutral-900 px-4 py-3" style={{ gap: 14 }}>
-          <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: GLOW }}>
-            <Text className="text-lg font-bold text-black">{i + 1}</Text>
-          </View>
-          <Text className="flex-1 text-lg font-semibold text-white">{t}</Text>
+    <View className="flex-1 justify-end">
+      <View className="mx-2 rounded-3xl px-4 pb-6 pt-5" style={{ backgroundColor: '#1c1c1e', gap: 16 }}>
+        <Text className="text-lg font-semibold text-white opacity-60">Sharing link</Text>
+        <View className="flex-row items-center rounded-2xl p-3 opacity-40" style={{ backgroundColor: '#2c2c2e', gap: 12 }}>
+          <Text className="flex-1 text-sm text-neutral-300" numberOfLines={1}>
+            https://www.instagram.com/p/BsOGulcndj-/
+          </Text>
         </View>
-      ))}
-      <View className="flex-1" />
-      <Button
-        className="h-14 rounded-2xl bg-white"
-        onPress={() => {
-          setOpened(true);
-          Share.share({ message: DEMO_POST_URL }).catch(() => {});
-        }}>
-        <Text className="text-lg font-bold text-black">{opened ? 'Open the share menu again' : 'Open the share menu'}</Text>
-      </Button>
-      {opened && <WaitingForPost onArrived={onDone} />}
-    </Animated.View>
+        <View className="flex-row justify-between opacity-40">
+          {[1, 2, 3, 4].map((p) => (
+            <View key={p} className="items-center" style={{ gap: 6 }}>
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-neutral-500">
+                <Icon as={UserRound} size={26} color="#d4d4d4" />
+              </View>
+              <Text className="text-[11px] text-white">Person</Text>
+            </View>
+          ))}
+        </View>
+        <View className="h-12" />
+        <View className="flex-row items-end justify-between">
+          {app('Quick Share', '#2563eb')}
+          {app('Chrome', '#16a34a')}
+          <Target onPress={onTarget} callout="Tap PostKeep" side="top" radius={20}>
+            <View className="items-center" style={{ gap: 6 }}>
+              <Image source={ICON} style={{ width: 60, height: 60, borderRadius: 30 }} />
+              <Text className="text-center text-xs font-semibold text-white">PostKeep</Text>
+            </View>
+          </Target>
+          {app('Messages', '#0ea5e9')}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/** Fausse fiche Save, comme notre vrai écran de partage, déjà remplie. */
+function FakeSaveSheet({ onTarget }: { onTarget: () => void }) {
+  return (
+    <View className="flex-1 justify-end">
+      <View className="rounded-t-3xl bg-background px-6 pb-8 pt-6">
+        <View className="opacity-50" style={{ gap: 16 }}>
+          <Text className="text-xl font-semibold">Save post</Text>
+          <View className="flex-row items-center" style={{ gap: 12 }}>
+            <PlatformSticker platform="instagram" size="md" />
+            <View className="flex-1">
+              <Text className="text-[15px] font-semibold">Instagram</Text>
+              <Text variant="muted" className="text-[11px]" numberOfLines={1}>
+                https://www.instagram.com/p/BsOGulcndj-/
+              </Text>
+            </View>
+          </View>
+          <Text variant="muted" className="text-xs font-semibold uppercase">
+            Collections
+          </Text>
+          <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+            {['Recipes', 'Travel', 'Read later'].map((c, i) => (
+              <View key={c} className={i === 0 ? 'rounded-full bg-primary px-3 py-1.5' : 'rounded-full bg-muted px-3 py-1.5'}>
+                <Text className={i === 0 ? 'text-sm text-primary-foreground' : 'text-sm'}>{c}</Text>
+              </View>
+            ))}
+          </View>
+          <Text variant="muted" className="text-xs font-semibold uppercase">
+            Note
+          </Text>
+          <View className="rounded-2xl bg-card p-3">
+            <Text className="text-sm">Show this to Mum 🥚</Text>
+          </View>
+        </View>
+        <View className="mt-16">
+          <Target onPress={onTarget} callout="Tap Save" side="top" radius={22}>
+            <Button className="h-12 w-72 rounded-2xl" onPress={onTarget}>
+              <Text className="font-semibold">Save</Text>
+            </Button>
+          </Target>
+        </View>
+      </View>
+    </View>
   );
 }
