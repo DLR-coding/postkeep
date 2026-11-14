@@ -28,7 +28,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Image, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, Share, View } from 'react-native';
 import Animated, {
   FadeIn,
   useAnimatedStyle,
@@ -53,6 +53,56 @@ type Step = 'reel' | 'panel' | 'scroll' | 'more' | 'tick' | 'done' | 'hold' | 'p
 const STEPS: Step[] = IS_SAMSUNG
   ? ['reel', 'panel', 'scroll', 'more', 'tick', 'done', 'pinned', 'save']
   : ['reel', 'panel', 'hold', 'pin', 'pinned', 'save'];
+
+/** Étapes du vrai épinglage, selon le téléphone ; la dernière ferme le menu pour ne pas
+ *  partager vers PostKeep par erreur. */
+const PIN_STEPS = IS_SAMSUNG
+  ? ['Slide the apps to the left, then tap “More”', 'Tap the pencil ✏️', 'Tick PostKeep, then tap “Done”', 'Swipe down to close the menu']
+  : ['Press and hold PostKeep', 'Tap “Pin”', 'Swipe down to close the menu'];
+
+/** Épinglage pour de vrai : rappel des étapes, puis la vraie feuille de partage Android. */
+export function RealPinScreen({ onDone }: { onDone: () => void }) {
+  const insets = useSafeAreaInsets();
+  const [opened, setOpened] = useState(false);
+  const open = () => {
+    setOpened(true);
+    Share.share({ message: 'https://postkeep.app' }).catch(() => {});
+  };
+  return (
+    <Animated.View
+      entering={FadeIn.duration(250)}
+      className="absolute inset-0 bg-background px-5"
+      style={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 96, gap: 10 }}>
+      <Text className="text-3xl font-bold">Now pin PostKeep for real</Text>
+      <Text variant="muted" className="pb-2 text-base">
+        Your share menu will open. Do this:
+      </Text>
+      {PIN_STEPS.map((t, i) => (
+        <View key={t} className="flex-row items-center rounded-2xl bg-card px-4 py-3" style={{ gap: 14 }}>
+          <View className="h-9 w-9 items-center justify-center rounded-full bg-primary">
+            <Text className="text-lg font-bold text-primary-foreground">{i + 1}</Text>
+          </View>
+          <Text className="flex-1 text-lg font-semibold">{t}</Text>
+        </View>
+      ))}
+      <View className="flex-1" />
+      {opened ? (
+        <>
+          <Button className="h-14 rounded-2xl" onPress={onDone}>
+            <Text className="text-lg font-semibold">I pinned it</Text>
+          </Button>
+          <Button variant="outline" className="h-12 rounded-2xl" onPress={open}>
+            <Text>Open the share menu again</Text>
+          </Button>
+        </>
+      ) : (
+        <Button className="h-14 rounded-2xl" onPress={open}>
+          <Text className="text-lg font-semibold">Open the share menu</Text>
+        </Button>
+      )}
+    </Animated.View>
+  );
+}
 
 /** Les 4 gestes, en petit : rappel pour la prochaine fois. */
 export function StepsStrip() {
