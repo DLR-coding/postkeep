@@ -1,17 +1,30 @@
 // PROTOTYPE — jetable. Pièces communes aux 5 variantes de l'onboarding.
-// Rien n'est branché : pas de vrai compte, pas de vraie détection de post (simulée).
+// Partage et détection du post réels ; compte factice (aucun compte créé).
+import { max } from 'drizzle-orm';
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Check, Pin } from 'lucide-react-native';
-import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, Share, TextInput, View, useColorScheme } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Linking, Pressable, Share, TextInput, View, useColorScheme } from 'react-native';
 
 import { PlatformSticker } from '@/components/platform-sticker';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { db, schema } from '@/db';
 import type { Platform } from '@/lib/share-url';
 import { THEME } from '@/lib/theme';
 
 export const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'x', 'threads', 'reddit'];
+
+const PLATFORM_URL: Record<Platform, string> = {
+  instagram: 'https://www.instagram.com',
+  tiktok: 'https://www.tiktok.com',
+  x: 'https://x.com',
+  threads: 'https://www.threads.net',
+  reddit: 'https://www.reddit.com',
+};
+
+const lastSavedQuery = db.select({ at: max(schema.posts.updatedAt) }).from(schema.posts);
 
 export type VariantProps = { onStep: (label: string) => void };
 
@@ -77,12 +90,20 @@ function FakeApp({ label, color, size }: { label: string; color: string; size: n
   );
 }
 
-/** Rangée des 5 plateformes. Dans l'app réelle : ouvre l'URL https de la plateforme. */
+/** Rangée des 5 plateformes : ouvre l'URL https (l'app si installée, sinon le navigateur). */
 export function PlatformRow({ onPick }: { onPick: (p: Platform) => void }) {
   return (
     <View className="flex-row justify-center" style={{ gap: 14 }}>
       {PLATFORMS.map((p) => (
-        <Pressable key={p} onPress={() => onPick(p)} className="active:opacity-60" accessibilityRole="button" accessibilityLabel={p}>
+        <Pressable
+          key={p}
+          onPress={() => {
+            onPick(p);
+            Linking.openURL(PLATFORM_URL[p]).catch(() => {});
+          }}
+          className="active:opacity-60"
+          accessibilityRole="button"
+          accessibilityLabel={p}>
           <PlatformSticker platform={p} size="md" />
         </Pressable>
       ))}
@@ -90,9 +111,23 @@ export function PlatformRow({ onPick }: { onPick: (p: Platform) => void }) {
   );
 }
 
-/** Attente du premier post. Le bouton pointillé simule son arrivée (prototype uniquement). */
+/** Attente du premier post : détecte un vrai enregistrement (nouveau ou repartagé).
+ *  Le bouton pointillé reste en secours. */
 export function WaitingForPost({ onArrived }: { onArrived: () => void }) {
   const colors = useColors();
+  const { data } = useLiveQuery(lastSavedQuery);
+  const at = data?.[0]?.at?.valueOf() ?? null;
+  const baseline = useRef<number | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!data) return;
+    if (baseline.current === undefined) baseline.current = at;
+    else if (at !== baseline.current) {
+      baseline.current = at;
+      onArrived();
+    }
+  }, [data, at, onArrived]);
+
   return (
     <View className="items-center" style={{ gap: 10 }}>
       <View className="flex-row items-center" style={{ gap: 8 }}>

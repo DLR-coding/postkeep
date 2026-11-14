@@ -9,7 +9,7 @@ import {
 import { PortalHost } from '@rn-primitives/portal';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
-import { ChevronRight, CodeXml, Droplet, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
+import { ChevronRight, CodeXml, Droplet, FlaskConical, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { AccountSheet } from '@/components/account-sheet';
@@ -222,6 +222,27 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
         </View>
 
         <AccountSection />
+
+        {/* PROTOTYPE onboarding — build de dev uniquement */}
+        {__DEV__ && (
+          <View>
+            <SectionLabel>Onboarding prototypes</SectionLabel>
+            {(['A · Carousel', 'B · Checklist', 'C · Chat', 'D · Stories', 'E · Account first + coach'] as const).map(
+              (label, i, all) => (
+                <Row
+                  key={label}
+                  icon={FlaskConical}
+                  label={label}
+                  onPress={() => {
+                    sheetRef.current?.dismiss();
+                    router.push({ pathname: '/prototype-onboarding', params: { variant: label[0] } });
+                  }}
+                  last={i === all.length - 1}
+                />
+              )
+            )}
+          </View>
+        )}
 
         <View>
           <SectionLabel>Data</SectionLabel>

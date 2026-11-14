@@ -16,6 +16,7 @@ import { extractCaptionFromText, PLATFORM_META, type AnalyzedUrl } from '@/lib/s
 import { fetchOEmbed } from '@/lib/oembed';
 import { useExtractMetadata } from '@/lib/webview-metadata';
 import { THEME } from '@/lib/theme';
+import { prototypeShare } from '@/screens/prototype-onboarding/share-return';
 
 import type { Prefill } from './index';
 
@@ -96,7 +97,7 @@ export function SavePostForm({
         onHide: () => {
           resetShareIntent();
           // Déjà quittée : on reste sur l'accueil au lieu de refermer l'app.
-          if (!leftDuringSave.current) BackHandler.exitApp();
+          if (!leftDuringSave.current && !prototypeShare.waiting) BackHandler.exitApp();
         },
       });
     },

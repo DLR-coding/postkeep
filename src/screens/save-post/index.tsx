@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { findPostByUrl, findPostCollectionIds } from '@/db/posts';
 import { analyzeSharedUrl, type AnalyzedUrl } from '@/lib/share-url';
 import { THEME } from '@/lib/theme';
+import { prototypeShare } from '@/screens/prototype-onboarding/share-return';
 
 import { SavePostForm } from './form';
 
@@ -31,7 +32,9 @@ export function SavePost() {
 
   useEffect(() => {
     if (isReady && !hasShareIntent) {
-      router.replace('/');
+      // PROTOTYPE onboarding : refermer l'écran de partage pour revenir au prototype.
+      if (prototypeShare.waiting && router.canGoBack()) router.back();
+      else router.replace('/');
     }
   }, [isReady, hasShareIntent, router]);
 

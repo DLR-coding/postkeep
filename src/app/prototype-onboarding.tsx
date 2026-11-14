@@ -1,14 +1,15 @@
 // PROTOTYPE — jetable. Cinq variantes du parcours d'onboarding complet (bienvenue → épingler
 // PostKeep → premier post → compte obligatoire), choisies par `?variant=A..E`.
-// Ouvrir : `npm run prototype:onboarding` (deep link sur le dev client).
+// Ouvrir : Settings → Onboarding prototypes (build de dev), ou `npm run prototype:onboarding`.
 import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
+import { prototypeShare } from '@/screens/prototype-onboarding/share-return';
 import { VariantA } from '@/screens/prototype-onboarding/variant-a';
 import { VariantB } from '@/screens/prototype-onboarding/variant-b';
 import { VariantC } from '@/screens/prototype-onboarding/variant-c';
@@ -31,19 +32,33 @@ export default function PrototypeOnboarding() {
   const [step, setStep] = useState('');
   const onStep = useCallback((s: string) => setStep(s), []);
   const Variant = VARIANTS[key].C;
-  // Le geste retour faisait quitter le prototype en plein parcours.
-  usePreventRemove(true, () => {});
+  const router = useRouter();
+  // Le geste retour faisait quitter le prototype en plein parcours : seule la croix sort.
+  const [exiting, setExiting] = useState(false);
+  usePreventRemove(!exiting, () => {});
+  // Tant que le prototype est ouvert, un partage revient ici au lieu de fermer l'app.
+  useEffect(() => {
+    prototypeShare.waiting = true;
+    return () => {
+      prototypeShare.waiting = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (!exiting) return;
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  }, [exiting, router]);
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       {/* `key` : changer de variante repart de zéro */}
       <Variant key={key} onStep={onStep} />
-      {__DEV__ && <PrototypeSwitcher current={key} step={step} />}
+      {__DEV__ && <PrototypeSwitcher current={key} step={step} onExit={() => setExiting(true)} />}
     </>
   );
 }
 
-function PrototypeSwitcher({ current, step }: { current: Key; step: string }) {
+function PrototypeSwitcher({ current, step, onExit }: { current: Key; step: string; onExit: () => void }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const go = (d: number) => router.setParams({ variant: KEYS[(KEYS.indexOf(current) + d + KEYS.length) % KEYS.length] });
@@ -63,6 +78,9 @@ function PrototypeSwitcher({ current, step }: { current: Key; step: string }) {
         </View>
         <Pressable onPress={() => go(1)} hitSlop={10} className="p-2 active:opacity-60">
           <Icon as={ChevronRight} size={20} color="#fff" />
+        </Pressable>
+        <Pressable onPress={onExit} hitSlop={10} className="ml-1 rounded-full bg-white/25 p-1.5 active:opacity-60" accessibilityLabel="Exit prototype">
+          <Icon as={X} size={16} color="#fff" />
         </Pressable>
       </View>
     </View>
