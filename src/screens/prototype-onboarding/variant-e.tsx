@@ -4,7 +4,7 @@
 // guide l'épinglage et le premier partage, sur place.
 import { Bookmark, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Image, KeyboardAvoidingView, Linking, Pressable, ScrollView, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Pressable, ScrollView, View } from 'react-native';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,14 +19,12 @@ import {
   FlowDone,
   openShareMenu,
   SavedBadge,
-  TEST_POST_URL,
   useColors,
-  WaitingForPost,
   type VariantProps,
 } from './shared';
 import { ShareRehearsal, StepsStrip } from './share-rehearsal';
 
-export type CoachStage = 'account' | 'pin' | 'save' | 'practice' | 'real' | 'waiting' | 'saved' | 'home' | 'done';
+export type CoachStage = 'account' | 'pin' | 'save' | 'practice' | 'saved' | 'home' | 'done';
 
 export function VariantE({ onStep }: VariantProps) {
   const [stage, setStage] = useState<CoachStage>('account');
@@ -135,39 +133,20 @@ export function HomeWithCoach({
             <>
               <Text className="text-2xl font-bold">Save your first post</Text>
               <Text className="text-base">
-                First, let's practice together. Then you'll do it for real on a test post.
+                Let's do it together on an example video. Just follow the yellow circle.
               </Text>
               <Button className="h-14 rounded-2xl" onPress={() => setStage('practice')}>
-                <Text className="text-lg font-semibold">Start practice</Text>
+                <Text className="text-lg font-semibold">Show me</Text>
               </Button>
-            </>
-          )}
-          {(stage === 'real' || stage === 'waiting') && (
-            <>
-              <Text className="text-2xl font-bold">{stage === 'real' ? 'Well done! Now for real' : 'Do the 4 steps in Instagram'}</Text>
-              <Text className="text-base">
-                {stage === 'real'
-                  ? 'Instagram will open on a test post. Do the same 4 steps:'
-                  : 'When you tap Save, you will come back here.'}
-              </Text>
-              <StepsStrip />
-              <Button
-                className="h-14 rounded-2xl"
-                onPress={() => {
-                  setStage('waiting');
-                  Linking.openURL(TEST_POST_URL).catch(() => {});
-                }}>
-                <Text className="text-lg font-semibold">{stage === 'real' ? 'Open the test post' : 'Open the test post again'}</Text>
-              </Button>
-              {stage === 'waiting' && <WaitingForPost onArrived={() => setStage('saved')} />}
             </>
           )}
           {stage === 'saved' && (
             <>
               <SavedBadge />
               <Text variant="muted" className="text-center">
-                That's it. Next time, just Share → PostKeep from any app.
+                That's it! Do the same 4 steps on any video you like:
               </Text>
+              <StepsStrip />
               <Button className="h-12 rounded-2xl" onPress={onFinish}>
                 <Text className="font-semibold">Got it</Text>
               </Button>
@@ -175,7 +154,7 @@ export function HomeWithCoach({
           )}
         </Animated.View>
       )}
-      {stage === 'practice' && <ShareRehearsal onDone={() => setStage('real')} />}
+      {stage === 'practice' && <ShareRehearsal onDone={() => setStage('saved')} />}
       {stage === 'home' && (
         <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 110 }}>
           <Button variant="outline" onPress={onFinish}>

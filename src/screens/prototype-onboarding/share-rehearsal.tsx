@@ -1,17 +1,21 @@
-// PROTOTYPE — jetable. Répétition guidée du partage sur un faux post Instagram, pour des
+// PROTOTYPE — jetable. Répétition guidée du partage sur un faux Reel Instagram, pour des
 // utilisateurs qui ne connaissent pas le geste : un seul endroit touchable par écran,
 // entouré d'un anneau jaune qui pulse et montré par un doigt. Les écrans imitent ceux
-// relevés sur le Galaxy S23 (Instagram : avion en papier → rangée du bas « Share » ;
+// relevés sur le Galaxy S23 (Reel : avion en papier à droite → rangée du bas « Share » ;
 // Android : feuille « Sharing link » → PostKeep ; PostKeep : Save).
 import {
   Bookmark,
   Heart,
+  Home,
   Link,
   MessageCircle,
   PlusCircle,
   Pointer,
+  Repeat2,
+  Search,
   Send,
   Share2,
+  SquarePlay,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, View } from 'react-native';
@@ -24,6 +28,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
@@ -32,13 +37,13 @@ import { Text } from '@/components/ui/text';
 const GLOW = '#facc15';
 
 const STEPS = [
-  { title: 'Tap the paper plane', hint: 'It is just under the photo.' },
+  { title: 'Tap the paper plane', hint: 'It is on the right side of the video.' },
   { title: 'Tap “Share”', hint: 'It is at the bottom, on the right. Slide the row to the left if you can’t see it.' },
   { title: 'Tap PostKeep', hint: 'It is in the list of apps.' },
   { title: 'Tap Save', hint: 'That’s it: your post is saved.' },
 ];
 
-/** Les 4 gestes, en petit : rappel à garder en tête avant d'ouvrir Instagram. */
+/** Les 4 gestes, en petit : rappel à garder en tête pour la prochaine fois. */
 export function StepsStrip() {
   const items = [
     { icon: Send, label: 'Paper plane' },
@@ -97,7 +102,7 @@ export function ShareRehearsal({ onDone }: { onDone: () => void }) {
       {/* Maquette : toucher ailleurs que la cible affiche le rappel */}
       <Pressable className="flex-1" onPress={wrongTap} style={{ paddingBottom: insets.bottom + 90 }}>
         <Animated.View key={step} entering={FadeIn.duration(250)} className="flex-1">
-          {step === 0 && <FakeInstagramPost onTarget={next} />}
+          {step === 0 && <FakeReel onTarget={next} />}
           {step === 1 && <FakeInstagramPanel onTarget={next} />}
           {step === 2 && <FakeAndroidSheet onTarget={next} />}
           {step === 3 && <FakePostKeepSave onTarget={next} />}
@@ -144,24 +149,64 @@ function Target({ onPress, children, round = true }: { onPress: () => void; chil
   );
 }
 
-function FakeInstagramPost({ onTarget }: { onTarget: () => void }) {
+/** Faux Reel : vidéo plein écran, colonne d'actions à droite (comme l'app Instagram). */
+function FakeReel({ onTarget }: { onTarget: () => void }) {
+  const actions = [
+    { icon: Heart, count: '195K' },
+    { icon: MessageCircle, count: '1,275' },
+    { icon: Repeat2, count: '29.4K' },
+  ];
   return (
-    <View className="flex-1 pt-4">
-      <View className="flex-row items-center px-4 pb-3" style={{ gap: 10 }}>
-        <View className="h-9 w-9 rounded-full" style={{ backgroundColor: '#d9a066' }} />
-        <Text className="text-base font-semibold text-white">world_record_egg</Text>
+    <View className="flex-1">
+      {/* « Vidéo » : dégradé + formes, rien à charger */}
+      <Svg style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} width="100%" height="100%">
+        <Defs>
+          <LinearGradient id="reel" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor="#f97316" />
+            <Stop offset="0.55" stopColor="#db2777" />
+            <Stop offset="1" stopColor="#4c1d95" />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#reel)" />
+        <Circle cx="40%" cy="38%" r="70" fill="#fde68a" opacity={0.85} />
+        <Circle cx="58%" cy="45%" r="44" fill="#fff" opacity={0.25} />
+      </Svg>
+      <Text className="px-4 pt-3 text-xl font-bold text-white">Reels</Text>
+      <View className="flex-1 flex-row items-end px-4 pb-3">
+        <View className="flex-1 pb-2" style={{ gap: 8 }}>
+          <View className="flex-row items-center" style={{ gap: 10 }}>
+            <View className="h-9 w-9 rounded-full border-2 border-white bg-amber-300" />
+            <Text className="text-base font-semibold text-white">pasta.lover</Text>
+            <View className="rounded-lg border border-white px-2.5 py-1">
+              <Text className="text-xs font-semibold text-white">Follow</Text>
+            </View>
+          </View>
+          <Text className="text-sm text-white">Easy pasta in 10 minutes 🍝</Text>
+        </View>
+        <View className="items-center" style={{ gap: 16 }}>
+          {actions.map((a) => (
+            <View key={a.count} className="items-center" style={{ gap: 2 }}>
+              <Icon as={a.icon} size={30} color="#fff" />
+              <Text className="text-xs font-semibold text-white">{a.count}</Text>
+            </View>
+          ))}
+          <View className="items-center" style={{ gap: 2 }}>
+            <Target onPress={onTarget}>
+              <Icon as={Send} size={30} color="#fff" />
+            </Target>
+            <Text className="mt-10 text-xs font-semibold text-white">26.6K</Text>
+          </View>
+          <View className="items-center" style={{ gap: 2 }}>
+            <Icon as={Bookmark} size={30} color="#fff" />
+            <Text className="text-xs font-semibold text-white">29.8K</Text>
+          </View>
+        </View>
       </View>
-      <View className="items-center justify-center" style={{ height: 300, backgroundColor: '#cfcfcf' }}>
-        <View style={{ width: 150, height: 190, borderRadius: 95, backgroundColor: '#d9a066' }} />
-      </View>
-      <View className="flex-row items-center px-4 pt-4" style={{ gap: 22 }}>
-        <Icon as={Heart} size={28} color="#fff" />
-        <Icon as={MessageCircle} size={28} color="#fff" />
-        <Target onPress={onTarget}>
-          <Icon as={Send} size={28} color="#fff" />
-        </Target>
-        <View className="flex-1" />
-        <Icon as={Bookmark} size={28} color="#fff" />
+      <View className="flex-row justify-around bg-black py-3 opacity-80">
+        {[Home, SquarePlay, Send, Search].map((I, i) => (
+          <Icon key={i} as={I} size={24} color="#fff" />
+        ))}
+        <View className="h-6 w-6 rounded-full bg-neutral-400" />
       </View>
     </View>
   );
@@ -226,7 +271,7 @@ function FakeAndroidSheet({ onTarget }: { onTarget: () => void }) {
           <View className="h-10 w-10 rounded-xl" style={{ backgroundColor: '#e4405f' }} />
           <View>
             <Text className="text-white">Instagram</Text>
-            <Text className="text-xs text-neutral-400">https://www.instagram.com/p/…</Text>
+            <Text className="text-xs text-neutral-400">https://www.instagram.com/reel/…</Text>
           </View>
         </View>
         <View className="flex-row items-start justify-between pb-6">
@@ -257,7 +302,7 @@ function FakePostKeepSave({ onTarget }: { onTarget: () => void }) {
       <View className="rounded-t-3xl bg-background px-5 pb-8 pt-5" style={{ gap: 14 }}>
         <Text className="text-xl font-semibold">Save post</Text>
         <View className="rounded-2xl bg-card p-3 opacity-60">
-          <Text className="text-sm text-muted-foreground">https://www.instagram.com/p/BsOGulcndj-/</Text>
+          <Text className="text-sm text-muted-foreground">https://www.instagram.com/reel/pasta-in-10-min/</Text>
         </View>
         <View className="h-20 rounded-2xl bg-card opacity-60" />
         <View className="items-center pb-10">
