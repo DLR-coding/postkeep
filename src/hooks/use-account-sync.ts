@@ -20,7 +20,7 @@ export function useAccountSync(ready: boolean): void {
   useEffect(() => {
     // Pas d'appel Supabase dans ce rappel (verrou de session interne) : seulement l'état.
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      useAccountStore.setState({ userId: session?.user.id ?? null, email: session?.user.email ?? null });
+      useAccountStore.setState({ authReady: true, userId: session?.user.id ?? null, email: session?.user.email ?? null });
     });
     return () => data.subscription.unsubscribe();
   }, []);

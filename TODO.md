@@ -148,12 +148,21 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
 
 ---
 
-## 🟠 Onboarding — prochaine tâche (demandée le 13 novembre 2026)
+## 🟠 Onboarding (demandé le 13 novembre 2026)
 
-- [ ] **Onboarding au premier lancement** : expliquer comment enregistrer un post (Partager
-      depuis Instagram/TikTok/X/Threads/Reddit → PostKeep) et proposer le compte (synchro,
-      sauvegarde). Contenu, forme (écrans, tutoriel du partage) et moment d'affichage à définir
-      avec l'utilisateur avant de coder. Prérequis pour « Ouverture à des testeurs ».
+- [x] **Onboarding au premier lancement** (branche `feat/onboarding`, 19 novembre 2026) :
+      forme choisie sur prototype (branche `worktree-prototype-onboarding`, variante G, et
+      animation « Burst » parmi six) — bienvenue → épingler PostKeep (animation + vrai menu de
+      partage) → « All set! » → essai guidé sur un faux Reel → « Saved! » → compte obligatoire.
+      Vérifié sur le Galaxy S23 : rejeu depuis Settings, partage vers PostKeep ignoré sur la
+      page d'épinglage, barrière après déconnexion, messages email / mot de passe, reconnexion
+- [ ] **Règle de mot de passe côté serveur** : Supabase → Authentication → Providers → Email
+      → longueur minimale 8 et « Lowercase, uppercase letters, digits and symbols ». L'app
+      vérifie déjà, mais un appel direct à l'API contourne la vérification de l'app
+- [ ] **Épinglage hors Samsung** : l'animation « appui long → Pin » (Android standard) n'a
+      pas été vérifiée sur un appareil ; le tester sur un émulateur Pixel
+- [ ] Connu : un partage reçu app fermée **avant** d'avoir un compte est perdu (l'écran de
+      partage se démonte quand la barrière ouvre l'onboarding)
 
 ## 🟢 Phase 7 — Polish UI/UX (repérées le 31 août 2026)
 

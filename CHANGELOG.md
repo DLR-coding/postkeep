@@ -15,6 +15,22 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Ajouté
+
+- **Onboarding au premier lancement** : bienvenue, puis comment épingler PostKeep dans le
+  menu de partage (animation du geste, puis le vrai menu s'ouvre), puis un essai guidé du
+  partage sur un faux Reel (« Tap Share » → « Share to » → PostKeep → Save), avec un écran
+  de réussite animé après chaque étape. Rejouable dans Settings → Show tutorial.
+
+### Modifié
+
+- **Le compte est obligatoire** : sans compte, l'app ouvre l'onboarding (ou directement son
+  étape de création de compte après une déconnexion). Un partage reçu avant le compte attend
+  et s'ouvre une fois le compte créé.
+- **Mot de passe robuste à la création du compte** : 8 caractères ou plus, avec une
+  majuscule, une minuscule, un chiffre et un symbole ; le format de l'email est vérifié
+  avant l'envoi.
+
 ### Corrigé
 
 - **Le téléphone revenait à l'écran de verrouillage** après un enregistrement un peu long :

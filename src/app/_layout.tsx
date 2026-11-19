@@ -1,7 +1,7 @@
 import '../../global.css';
 
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { Stack, ThemeProvider, useRouter } from 'expo-router';
+import { Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -21,6 +21,8 @@ import { useAccountSync } from '@/hooks/use-account-sync';
 import migrations from '@/db/migrations/migrations';
 import { NAV_THEME, THEME } from '@/lib/theme';
 import { MetadataExtractorProvider } from '@/lib/webview-metadata';
+import { PIN_SHARE_URL } from '@/screens/onboarding/pin-step';
+import { useAccountStore } from '@/stores/account-store';
 import { applyThemePreference, loadThemePreference } from '@/lib/settings';
 
 // Thème choisi dans les Paramètres, appliqué avant le premier rendu.
@@ -31,15 +33,37 @@ SplashScreen.preventAutoHideAsync();
 // Écoute le partage à la racine : nécessaire pour capter un nouveau partage quand
 // l'app est déjà ouverte en arrière-plan (relance via singleTask, pas un cold start —
 // +native-intent.tsx ne couvre que le cold start).
+//
+// Compte obligatoire : sans session, le partage attend (il reste dans le contexte) et s'ouvre
+// une fois le compte créé. Le lien partagé depuis la page d'épinglage de l'onboarding est
+// ignoré : l'utilisateur a touché PostKeep au lieu de seulement l'épingler.
 function ShareIntentRedirect() {
   const router = useRouter();
-  const { hasShareIntent } = useShareIntentContext();
+  const userId = useAccountStore((s) => s.userId);
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
 
   useEffect(() => {
-    if (hasShareIntent) {
-      router.push('/shareintent');
+    if (!hasShareIntent) return;
+    if ((shareIntent.webUrl ?? shareIntent.text ?? '').startsWith(PIN_SHARE_URL)) {
+      resetShareIntent();
+      return;
     }
-  }, [hasShareIntent, router]);
+    if (userId) router.push('/shareintent');
+  }, [hasShareIntent, shareIntent, resetShareIntent, userId, router]);
+
+  return null;
+}
+
+/** Compte obligatoire : sans session, l'app ouvre l'onboarding (ou son étape du compte). */
+function AuthGate() {
+  const router = useRouter();
+  const segments = useSegments();
+  const authReady = useAccountStore((s) => s.authReady);
+  const userId = useAccountStore((s) => s.userId);
+
+  useEffect(() => {
+    if (authReady && !userId && segments[0] !== 'onboarding') router.replace('/onboarding');
+  }, [authReady, userId, segments, router]);
 
   return null;
 }
@@ -81,12 +105,15 @@ export default function RootLayout() {
   const colorScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const { success, error } = useMigrations(db, migrations);
   useAccountSync(success);
+  const authReady = useAccountStore((s) => s.authReady);
 
+  // Le splash attend aussi la session : sinon l'accueil apparaîtrait un instant avant que la
+  // barrière du compte n'ouvre l'onboarding.
   useEffect(() => {
-    if (success || error) {
+    if ((success && authReady) || error) {
       SplashScreen.hideAsync();
     }
-  }, [success, error]);
+  }, [success, authReady, error]);
 
   return (
     <KeyboardProvider>
@@ -101,11 +128,13 @@ export default function RootLayout() {
                 {/* Le partage n'est routé qu'une fois les migrations passées : l'écran de
                     sauvegarde lit les collections dès son montage. */}
                 {success && <ShareIntentRedirect />}
+                {success && <AuthGate />}
                 {success && <MetadataBackfill />}
                 <Stack>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                   <Stack.Screen name="shareintent" options={{ presentation: 'modal', headerShown: false }} />
                   <Stack.Screen name="collection/[id]" />
+                  <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
                 </Stack>
                 <PostDetailSheet />
                 {!success && <MigrationGate error={error} />}

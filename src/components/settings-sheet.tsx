@@ -9,7 +9,7 @@ import {
 import { PortalHost } from '@rn-primitives/portal';
 import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
-import { ChevronRight, CodeXml, Droplet, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
+import { ChevronRight, CodeXml, Droplet, GraduationCap, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { AccountSheet } from '@/components/account-sheet';
@@ -230,6 +230,14 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
 
         <View>
           <SectionLabel>About</SectionLabel>
+          <Row
+            icon={GraduationCap}
+            label="Show tutorial"
+            onPress={() => {
+              sheetRef.current?.dismiss();
+              router.push({ pathname: '/onboarding', params: { replay: '1' } });
+            }}
+          />
           <Row icon={CodeXml} label="Source code" onPress={() => Linking.openURL(REPO_URL)} />
           <Row icon={Info} label="Version" detail={version} last />
         </View>

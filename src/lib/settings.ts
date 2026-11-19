@@ -29,6 +29,18 @@ export function saveThemePreference(pref: ThemePreference): void {
   applyThemePreference(pref);
 }
 
+// Le tutoriel a été vu jusqu'à l'étape du compte : après une déconnexion, l'onboarding
+// reprend directement au compte au lieu de rejouer le tutoriel.
+const TUTORIAL_SEEN_KEY = 'onboardingTutorialSeen';
+
+export function loadTutorialSeen(): boolean {
+  return Storage.getItemSync(TUTORIAL_SEEN_KEY) === '1';
+}
+
+export function saveTutorialSeen(): void {
+  Storage.setItemSync(TUTORIAL_SEEN_KEY, '1');
+}
+
 const LAYOUT_KEY = 'postsLayout';
 
 export function loadPostsLayout(): PostsLayout {

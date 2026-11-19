@@ -14,9 +14,11 @@
 L'app doit fonctionner **hors ligne et sans compte**. Toutes les données vivent dans une base
 SQLite sur l'appareil. Il n'y a pas de serveur en V1.
 
-Depuis la V1.5, un **compte optionnel** synchronise cette base avec Supabase (§12). Ça ne
-change rien à la règle : la base locale reste la source de vérité pour l'affichage, la
-synchro tourne en arrière-plan, et l'app sans compte se comporte exactement comme avant.
+Depuis la V1.5, un compte synchronise cette base avec Supabase (§12) ; il est **obligatoire**
+depuis l'onboarding (19 novembre 2026). Ça ne change rien à la règle : la base locale reste
+la source de vérité pour l'affichage, et la synchro tourne en arrière-plan. Le code garde le
+fonctionnement sans compte (lignes `user_id IS NULL`, rattachées au push) : seul l'accès à
+l'app est fermé sans session.
 
 **Ce que ça implique concrètement :**
 
@@ -304,6 +306,7 @@ src/app/
 ├── _layout.tsx          # Layout racine : providers globaux + Stack + feuille de détail
 ├── +native-intent.tsx   # Redirection des partages entrants (démarrage à froid)
 ├── shareintent.tsx      # Écran de réception d'un partage (modale)
+├── onboarding.tsx       # Onboarding et création de compte (barrière du compte, §12)
 ├── collection/[id].tsx  # Posts d'une collection (écran empilé)
 └── (tabs)/              # Groupe d'onglets
     ├── _layout.tsx      # Onglets JS + barre flottante GlassTabBar
@@ -451,8 +454,9 @@ Pour éviter de re-débattre à chaque itération :
   lues sur l'appareil, une seule fois, au partage (§6)
 - iOS → après la V1 Android
 
-Le compte utilisateur est **optionnel** — jamais un mur d'inscription au lancement, ni de
-rappel insistant : il ne se montre que dans la section « Account » des Paramètres.
+~~Le compte utilisateur est optionnel, jamais un mur d'inscription au lancement~~ —
+**remplacé le 19 novembre 2026** : le compte est obligatoire, créé en fin d'onboarding
+(barrière du compte, §12).
 
 ---
 
@@ -509,7 +513,8 @@ Conception : `docs/superpowers/specs/2026-11-11-comptes-synchro-design.md` ; pla
 du plan (marque de push, rattachement avant chaque push, déconnexion) : les écarts sont
 expliqués en place ci-dessous.
 
-Un compte **optionnel** (email + mot de passe) sauvegarde posts et collections dans
+Un compte **obligatoire** depuis le 19 novembre 2026 (email + mot de passe ; il était
+optionnel jusqu'à la v0.5) sauvegarde posts et collections dans
 Supabase et les synchronise entre les appareils **du même compte**. Pas de partage entre
 personnes, pas de temps réel.
 
@@ -632,6 +637,24 @@ appareils du compte, et la sortie ne doit plus dépendre du réseau une fois tou
 **Suppression du compte** (`deleteAccount()`) : attend la fin d'une synchro en cours (elle
 réécrirait des lignes après le nettoyage), `rpc('delete_my_account')`, `signOut` local (le
 jeton d'un compte supprimé reste valide jusqu'à expiration), vidage local.
+
+### Barrière du compte et onboarding
+
+- `account-store.authReady` passe à vrai au premier `onAuthStateChange` (Supabase a lu la
+  session du kv-store). Le splash reste affiché jusque-là, pour ne pas montrer l'accueil un
+  instant à quelqu'un qui n'a pas de compte.
+- `AuthGate` (`_layout.tsx`) : sans session, `router.replace('/onboarding')`. Couvre le
+  premier lancement, la déconnexion et la suppression du compte. Une fois connecté,
+  `src/screens/onboarding` renvoie à l'accueil.
+- Le tutoriel (`src/screens/onboarding`) n'est joué qu'une fois : la clé de kv-store
+  `onboardingTutorialSeen` fait reprendre l'onboarding directement à l'étape du compte. Il
+  se rejoue depuis Settings → Show tutorial (`/onboarding?replay=1`, sans l'étape du compte).
+- `ShareIntentRedirect` n'ouvre l'écran de partage qu'avec une session : un partage reçu
+  avant le compte reste dans le contexte et s'ouvre après la connexion. Le lien partagé par la
+  page d'épinglage (`PIN_SHARE_URL`) est ignoré s'il revient vers PostKeep.
+- Identifiants vérifiés par `src/lib/credentials.ts` (email au bon format ; à la création,
+  mot de passe de 8+ caractères avec majuscule, minuscule, chiffre et symbole), dans
+  l'onboarding comme dans `account-sheet.tsx`. Pas de confirmation par email (pas de SMTP).
 
 ### Exceptions à « jamais de vrai `DELETE` »
 

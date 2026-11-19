@@ -12,10 +12,10 @@ import * as Haptics from 'expo-haptics';
 import { SheetField, sheetBackgroundStyle } from '@/components/sheet-kit';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { credentialsError, PASSWORD_RULE } from '@/lib/credentials';
 import { signIn, signUp } from '@/lib/sync/account';
 import { THEME } from '@/lib/theme';
 
-const MIN_PASSWORD = 8;
 
 /** Connexion / création de compte, empilée par-dessus les paramètres
  *  (`stackBehavior="push"`, comme `CollectionPickerSheet` : la feuille des paramètres reste
@@ -41,8 +41,9 @@ export function AccountSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetModa
 
   const submit = async () => {
     if (loading || !email.trim() || !password) return;
-    if (creating && password.length < MIN_PASSWORD) {
-      setError(`Password must be at least ${MIN_PASSWORD} characters.`);
+    const invalid = credentialsError(email, password, creating);
+    if (invalid) {
+      setError(invalid);
       return;
     }
     setError(null);
@@ -98,7 +99,7 @@ export function AccountSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetModa
           ref={passwordRef}
           value={password}
           onChangeText={setPassword}
-          placeholder={creating ? `Password (${MIN_PASSWORD}+ characters)` : 'Password'}
+          placeholder="Password"
           secureTextEntry
           autoComplete={creating ? 'new-password' : 'password'}
           autoCapitalize="none"
@@ -106,6 +107,11 @@ export function AccountSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetModa
           returnKeyType="go"
           onSubmitEditing={submit}
         />
+        {creating && !error && (
+          <Text variant="muted" className="text-xs">
+            {PASSWORD_RULE}
+          </Text>
+        )}
         {!!error && <Text className="text-sm text-destructive">{error}</Text>}
         <Button className="mt-1 h-12 rounded-2xl" disabled={loading || !email.trim() || !password} onPress={submit}>
           {loading ? (

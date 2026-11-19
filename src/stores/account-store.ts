@@ -6,6 +6,9 @@ import { create } from 'zustand';
 export type SyncStatus = 'idle' | 'syncing' | 'error';
 
 type AccountState = {
+  /** Vrai dès que Supabase a lu la session enregistrée (connecté ou non) : avant, `userId`
+   *  nul ne veut pas dire « pas de compte ». La barrière du compte (`_layout.tsx`) l'attend. */
+  authReady: boolean;
   userId: string | null;
   email: string | null;
   status: SyncStatus;
@@ -14,6 +17,7 @@ type AccountState = {
 };
 
 export const useAccountStore = create<AccountState>(() => ({
+  authReady: false,
   userId: null,
   email: null,
   status: 'idle',
