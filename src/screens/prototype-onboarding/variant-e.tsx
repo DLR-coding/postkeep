@@ -20,9 +20,9 @@ import {
   useColors,
   type VariantProps,
 } from './shared';
-import { RealPinScreen, ShareRehearsal, StepsStrip } from './share-rehearsal';
+import { ShareRehearsal, StepsStrip } from './share-rehearsal';
 
-export type CoachStage = 'account' | 'pin' | 'save' | 'practice' | 'pinReal' | 'saved' | 'home' | 'done';
+export type CoachStage = 'account' | 'pin' | 'save' | 'practice' | 'saved' | 'home' | 'done';
 
 export function VariantE({ onStep }: VariantProps) {
   const [stage, setStage] = useState<CoachStage>('account');
@@ -99,7 +99,7 @@ export function HomeWithCoach({
           </View>
         )}
       </View>
-      {stage !== 'home' && stage !== 'practice' && stage !== 'pinReal' && (
+      {stage !== 'home' && stage !== 'practice' && (
         <Animated.View
           key={stage}
           entering={SlideInDown.duration(350)}
@@ -131,21 +131,14 @@ export function HomeWithCoach({
                 That's it! Do the same 4 steps on any video you like:
               </Text>
               <StepsStrip />
-              <Text className="pt-1 text-center text-base font-semibold">
-                Last thing: pin PostKeep in your real share menu, so it’s always first.
-              </Text>
-              <Button className="h-14 rounded-2xl" onPress={() => setStage('pinReal')}>
-                <Text className="text-lg font-semibold">Pin PostKeep now</Text>
+              <Button className="h-12 rounded-2xl" onPress={onFinish}>
+                <Text className="font-semibold">Got it</Text>
               </Button>
-              <Pressable onPress={onFinish} hitSlop={8} className="items-center py-1 active:opacity-60">
-                <Text variant="muted">Later</Text>
-              </Pressable>
             </>
           )}
         </Animated.View>
       )}
       {stage === 'practice' && <ShareRehearsal onDone={() => setStage('saved')} onSkip={onFinish} />}
-      {stage === 'pinReal' && <RealPinScreen onDone={onFinish} />}
       {stage === 'home' && (
         <View className="absolute inset-x-0 items-center" style={{ bottom: insets.bottom + 110 }}>
           <Button variant="outline" onPress={onFinish}>
