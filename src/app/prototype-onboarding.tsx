@@ -17,6 +17,7 @@ import { VariantD } from '@/screens/prototype-onboarding/variant-d';
 import { VariantE } from '@/screens/prototype-onboarding/variant-e';
 import { VariantF } from '@/screens/prototype-onboarding/variant-f';
 import { VariantG } from '@/screens/prototype-onboarding/variant-g';
+import { VariantS } from '@/screens/prototype-onboarding/variant-s';
 
 const VARIANTS = {
   A: { name: 'Carousel', C: VariantA },
@@ -26,6 +27,7 @@ const VARIANTS = {
   E: { name: 'Account first + coach', C: VariantE },
   F: { name: 'Carousel → coach → account', C: VariantF },
   G: { name: 'Welcome → pin → test → account', C: VariantG },
+  S: { name: 'Success animations', C: VariantS },
 } as const;
 type Key = keyof typeof VARIANTS;
 const KEYS = Object.keys(VARIANTS) as Key[];

@@ -15,7 +15,7 @@ import { Text } from '@/components/ui/text';
 import { PinPage } from './pin-page';
 import { ShareRehearsal } from './share-rehearsal';
 import { FlowDone, PLATFORMS, type VariantProps } from './shared';
-import { CHECK_AT_MS, SuccessCheck } from './success-check';
+import { getCheckVariant } from './success-variants';
 import { SignUpGate } from './variant-e';
 
 type Stage = 'welcome' | 'pin' | 'pinDone' | 'test' | 'testDone' | 'account' | 'done';
@@ -45,10 +45,11 @@ export function VariantG({ onStep }: VariantProps) {
 
 const DONE_MS = 2300;
 
-/** Écran « c'est fait » après une étape d'action : anneaux qui tournent puis ✓ dessiné
- *  (`success-check.tsx`, d'après la vidéo de référence), vibration au moment du ✓.
+/** Écran « c'est fait » après une étape d'action : animation choisie dans l'atelier S
+ *  (`success-variants.tsx`, anneaux par défaut), vibration au moment du ✓.
  *  Passe tout seul à la suite après DONE_MS ; un toucher passe tout de suite. */
 function DoneCheck({ title, body, onNext }: { title: string; body: string; onNext: () => void }) {
+  const [check] = useState(getCheckVariant);
   // `onNext` change à chaque rendu du parent : sans ref, l'effet repartirait (2e vibration,
   // minuteur remis à zéro).
   const next = useRef(onNext);
@@ -56,17 +57,17 @@ function DoneCheck({ title, body, onNext }: { title: string; body: string; onNex
     next.current = onNext;
   });
   useEffect(() => {
-    const haptic = setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), CHECK_AT_MS);
+    const haptic = setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), check.checkAt);
     const t = setTimeout(() => next.current(), DONE_MS);
     return () => {
       clearTimeout(haptic);
       clearTimeout(t);
     };
-  }, []);
+  }, [check.checkAt]);
   return (
     <Pressable className="flex-1 items-center justify-center bg-background px-8" style={{ gap: 18 }} onPress={onNext}>
-      <SuccessCheck />
-      <Animated.View entering={FadeInDown.delay(CHECK_AT_MS).duration(350)} className="items-center" style={{ gap: 8 }}>
+      <check.C />
+      <Animated.View entering={FadeInDown.delay(check.checkAt).duration(350)} className="items-center" style={{ gap: 8 }}>
         <Text className="text-center text-3xl font-bold">{title}</Text>
         <Text variant="muted" className="text-center text-base">
           {body}
