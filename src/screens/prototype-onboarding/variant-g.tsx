@@ -27,7 +27,7 @@ export function VariantG({ onStep }: VariantProps) {
   if (stage === 'done') return <FlowDone onRestart={() => setStage('welcome')} />;
   if (stage === 'pin') return <PinPage onContinue={() => setStage('pinDone')} />;
   if (stage === 'pinDone')
-    return <DoneCheck title="Pinned!" body="PostKeep will be first in your share menu." onNext={() => setStage('test')} />;
+    return <DoneCheck title="All set!" body="PostKeep is now easy to find when you share." onNext={() => setStage('test')} />;
   if (stage === 'test')
     return <ShareRehearsal includePin={false} onDone={() => setStage('testDone')} onSkip={() => setStage('account')} />;
   if (stage === 'testDone')
