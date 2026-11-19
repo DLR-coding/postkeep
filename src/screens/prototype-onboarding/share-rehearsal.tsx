@@ -45,6 +45,8 @@ const DIM = 'rgba(0,0,0,0.55)';
 
 type Step = 'reel' | 'panel' | 'pinPage' | 'pinned' | 'save';
 const STEPS: Step[] = ['reel', 'panel', 'pinPage', 'pinned', 'save'];
+// Sans l'épinglage, quand il a déjà été montré avant le test (variante G).
+const STEPS_NO_PIN: Step[] = ['reel', 'panel', 'pinned', 'save'];
 
 /** Les 4 gestes, en petit : rappel pour la prochaine fois. */
 export function StepsStrip() {
@@ -77,11 +79,20 @@ export function StepsStrip() {
 }
 
 /** Tutoriel plein écran. `onDone` : les 4 gestes faits ; `onSkip` : « Skip ». */
-export function ShareRehearsal({ onDone, onSkip }: { onDone: () => void; onSkip: () => void }) {
+export function ShareRehearsal({
+  onDone,
+  onSkip,
+  includePin = true,
+}: {
+  onDone: () => void;
+  onSkip: () => void;
+  includePin?: boolean;
+}) {
+  const steps = includePin ? STEPS : STEPS_NO_PIN;
   const insets = useSafeAreaInsets();
   const [i, setI] = useState(0);
-  const step = STEPS[i];
-  const next = () => (i === STEPS.length - 1 ? onDone() : setI(i + 1));
+  const step = steps[i];
+  const next = () => (i === steps.length - 1 ? onDone() : setI(i + 1));
 
   return (
     <View className="absolute inset-0 bg-black">
