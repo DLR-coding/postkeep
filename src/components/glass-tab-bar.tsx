@@ -2,7 +2,7 @@ import { type ComponentRef, useCallback, useEffect, useRef, useState, type RefOb
 import { PanResponder, PixelRatio, Pressable, TextInput, useColorScheme, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { usePathname, useRouter } from 'expo-router';
+import { useIsFocused, usePathname, useRouter } from 'expo-router';
 import { Folder, List, Search, X } from 'lucide-react-native';
 import Animated, {
   useAnimatedKeyboard,
@@ -130,7 +130,10 @@ export function GlassTabBar({
   useEffect(() => {
     requestAnimationFrame(measure);
   }, [measure, width, insets.bottom]);
-  const { image, ready } = useLiveBackdrop(scene, placement?.strip ?? null, lift);
+  // Rendu dans le layout des onglets : non « focus » quand un écran de la pile racine (partage,
+  // collection) les couvre — la capture s'arrête alors (voir useLiveBackdrop).
+  const tabsShown = useIsFocused();
+  const { image, ready } = useLiveBackdrop(scene, placement?.strip ?? null, lift, tabsShown);
   const glassOn = ready && placement !== null && width > 0;
 
   // Tout changement d'onglet vide la recherche, y compris par le retour Android
