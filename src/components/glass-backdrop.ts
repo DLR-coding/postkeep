@@ -21,11 +21,15 @@ function release(pool: Pool) {
 
 /** Image (partagée avec le thread UI) de la bande `strip` de `scene`, en dp de la scène.
  *  `lift` : remontée actuelle de la barre (clavier ouvert), la bande capturée la suit.
- *  `ready` passe à vrai à la première capture réussie ; il reste faux sans GPU (repli flou). */
+ *  `ready` passe à vrai à la première capture réussie ; il reste faux sans GPU (repli flou).
+ *  `active` : faux quand un autre écran couvre les onglets. Capturer une vue couverte fait
+ *  fuir la mémoire graphique (~30 Mo/s, mesuré sur Galaxy S23) : au bout d'une minute ou deux
+ *  sur l'écran de partage, Android manquait de mémoire et redémarrait l'écran de verrouillage. */
 export function useLiveBackdrop(
   scene: RefObject<ComponentRef<typeof View> | null>,
   strip: Strip | null,
-  lift: SharedValue<number>
+  lift: SharedValue<number>,
+  active: boolean
 ) {
   const image = useSharedValue<SkImage | null>(null);
   const shown = useRef<Pool | null>(null);
@@ -33,7 +37,7 @@ export function useLiveBackdrop(
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!strip || !Skia.gpu.isAvailable) return;
+    if (!strip || !active || !Skia.gpu.isAvailable) return;
     let alive = true;
     let frame = 0;
     let turn = 0;
@@ -88,7 +92,7 @@ export function useLiveBackdrop(
       cancelAnimationFrame(frame);
       if (shown.current !== pool) setTimeout(() => release(pool), 500);
     };
-  }, [scene, strip?.x, strip?.y, strip?.width, strip?.height]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scene, active, strip?.x, strip?.y, strip?.width, strip?.height]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { image, ready };
 }

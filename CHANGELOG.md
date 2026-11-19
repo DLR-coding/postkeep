@@ -15,6 +15,14 @@ Le projet suit [SemVer](https://semver.org/lang/fr/) depuis la première version
 
 ## [Non publié]
 
+### Corrigé
+
+- **Le téléphone revenait à l'écran de verrouillage** après un enregistrement un peu long :
+  la barre en verre continuait de capturer l'écran caché sous l'écran de partage (ou sous une
+  collection ouverte) et la mémoire graphique grimpait d'environ 30 Mo par seconde jusqu'à
+  saturer le téléphone. La capture s'arrête maintenant dès qu'un autre écran couvre les
+  onglets (mémoire stable, vérifié 2 min sur l'écran de partage).
+
 ## [0.5.0-beta] — 13 novembre 2026
 
 APK construit en local (pas sur EAS) et signé avec la clé de debug : désinstaller une version
