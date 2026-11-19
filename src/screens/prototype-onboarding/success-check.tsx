@@ -19,18 +19,21 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export const SUCCESS_GREEN = '#7ee08a';
 const SIZE = 128;
 const STROKE = 9;
-const SPIN_MS = 650; // anneaux qui tournent puis fusionnent
+const SPIN_MS = 800; // anneaux qui tournent puis fusionnent
 const DRAW_MS = 400; // dessin du ✓
 /** Moment où le ✓ commence à se dessiner (pour caler une vibration ou un texte). */
 export const CHECK_AT_MS = SPIN_MS;
 
-// Inclinaisons de départ des anneaux (degrés autour de X, Y, Z), comme dans la référence.
+// Chaque anneau tourne sur lui-même autour d'un axe incliné différent (`axis`, degrés dans
+// le plan de l'écran) : vu de face, il devient une ellipse qui s'élargit et s'affine, et les
+// cinq ensemble dessinent la sphère en fil de fer de la référence. `turn` : rotation de
+// départ (degrés), ramenée à 0 (anneau à plat) en ralentissant.
 const RINGS = [
-  { x: 75, y: 0, z: 20 },
-  { x: 0, y: 80, z: -30 },
-  { x: 55, y: 50, z: 60 },
-  { x: -60, y: 35, z: -70 },
-  { x: 30, y: -70, z: 110 },
+  { axis: 0, turn: 540 },
+  { axis: 36, turn: -450 },
+  { axis: 72, turn: 630 },
+  { axis: 108, turn: -500 },
+  { axis: 144, turn: 580 },
 ];
 
 // ✓ dans un repère 0..100 : petit trait vers le bas, puis grand trait vers le haut à droite.
@@ -39,17 +42,15 @@ const CHECK_LENGTH = 60; // ≈ 19,8 + 39,6
 
 function Ring({ tilt, progress }: { tilt: (typeof RINGS)[number]; progress: { value: number } }) {
   const style = useAnimatedStyle(() => {
-    const t = progress.value; // 0 → 1 : de l'inclinaison de départ à plat
-    const k = 1 - t;
+    const t = progress.value; // 0 → 1 : de la rotation de départ à plat
     return {
-      // Les anneaux apparaissent pâles, s'éclairent en tournant, puis s'effacent dans le cercle final.
-      opacity: t < 0.15 ? t * 3 : t > 0.85 ? (1 - t) * 3.3 : 0.5,
+      // Apparition rapide, bien visibles pendant la rotation, puis fondus dans le cercle final.
+      opacity: t < 0.1 ? t * 8 : t > 0.8 ? (1 - t) * 4 : 0.8,
       transform: [
-        { perspective: 600 },
-        { rotateX: `${tilt.x * k}deg` },
-        { rotateY: `${tilt.y * k}deg` },
-        { rotateZ: `${tilt.z * k * 2}deg` },
-        { scale: 0.8 + 0.2 * t },
+        { perspective: 800 },
+        { rotateZ: `${tilt.axis}deg` },
+        { rotateY: `${tilt.turn * (1 - t)}deg` },
+        { scale: 0.85 + 0.15 * t },
       ],
     };
   });
@@ -68,12 +69,12 @@ export function SuccessCheck() {
   const draw = useSharedValue(0);
 
   useEffect(() => {
-    spin.value = withTiming(1, { duration: SPIN_MS, easing: Easing.out(Easing.cubic) });
+    spin.value = withTiming(1, { duration: SPIN_MS, easing: Easing.out(Easing.quad) });
     draw.value = withDelay(SPIN_MS, withTiming(1, { duration: DRAW_MS, easing: Easing.inOut(Easing.quad) }));
   }, [spin, draw]);
 
   // Cercle final : apparaît quand les anneaux se rejoignent.
-  const finalRing = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (spin.value - 0.6) / 0.4)) }));
+  const finalRing = useAnimatedStyle(() => ({ opacity: Math.min(1, Math.max(0, (spin.value - 0.75) / 0.25)) }));
   // Le ✓ commence par un point (bout arrondi), puis le trait s'allonge.
   const checkProps = useAnimatedProps(() => ({
     strokeDashoffset: CHECK_LENGTH * (1 - draw.value),
