@@ -228,16 +228,17 @@ function RingsBoxed() {
 export type CheckVariant = { key: string; name: string; C: ComponentType; checkAt: number };
 
 export const CHECK_VARIANTS: CheckVariant[] = [
-  { key: 'rings', name: 'Rings (current)', C: RingsBoxed, checkAt: RINGS_CHECK_AT },
+  { key: 'rings', name: 'Rings', C: RingsBoxed, checkAt: RINGS_CHECK_AT },
   { key: 'draw', name: 'Draw', C: Draw, checkAt: 500 },
-  { key: 'burst', name: 'Burst', C: Burst, checkAt: 200 },
+  { key: 'burst', name: 'Burst (chosen)', C: Burst, checkAt: 200 },
   { key: 'liquid', name: 'Liquid', C: Liquid, checkAt: 850 },
   { key: 'stamp', name: 'Stamp', C: Stamp, checkAt: 240 },
   { key: 'morph', name: 'Morph', C: Morph, checkAt: 900 },
 ];
 
 // Choix courant, en mémoire seulement (prototype) : partagé entre l'atelier et la variante G.
-let chosen = 'rings';
+// Burst retenue le 19 novembre.
+let chosen = 'burst';
 export const getCheckVariant = () => CHECK_VARIANTS.find((v) => v.key === chosen) ?? CHECK_VARIANTS[0];
 export const setCheckVariant = (key: string) => {
   chosen = key;

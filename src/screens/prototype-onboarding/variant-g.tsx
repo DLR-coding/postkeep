@@ -46,7 +46,7 @@ export function VariantG({ onStep }: VariantProps) {
 const DONE_MS = 2300;
 
 /** Écran « c'est fait » après une étape d'action : animation choisie dans l'atelier S
- *  (`success-variants.tsx`, anneaux par défaut), vibration au moment du ✓.
+ *  (`success-variants.tsx`, Burst par défaut), vibration au moment du ✓.
  *  Passe tout seul à la suite après DONE_MS ; un toucher passe tout de suite. */
 function DoneCheck({ title, body, onNext }: { title: string; body: string; onNext: () => void }) {
   const [check] = useState(getCheckVariant);
