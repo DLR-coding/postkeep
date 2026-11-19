@@ -3,20 +3,19 @@
 // simulé du partage (faux Reel → Share to → PostKeep → Save, sans l'épinglage) → 4. compte
 // obligatoire.
 import * as Haptics from 'expo-haptics';
-import { Check } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withDelay, withTiming, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PlatformSticker } from '@/components/platform-sticker';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
 import { PinPage } from './pin-page';
 import { ShareRehearsal } from './share-rehearsal';
-import { FlowDone, PLATFORMS, useColors, type VariantProps } from './shared';
+import { FlowDone, PLATFORMS, type VariantProps } from './shared';
+import { CHECK_AT_MS, SuccessCheck } from './success-check';
 import { SignUpGate } from './variant-e';
 
 type Stage = 'welcome' | 'pin' | 'pinDone' | 'test' | 'testDone' | 'account' | 'done';
@@ -44,13 +43,12 @@ export function VariantG({ onStep }: VariantProps) {
   return <Welcome onNext={() => setStage('pin')} onSkip={() => setStage('account')} />;
 }
 
-const DONE_MS = 2000;
+const DONE_MS = 2300;
 
-/** Écran « c'est fait » après une étape d'action : rond qui rebondit, ✓, onde, vibration.
+/** Écran « c'est fait » après une étape d'action : anneaux qui tournent puis ✓ dessiné
+ *  (`success-check.tsx`, d'après la vidéo de référence), vibration au moment du ✓.
  *  Passe tout seul à la suite après DONE_MS ; un toucher passe tout de suite. */
 function DoneCheck({ title, body, onNext }: { title: string; body: string; onNext: () => void }) {
-  const colors = useColors();
-  const wave = useSharedValue(0);
   // `onNext` change à chaque rendu du parent : sans ref, l'effet repartirait (2e vibration,
   // minuteur remis à zéro).
   const next = useRef(onNext);
@@ -58,23 +56,17 @@ function DoneCheck({ title, body, onNext }: { title: string; body: string; onNex
     next.current = onNext;
   });
   useEffect(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    wave.value = withDelay(250, withTiming(1, { duration: 900 }));
+    const haptic = setTimeout(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success), CHECK_AT_MS);
     const t = setTimeout(() => next.current(), DONE_MS);
-    return () => clearTimeout(t);
-  }, [wave]);
-  const waveStyle = useAnimatedStyle(() => ({ opacity: 0.5 * (1 - wave.value), transform: [{ scale: 1 + wave.value * 0.9 }] }));
+    return () => {
+      clearTimeout(haptic);
+      clearTimeout(t);
+    };
+  }, []);
   return (
     <Pressable className="flex-1 items-center justify-center bg-background px-8" style={{ gap: 18 }} onPress={onNext}>
-      <View className="items-center justify-center">
-        <Animated.View className="absolute h-28 w-28 rounded-full bg-primary" style={waveStyle} />
-        <Animated.View entering={ZoomIn.springify().damping(12)} className="h-28 w-28 items-center justify-center rounded-full bg-primary">
-          <Animated.View entering={ZoomIn.delay(250).springify().damping(10)}>
-            <Icon as={Check} size={56} strokeWidth={3} color={colors.primaryForeground} />
-          </Animated.View>
-        </Animated.View>
-      </View>
-      <Animated.View entering={FadeInDown.delay(300).duration(350)} className="items-center" style={{ gap: 8 }}>
+      <SuccessCheck />
+      <Animated.View entering={FadeInDown.delay(CHECK_AT_MS).duration(350)} className="items-center" style={{ gap: 8 }}>
         <Text className="text-center text-3xl font-bold">{title}</Text>
         <Text variant="muted" className="text-center text-base">
           {body}
