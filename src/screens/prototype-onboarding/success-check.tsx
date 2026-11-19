@@ -19,7 +19,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export const SUCCESS_GREEN = '#7ee08a';
 const SIZE = 128;
 const STROKE = 9;
-const SPIN_MS = 800; // anneaux qui tournent puis fusionnent
+const SPIN_MS = 1000; // anneaux qui tournent puis fusionnent
 const DRAW_MS = 400; // dessin du ✓
 /** Moment où le ✓ commence à se dessiner (pour caler une vibration ou un texte). */
 export const CHECK_AT_MS = SPIN_MS;
@@ -29,11 +29,11 @@ export const CHECK_AT_MS = SPIN_MS;
 // cinq ensemble dessinent la sphère en fil de fer de la référence. `turn` : rotation de
 // départ (degrés), ramenée à 0 (anneau à plat) en ralentissant.
 const RINGS = [
-  { axis: 0, turn: 540 },
-  { axis: 36, turn: -450 },
-  { axis: 72, turn: 630 },
-  { axis: 108, turn: -500 },
-  { axis: 144, turn: 580 },
+  { axis: 0, turn: 270 },
+  { axis: 36, turn: -225 },
+  { axis: 72, turn: 315 },
+  { axis: 108, turn: -250 },
+  { axis: 144, turn: 290 },
 ];
 
 // ✓ dans un repère 0..100 : petit trait vers le bas, puis grand trait vers le haut à droite.
