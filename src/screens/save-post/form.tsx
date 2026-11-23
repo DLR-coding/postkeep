@@ -16,6 +16,7 @@ import { extractCaptionFromText, PLATFORM_META, type AnalyzedUrl } from '@/lib/s
 import { fetchOEmbed } from '@/lib/oembed';
 import { useExtractMetadata } from '@/lib/webview-metadata';
 import { THEME } from '@/lib/theme';
+import { startSpikeService } from '@/lib/spike-fgs';
 
 import type { Prefill } from './index';
 
@@ -85,6 +86,8 @@ export function SavePostForm({
           await setPostMetadata(postId, await fetchOEmbed(analyzed.url, analyzed.platform));
         }
       }
+      // SPIKE : service de premier plan démarré tant que la feuille est visible.
+      startSpikeService().catch((e) => console.log('[SPIKE] start failed', e));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // `resetShareIntent()` déclenche `hasShareIntent: false` chez le parent,
       // qui redirige vers `/` — repoussé à la fin du toast pour ne pas couper

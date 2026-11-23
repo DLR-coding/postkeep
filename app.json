@@ -53,6 +53,10 @@
       "expo-web-browser",
       "react-native-webgpu",
       [
+        "react-native-notify-kit",
+        { "android": { "foregroundService": { "types": ["dataSync"] } } }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
