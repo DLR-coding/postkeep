@@ -236,6 +236,44 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       ~80 lignes de CONTRIBUTING.md) (11 novembre 2026)
 - [x] Supprimer `handoff.txt` (notes de session non suivies, à la racine)
 
+## 🟠 Résumé IA des vidéos (décidé le 23 novembre 2026, branche `feat/ai-summary`)
+
+Décisions et raisons : [ARCHITECTURE.md §13](./ARCHITECTURE.md). Tests sur le compte de dev
+uniquement.
+
+**Essai jetable sur le Galaxy S23** (ne va pas dans `master`) :
+
+- [ ] Récupérer le mp4 depuis le téléphone, et noter la taille réelle de quelques vidéos :
+  - [ ] X via la syndication ;
+  - [ ] Instagram via `/embed/captioned/` ;
+  - [ ] TikTok, avec le cookie `tt_chain_token` lu dans la WebView.
+- [ ] Fixer une limite de taille ou de durée de vidéo à partir de ces mesures.
+- [ ] `react-native-notify-kit` : `npx expo install`, plugin `dataSync`, `npx expo-doctor`
+      à 20/20, doctor de reusables OK, build local.
+- [ ] Le JS continue-t-il de tourner après `BackHandler.exitApp()` dans le service ?
+      Vérifier aussi écran éteint.
+- [ ] Analyse complète sur le LiteLLM de l'utilisateur : transcription, puis chat avec
+      `video_url` en base64. Mesurer le temps et la mémoire pour une vidéo de 20 Mo.
+
+**Fonctionnalité** (en parallèle, sur la branche) :
+
+- [ ] Colonne `posts.ai_summary` : migration Drizzle locale, migration Supabase, synchro.
+- [ ] Section IA dans `SettingsSheet` :
+  - [ ] URL du service et clé dans SecureStore ;
+  - [ ] « Tester », puis les listes déroulantes du modèle vidéo et du modèle de
+        transcription ;
+  - [ ] langue FR/EN, EN par défaut ;
+  - [ ] Enregistrer et Effacer ;
+  - [ ] demande de la permission de notifications.
+- [ ] Détail du post :
+  - [ ] bloc « Résumé IA » modifiable ;
+  - [ ] boutons « Analyser » et « Relancer », avec confirmation pour « Relancer » ;
+  - [ ] message « Pas réussi à faire le résumé : … ».
+- [ ] Recherche et surlignage sur `ai_summary`, et ajout à l'export JSON.
+- [ ] Rattrapage : seulement les posts enregistrés pendant que l'IA est configurée, au plus
+      3 essais, raison de l'échec stockée localement.
+- [ ] Service d'arrière-plan démarré après « Save », une fois l'essai validé.
+
 ## ⏭️ Ensuite
 
 Après la V1 (phases 6 et 7 closes), sans rien en installer avant — détail dans

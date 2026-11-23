@@ -689,3 +689,120 @@ jusqu'à la remise en route du projet depuis le tableau de bord.
   lignes d'un autre `user_id` (`dropOtherAccountRows`, `engine.ts`). Seules leurs
   modifications jamais poussées sont perdues. En mode sans compte, elles restent visibles
   jusqu'à la prochaine connexion.
+
+---
+
+## 13. Résumé IA des vidéos (décidé le 23 novembre 2026, en cours)
+
+La légende d'un post ne dit pas forcément ce que montre la vidéo. À l'enregistrement, une
+IA configurée par l'utilisateur regarde la vidéo et en écrit un résumé, qui sert surtout à
+la recherche. Les décisions ci-dessous ont été prises en séance de questions-réponses. Les
+points marqués « essai » attendent l'essai jetable sur le téléphone (voir `TODO.md`).
+
+### Données
+
+- **Colonne `posts.ai_summary`**, synchronisée comme `note`. La note de l'utilisateur n'est
+  **jamais** modifiée par l'IA. Raison : l'analyse tourne après « Save », en arrière-plan,
+  pendant que l'utilisateur peut éditer sa note. Écrire dans `note` ferait perdre l'une des
+  deux écritures.
+- Le résumé est **modifiable** dans le détail du post. Il est inclus dans la recherche (avec
+  surlignage) et dans l'export JSON.
+- Résumé vide : bouton « Analyser ». Résumé présent : « Relancer », avec la confirmation
+  « Remplacer le résumé actuel ? ». L'automatisme ne remplit qu'un résumé **vide**, il
+  n'écrase jamais un texte existant.
+- **Échec** : pas de résumé approximatif (pas de repli sur la miniature). Le détail affiche
+  « Pas réussi à faire le résumé : <raison> » à la place du champ. La raison est stockée
+  **localement** (kv-store, comme le compteur de `metadata-backfill`), jamais dans
+  `ai_summary` : la recherche la trouverait, et le rattrapage la prendrait pour un vrai
+  résumé.
+
+### Contenu du résumé
+
+- 2 à 4 phrases, dans la langue choisie dans les réglages : FR ou EN, **EN par défaut**.
+  Changer la langue ne touche que les prochains résumés.
+- L'IA reçoit la vidéo, la transcription de l'audio, la légende et la note de
+  l'utilisateur.
+
+### Fournisseur : tout service compatible OpenAI
+
+Vérifié le 23 novembre 2026 sur le LiteLLM de l'utilisateur (vLLM derrière) :
+
+- `Qwen/Qwen3.5-35B-A3B` accepte une partie `video_url` en `data:video/mp4;base64,…` et
+  décrit correctement la vidéo. Il **n'entend pas l'audio**. Le coût est d'environ 12 300
+  tokens vidéo, que la vidéo dure 6 s ou 70 s (vLLM prend un nombre fixe d'images). Il faut
+  environ 11 s par appel.
+- `openai/whisper-large-v3` (ou `Qwen/Qwen3-ASR-1.7B`) transcrit le **mp4 brut** sur
+  `/audio/transcriptions`, sans extraction audio. Il faut environ 6 s pour 70 s de vidéo.
+- Sans `chat_template_kwargs: {enable_thinking: false}`, Qwen3.5 dépense tous ses tokens à
+  raisonner et renvoie une réponse vide. Le paramètre est **envoyé à chaque appel**. Il
+  n'est pas standard : un fournisseur qui le refuse sera traité le jour où il se présente.
+- Gemini natif n'est pas retenu : il n'est pas compatible OpenAI, et ses fonctions de
+  compatibilité OpenAI n'acceptent pas la vidéo.
+
+Pipeline :
+
+1. Récupérer le mp4.
+2. L'envoyer à `/audio/transcriptions`. Cette étape est sautée si aucun modèle de
+   transcription n'est choisi.
+3. Appeler `/chat/completions` avec la vidéo en base64, la transcription, la légende, la
+   note et la langue.
+
+### Réglages
+
+Dans `SettingsSheet` :
+
+- URL du service (avec `/v1`) et clé API dans **SecureStore**, sur l'appareil seulement,
+  comme budget-app : la clé ne part jamais sur Supabase.
+- « Tester » appelle `GET /models`. Les deux listes déroulantes se remplissent ensuite :
+  modèle vidéo, et modèle de transcription (facultatif).
+- Langue FR/EN.
+- « Enregistrer » demande la permission d'afficher des notifications (Android 13+). Un refus
+  n'empêche rien.
+
+### Périmètre
+
+Sont traités les posts enregistrés **pendant que l'IA est configurée**. Les posts plus
+anciens, ou ceux enregistrés sans configuration, gardent le bouton « Analyser ». Raison :
+configurer l'IA ne doit pas déclencher une avalanche d'appels.
+
+### Récupération de la vidéo (essai)
+
+Rien n'est vérifié sur l'appareil à ce stade :
+
+- **X** : `cdn.syndication.twimg.com/tweet-result` donne des mp4 directs. L'endpoint n'est
+  pas documenté.
+- **Instagram** : la page `/p/<code>/embed/captioned/` contient parfois le mp4. Le `<video>`
+  de la page normale est probablement un `blob:`, donc impossible à télécharger.
+- **TikTok** : l'URL de lecture exige le cookie anonyme `tt_chain_token` de la même session.
+  Il est lu dans la WebView et renvoyé avec la requête (accepté pour un usage personnel).
+- **Reddit** : non supporté (l'id `v.redd.it` est inaccessible).
+- Les URL de CDN expirent en quelques heures. Chaque essai repasse donc par la WebView.
+- Écarté : un serveur yt-dlp. Instagram y exige les cookies d'un compte, et TikTok
+  l'imitation de l'empreinte TLS d'un navigateur.
+
+**Risque accepté** : récupérer les vidéos Instagram et TikTok va contre leurs conditions
+d'utilisation et peut cesser de marcher du jour au lendemain. On retombe alors sur le
+message d'échec.
+
+### Exécution en arrière-plan (essai)
+
+- « Save » écrit le post et se ferme **tout de suite**, sans attente supplémentaire.
+- **Le service seul ne suffit pas.** Dans RN 0.88, `JavaTimerManager` met les timers JS en
+  pause quand l'app passe en arrière-plan, sauf si une tâche **Headless JS** est active. Il
+  faut donc un service en avant-plan **et** une tâche Headless JS.
+- **Module retenu : `react-native-notify-kit`**, un fork maintenu de Notifee. Notifee est
+  archivé depuis avril 2026. `react-native-background-actions` est abandonné.
+  `expo-background-task` est périodique, toutes les 15 min au minimum.
+- **Type de service `dataSync`**, démarré pendant que la feuille de partage est visible.
+  `shortService` est écarté : il est limité à environ 3 min, avec une ANR en cas de
+  dépassement.
+- La notification « Analyse du post… » est silencieuse et disparaît à la fin. Délai maximal
+  d'environ 150 s (`AbortController`).
+- `expo-file-system` sert à télécharger le mp4 dans un fichier, à l'envoyer (`FormData`) et
+  à le lire en base64.
+- **Repli** : rattrapage au lancement et au retour au premier plan, sur le modèle de
+  `metadata-backfill`. Un post à la fois, 3 essais au plus.
+- **Risques** : notify-kit a un seul mainteneur et démarre le ReactHost par réflexion. Si
+  l'essai échoue (expo-doctor, doctor de reusables, build local, JS gelé après
+  `exitApp()`), on s'arrête et on le signale (voir `AGENTS.md`). Sur Samsung, PostKeep doit
+  être en « Never sleeping » avec la batterie « Unrestricted ».
