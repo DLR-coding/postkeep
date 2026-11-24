@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { Pressable, useColorScheme, View } from 'react-native';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import * as Haptics from 'expo-haptics';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,38 @@ export function sheetBackgroundStyle(colors: Colors) {
     borderTopLeftRadius: RADIUS.sheet,
     borderTopRightRadius: RADIUS.sheet,
   };
+}
+
+/** Choix exclusif en segments (thème, langue du résumé IA). */
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <View className="flex-row gap-1.5 rounded-2xl bg-note p-1.5">
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            onPress={() => {
+              onChange(o.value);
+              Haptics.selectionAsync();
+            }}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            className={`h-10 flex-1 items-center justify-center rounded-xl ${active ? 'bg-primary' : ''}`}>
+            <Text className={`text-sm font-semibold ${active ? 'text-primary-foreground' : ''}`}>{o.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
 }
 
 /** Champ texte d'une feuille : même encart que la note (fond `note`, sans bord), 48 px. */

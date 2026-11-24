@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, Share, useColorScheme, View } from 'react-native';
 import {
   BottomSheetBackdrop,
@@ -8,16 +8,30 @@ import {
 } from '@gorhom/bottom-sheet';
 import { PortalHost } from '@rn-primitives/portal';
 import Constants from 'expo-constants';
-import * as Haptics from 'expo-haptics';
-import { ChevronRight, CodeXml, Droplet, GraduationCap, Info, LogOut, RefreshCw, Share2, Trash2, UserRound } from 'lucide-react-native';
+import {
+  ChevronRight,
+  CodeXml,
+  Droplet,
+  GraduationCap,
+  Info,
+  LogOut,
+  RefreshCw,
+  Share2,
+  Sparkles,
+  Trash2,
+  UserRound,
+} from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { AccountSheet } from '@/components/account-sheet';
+import { AiSettingsSheet } from '@/components/ai-settings-sheet';
 import { SectionLabel } from '@/components/post-fields-form';
-import { ConfirmDialog, sheetBackgroundStyle } from '@/components/sheet-kit';
+import { ConfirmDialog, Segmented, sheetBackgroundStyle } from '@/components/sheet-kit';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { activePostsQuery, groupPostRows } from '@/db/posts';
+import { loadAiSettings } from '@/lib/ai-settings';
+import { aiSettingsSummary, type AiSettings } from '@/lib/ai-summary';
 import { buildExport, type ThemePreference } from '@/lib/settings-logic';
 import { loadThemePreference, saveThemePreference } from '@/lib/settings';
 import { deleteAccount, requestSync, signOut } from '@/lib/sync/account';
@@ -63,7 +77,7 @@ function Row({
       <Icon as={icon} size={20} color={destructive ? colors.destructive : colors.foreground} />
       <Text className={`flex-1 text-base ${destructive ? 'text-destructive' : ''}`}>{label}</Text>
       {!!detail && (
-        <Text variant="muted" className="text-sm">
+        <Text variant="muted" className="max-w-[55%] text-sm" numberOfLines={1}>
           {detail}
         </Text>
       )}
@@ -157,6 +171,28 @@ function AccountSection() {
 
 /** Paramètres : apparence, compte et synchro, export des posts, à propos. Ouverte par le
  *  bouton ⚙ de l'écran All posts. */
+/** Section « AI summary » : une ligne qui ouvre `AiSettingsSheet` (ARCHITECTURE.md §13). */
+function AiSection() {
+  const sheetRef = useRef<BottomSheetModal>(null);
+  const [settings, setSettings] = useState<AiSettings | null>(null);
+  useEffect(() => {
+    loadAiSettings().then(setSettings);
+  }, []);
+  return (
+    <View>
+      <SectionLabel>AI</SectionLabel>
+      <Row
+        icon={Sparkles}
+        label="Video summary"
+        detail={aiSettingsSummary(settings)}
+        onPress={() => sheetRef.current?.present()}
+        last
+      />
+      <AiSettingsSheet sheetRef={sheetRef} onSaved={setSettings} />
+    </View>
+  );
+}
+
 export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetModal | null> }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const [theme, setTheme] = useState<ThemePreference>(loadThemePreference);
@@ -190,25 +226,14 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
 
         <View className="gap-2">
           <SectionLabel>Appearance</SectionLabel>
-          <View className="flex-row gap-1.5 rounded-2xl bg-note p-1.5">
-            {THEMES.map((t) => {
-              const active = t.value === theme;
-              return (
-                <Pressable
-                  key={t.value}
-                  onPress={() => {
-                    setTheme(t.value);
-                    saveThemePreference(t.value);
-                    Haptics.selectionAsync();
-                  }}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  className={`h-10 flex-1 items-center justify-center rounded-xl ${active ? 'bg-primary' : ''}`}>
-                  <Text className={`text-sm font-semibold ${active ? 'text-primary-foreground' : ''}`}>{t.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <Segmented
+            options={THEMES}
+            value={theme}
+            onChange={(t) => {
+              setTheme(t);
+              saveThemePreference(t);
+            }}
+          />
           <Row
             icon={Droplet}
             label="Liquid glass"
@@ -222,6 +247,8 @@ export function SettingsSheet({ sheetRef }: { sheetRef: RefObject<BottomSheetMod
         </View>
 
         <AccountSection />
+
+        <AiSection />
 
         <View>
           <SectionLabel>Data</SectionLabel>
