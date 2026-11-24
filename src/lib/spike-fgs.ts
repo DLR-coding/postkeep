@@ -7,19 +7,17 @@ import { Directory, File, Paths } from 'expo-file-system';
 const SAMPLE_MP4 =
   'https://video.twimg.com/amplify_video/2085116218021736448/vid/avc1/640x360/IogHdNZFjlURVOmp.mp4?tag=14';
 
+// true = témoin : même travail, sans service de premier plan.
+export const SPIKE_NO_FGS = false;
+
 const log = (t0: number, msg: string) =>
-  console.log(`[SPIKE] +${((Date.now() - t0) / 1000).toFixed(1)}s ${msg}`);
+  console.log(`[SPIKE] +${((Date.now() - t0) / 1000).toFixed(1)}s ${SPIKE_NO_FGS ? '(no fgs) ' : ''}${msg}`);
 
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-notifee.registerForegroundService(async () => {
+// Aucun setTimeout : les timers JS gèlent app fermée, même avec le service.
+export async function spikeWork() {
   const t0 = Date.now();
-  log(t0, 'runner started');
+  log(t0, 'work started');
   try {
-    for (let i = 0; i < 6; i++) {
-      await wait(5000);
-      log(t0, `tick ${i}`);
-    }
     const dir = new Directory(Paths.cache, 'spike');
     if (!dir.exists) dir.create();
     const out = new File(dir, 'x.mp4');
@@ -28,19 +26,24 @@ notifee.registerForegroundService(async () => {
     log(t0, `downloaded ${file.size} bytes`);
     const b64 = await file.base64();
     log(t0, `base64 length ${b64.length}`);
-    for (let i = 0; i < 6; i++) {
-      await wait(5000);
-      log(t0, `tick after download ${i}`);
+    // Réponses lentes (10 s chacune), comme un appel LLM.
+    for (let i = 0; i < 3; i++) {
+      const r = await fetch('https://httpbin.org/delay/10');
+      log(t0, `slow fetch ${i} -> ${r.status}`);
     }
   } catch (e) {
     log(t0, `error ${(e as Error).message}`);
-  } finally {
-    log(t0, 'stopping');
-    await notifee.stopForegroundService();
   }
+  log(t0, 'work done');
+}
+
+notifee.registerForegroundService(async () => {
+  await spikeWork();
+  await notifee.stopForegroundService();
 });
 
 export async function startSpikeService() {
+  if (SPIKE_NO_FGS) return void spikeWork();
   const channelId = await notifee.createChannel({
     id: 'ai-summary',
     name: 'AI summary',
