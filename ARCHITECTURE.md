@@ -692,7 +692,7 @@ jusqu'à la remise en route du projet depuis le tableau de bord.
 
 ---
 
-## 13. Résumé IA des vidéos (décidé le 23 novembre 2026, en cours)
+## 13. Résumé IA des vidéos (décidé le 23 novembre 2026, codé le 24, à valider)
 
 La légende d'un post ne dit pas forcément ce que montre la vidéo. À l'enregistrement, une
 IA configurée par l'utilisateur regarde la vidéo et en écrit un résumé, qui sert surtout à
@@ -765,7 +765,7 @@ Sont traités les posts enregistrés **pendant que l'IA est configurée**. Les p
 anciens, ou ceux enregistrés sans configuration, gardent le bouton « Analyser ». Raison :
 configurer l'IA ne doit pas déclencher une avalanche d'appels.
 
-### Récupération de la vidéo (essai)
+### Récupération de la vidéo (`src/lib/video-source.ts`)
 
 Rien n'est vérifié sur l'appareil à ce stade :
 
@@ -776,7 +776,16 @@ Rien n'est vérifié sur l'appareil à ce stade :
 - **TikTok** : l'URL de lecture exige le cookie anonyme `tt_chain_token` de la même session.
   Il est lu dans la WebView et renvoyé avec la requête (accepté pour un usage personnel).
 - **Reddit** : non supporté (l'id `v.redd.it` est inaccessible).
-- Les URL de CDN expirent en quelques heures. Chaque essai repasse donc par la WebView.
+- Pas de WebView : tout passe par `XMLHttpRequest`. Toutes les requêtes partagent le
+  cookie jar d'OkHttp, donc le cookie TikTok posé par la page repart avec le
+  téléchargement de la vidéo. Le délai de chaque requête est appliqué par OkHttp
+  (`callTimeout`) et fonctionne même quand les timers JS sont gelés.
+- Chaque essai relit la page du post, parce que les URL de CDN expirent en quelques heures.
+- **Limite : 25 Mo** (`MAX_VIDEO_BYTES`). C'est la limite de `/audio/transcriptions` chez
+  OpenAI, et une vidéo de 25 Mo fait environ 33 Mo de base64 dans Hermes. Les vidéos
+  mesurées font de 0,4 à 2,7 Mo. Pour X, on prend la meilleure variante sous 1 Mbit/s.
+- Formats des pages relevés le 24 novembre 2026 (`video-source-logic.ts`, testé) : ils
+  peuvent changer sans prévenir.
 - Écarté : un serveur yt-dlp. Instagram y exige les cookies d'un compte, et TikTok
   l'imitation de l'empreinte TLS d'un navigateur.
 
@@ -784,7 +793,13 @@ Rien n'est vérifié sur l'appareil à ce stade :
 d'utilisation et peut cesser de marcher du jour au lendemain. On retombe alors sur le
 message d'échec.
 
-### Exécution en arrière-plan (essai)
+### Exécution en arrière-plan (`src/lib/ai-runner.ts`)
+
+- **File** : `ai-queue.ts` (logique pure) et `src/stores/ai-summary-store.ts` (zustand,
+  recopié dans le kv-store, clé `ai-summary-queue`). Elle contient le nombre d'essais, la
+  raison du dernier échec, et le drapeau `overwrite` (« Redo »).
+- **Entrée `index.js`** : `package.json` → `main` importe `ai-runner` avant
+  `expo-router/entry`, pour que le runner du service existe au chargement du bundle.
 
 - « Save » écrit le post et se ferme **tout de suite**, sans attente supplémentaire.
 - **Le service seul ne suffit pas.** Dans RN 0.88, `JavaTimerManager` met les timers JS en

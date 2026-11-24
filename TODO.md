@@ -269,24 +269,23 @@ uniquement.
 - [x] Analyse complète sur le LiteLLM : transcription en 4 à 7 s, chat en 4 à 11 s.
       Mémoire pour une vidéo de 20 Mo non mesurée.
 
-**Fonctionnalité** (en parallèle, sur la branche) :
+**Fonctionnalité** (codée le 24 novembre 2026, à valider sur le S23) :
 
-- [ ] Colonne `posts.ai_summary` : migration Drizzle locale, migration Supabase, synchro.
-- [ ] Section IA dans `SettingsSheet` :
-  - [ ] URL du service et clé dans SecureStore ;
-  - [ ] « Tester », puis les listes déroulantes du modèle vidéo et du modèle de
-        transcription ;
-  - [ ] langue FR/EN, EN par défaut ;
-  - [ ] Enregistrer et Effacer ;
-  - [ ] demande de la permission de notifications.
-- [ ] Détail du post :
-  - [ ] bloc « Résumé IA » modifiable ;
-  - [ ] boutons « Analyser » et « Relancer », avec confirmation pour « Relancer » ;
-  - [ ] message « Pas réussi à faire le résumé : … ».
-- [ ] Recherche et surlignage sur `ai_summary`, et ajout à l'export JSON.
-- [ ] Rattrapage : seulement les posts enregistrés pendant que l'IA est configurée, au plus
-      3 essais, raison de l'échec stockée localement.
-- [ ] Service d'arrière-plan démarré après « Save », une fois l'essai validé.
+- [x] Colonne `posts.ai_summary` : migration Drizzle `0003`, migration Supabase appliquée,
+      synchro, recherche, export JSON.
+- [x] Réglages : ligne « AI › Video summary » → `AiSettingsSheet` (URL, clé SecureStore,
+      « Load models », puces des modèles vidéo et de transcription, langue EN/FR,
+      permission de notifications à l'enregistrement, « Turn off »).
+- [x] Détail du post : `AiSummarySection` (résumé modifiable, « Summarize », « Redo »
+      confirmé, « Couldn't summarize: … », « Summarizing… »).
+- [x] File (`ai-queue.ts` + `ai-summary-store.ts`, kv-store), service notify-kit
+      (`ai-runner.ts`), rattrapage (`ai-summary-backfill.tsx`), mise en file au « Save ».
+- [ ] Valider sur le S23 (compte de dev) : réglages avec le LiteLLM, partage X, TikTok et
+      Instagram app fermée puis écran éteint, rattrapage après un échec, « Redo », édition,
+      recherche par le résumé, synchro vers Supabase.
+- [ ] TikTok : le `playAddr` se télécharge-t-il depuis l'app (cookie jar OkHttp partagé
+      entre la page et la vidéo) ?
+- [ ] Prompt : les résumés font parfois 5 phrases au lieu de 2 à 4.
 
 ## ⏭️ Ensuite
 
