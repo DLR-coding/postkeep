@@ -280,12 +280,19 @@ uniquement.
       confirmé, « Couldn't summarize: … », « Summarizing… »).
 - [x] File (`ai-queue.ts` + `ai-summary-store.ts`, kv-store), service notify-kit
       (`ai-runner.ts`), rattrapage (`ai-summary-backfill.tsx`), mise en file au « Save ».
-- [ ] Valider sur le S23 (compte de dev) : réglages avec le LiteLLM, partage X, TikTok et
-      Instagram app fermée puis écran éteint, rattrapage après un échec, « Redo », édition,
-      recherche par le résumé, synchro vers Supabase.
-- [ ] TikTok : le `playAddr` se télécharge-t-il depuis l'app (cookie jar OkHttp partagé
-      entre la page et la vidéo) ?
-- [ ] Prompt : les résumés font parfois 5 phrases au lieu de 2 à 4.
+- [x] Validé sur le S23 (compte de dev, 24 novembre 2026) :
+  - réglages avec le LiteLLM : « Load models », choix des modèles, permission de
+    notifications ;
+  - X (app fermée), TikTok (app fermée, écran éteint : le cookie jar d'OkHttp suffit) et
+    Instagram `DehO5gjSPgM` : résumé écrit, file vidée, service arrêté seul ;
+  - Instagram `DeEb3wAoK-Z` : « Couldn't summarize: No video found in this post. »,
+    réessayé au lancement ;
+  - « Redo » confirmé, recherche par un mot présent seulement dans le résumé, synchro du
+    résumé vers Supabase.
+- [x] Prompt : 10 phrases vues, et de l'anglais quand le français était demandé. Langue
+      répétée en fin de message, résumé coupé à 4 phrases (`readSummary`).
+- [ ] « Edit » du résumé (saisie au clavier dans la feuille) : pas essayé sur le téléphone.
+- [ ] Vidéo proche de 25 Mo : mémoire et durée non mesurées.
 
 ## ⏭️ Ensuite
 
