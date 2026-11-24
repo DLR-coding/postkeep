@@ -19,6 +19,7 @@ type ExportablePost = {
   url: string | null;
   caption: string | null;
   note: string | null;
+  aiSummary: string | null;
   createdAt: Date;
   collectionNames: string[];
 };
@@ -34,6 +35,7 @@ export function buildExport(posts: ExportablePost[], now: Date = new Date()): st
         url: p.url,
         caption: p.caption,
         note: p.note,
+        aiSummary: p.aiSummary,
         collections: p.collectionNames,
         savedAt: p.createdAt.toISOString(),
       })),

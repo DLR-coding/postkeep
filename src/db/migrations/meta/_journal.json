@@ -22,6 +22,13 @@
       "when": 1794248679987,
       "tag": "0002_adorable_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1795510090367,
+      "tag": "0003_ai_summary",
+      "breakpoints": true
     }
   ]
 }

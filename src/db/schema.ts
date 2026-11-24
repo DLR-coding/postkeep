@@ -40,6 +40,9 @@ export const posts = sqliteTable('posts', {
   // thumbnailUrl is a signed URL that may expire after a few days.
   caption: text('caption'),
   thumbnailUrl: text('thumbnail_url'),
+  // Résumé de la vidéo écrit par l'IA de l'utilisateur, modifiable (ARCHITECTURE.md §13).
+  // Séparé de `note` : l'IA n'écrit jamais dans la note de l'utilisateur.
+  aiSummary: text('ai_summary'),
   // Rempli à la première ouverture (Linking.openURL réussi). Sert de base aux
   // rappels de la phase 5 — TODO.md §Questions ouvertes, fréquence non tranchée.
   openedAt: integer('opened_at', { mode: 'timestamp_ms' }),

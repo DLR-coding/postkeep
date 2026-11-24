@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 
 import { filterCollectionsByName, filterPosts, matchesText, splitHighlight } from './post-filters.ts';
 
-const post = (url: string | null, caption: string | null = null, note: string | null = null) => ({ url, caption, note });
+const post = (url: string | null, caption: string | null = null, note: string | null = null, aiSummary: string | null = null) => ({
+  url,
+  caption,
+  note,
+  aiSummary,
+});
 
 const tiktok = post('https://www.tiktok.com/@chef/video/1', 'Tonkotsu ramen at home');
 const reel = post('https://www.instagram.com/reel/abc/', 'Kyoto in autumn');
@@ -11,10 +16,11 @@ const tweet = post('https://x.com/dev/status/1', 'Shipping a React Native app');
 const threadsNote = post('https://www.threads.net/@lea/post/1', null, 'Ask Léa for the ramen place');
 const plainText = post(null, null, 'Buy miso');
 const youtube = post('https://youtube.com/watch?v=abc', 'A video');
-const all = [tiktok, reel, tweet, threadsNote, plainText, youtube];
+const aiOnly = post('https://www.tiktok.com/@nasa/video/2', 'The Moon understood the assignment', null, 'Une fusée SLS sur son pas de tir, la nuit.');
+const all = [tiktok, reel, tweet, threadsNote, plainText, youtube, aiOnly];
 
 test('filterPosts garde seulement la plateforme choisie', () => {
-  assert.deepEqual(filterPosts(all, { platform: 'tiktok', query: '' }), [tiktok]);
+  assert.deepEqual(filterPosts(all, { platform: 'tiktok', query: '' }), [tiktok, aiOnly]);
   assert.deepEqual(filterPosts(all, { platform: 'instagram', query: '' }), [reel]);
   assert.deepEqual(filterPosts(all, { platform: 'x', query: '' }), [tweet]);
 });
@@ -27,7 +33,8 @@ test('filterPosts : un post sans URL ou d\'une plateforme inconnue n\'apparaît 
   }
 });
 
-test('filterPosts cherche dans la légende, la note et l\'URL', () => {
+test('filterPosts cherche dans la légende, la note, le résumé IA et l\'URL', () => {
+  assert.deepEqual(filterPosts(all, { platform: 'all', query: 'fusee' }), [aiOnly]);
   assert.deepEqual(filterPosts(all, { platform: 'all', query: 'ramen' }), [tiktok, threadsNote]);
   assert.deepEqual(filterPosts(all, { platform: 'all', query: 'reel/abc' }), [reel]);
 });

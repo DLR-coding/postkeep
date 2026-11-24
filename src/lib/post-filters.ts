@@ -8,7 +8,12 @@ import { detectPlatform } from './share-url.ts';
 
 export type PlatformFilter = 'all' | 'instagram' | 'tiktok' | 'x' | 'threads' | 'reddit';
 
-export type SearchablePost = { url: string | null; caption: string | null; note: string | null };
+export type SearchablePost = {
+  url: string | null;
+  caption: string | null;
+  note: string | null;
+  aiSummary: string | null;
+};
 
 export type HighlightSegment = { text: string; match: boolean };
 
@@ -76,7 +81,7 @@ export function filterPosts<T extends SearchablePost>(
       return false;
     }
     if (!query) return true;
-    return [post.caption, post.note, post.url].some((field) => !!field && matchesText(field, query));
+    return [post.caption, post.note, post.aiSummary, post.url].some((field) => !!field && matchesText(field, query));
   });
 }
 

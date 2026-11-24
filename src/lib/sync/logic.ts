@@ -18,7 +18,7 @@ export type RemoteRow = Record<string, string | number | null>;
 const BASE_COLUMNS = ['id', 'createdAt', 'updatedAt', 'deletedAt'];
 const COLUMNS: Record<SyncTable, string[]> = {
   collections: ['name'],
-  posts: ['url', 'note', 'caption', 'thumbnailUrl', 'openedAt'],
+  posts: ['url', 'note', 'caption', 'thumbnailUrl', 'aiSummary', 'openedAt'],
   post_collections: ['postId', 'collectionId'],
 };
 const DATE_COLUMNS = new Set(['createdAt', 'updatedAt', 'deletedAt', 'openedAt']);

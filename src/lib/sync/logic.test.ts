@@ -31,6 +31,7 @@ const post = (id: string, url: string | null, note: string | null = null, extra:
   note,
   caption: null,
   thumbnailUrl: null,
+  aiSummary: null,
   openedAt: null,
   ...extra,
 });
@@ -54,6 +55,7 @@ test('toRemote / fromRemote : post en snake_case et ms, aller-retour identique',
   const local = post('p1', 'https://x.com/a/status/1', 'Note', {
     caption: 'Légende',
     thumbnailUrl: 'https://cdn/x.jpg',
+    aiSummary: 'Résumé',
     openedAt: T2,
     deletedAt: T2,
     userId: UID,
@@ -69,6 +71,7 @@ test('toRemote / fromRemote : post en snake_case et ms, aller-retour identique',
     note: 'Note',
     caption: 'Légende',
     thumbnail_url: 'https://cdn/x.jpg',
+    ai_summary: 'Résumé',
     opened_at: T2.getTime(),
   });
   assert.deepEqual(fromRemote('posts', { ...remote, server_updated_at: '2026-11-02T08:00:00.123456+00:00' }), local);
