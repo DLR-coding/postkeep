@@ -243,17 +243,31 @@ uniquement.
 
 **Essai jetable sur le Galaxy S23** (ne va pas dans `master`) :
 
-- [ ] Récupérer le mp4 depuis le téléphone, et noter la taille réelle de quelques vidéos :
-  - [ ] X via la syndication ;
-  - [ ] Instagram via `/embed/captioned/` ;
-  - [ ] TikTok, avec le cookie `tt_chain_token` lu dans la WebView.
-- [ ] Fixer une limite de taille ou de durée de vidéo à partir de ces mesures.
-- [ ] `react-native-notify-kit` : `npx expo install`, plugin `dataSync`, `npx expo-doctor`
-      à 20/20, doctor de reusables OK, build local.
-- [ ] Le JS continue-t-il de tourner après `BackHandler.exitApp()` dans le service ?
-      Vérifier aussi écran éteint.
-- [ ] Analyse complète sur le LiteLLM de l'utilisateur : transcription, puis chat avec
-      `video_url` en base64. Mesurer le temps et la mémoire pour une vidéo de 20 Mo.
+- [x] Récupérer le mp4 (24 novembre 2026, depuis le PC, qui sort sur internet par le partage
+      de connexion du S23, donc avec la même IP que le téléphone) :
+  - [x] X via la syndication : mp4 direct sans cookie (103 s, 360p, 2,7 Mo) ;
+  - [ ] Instagram via `/embed/captioned/` avec le User-Agent `facebookexternalhit` (accepté
+        par l'utilisateur) : 1 reel sur 2. `DehO5gjSPgM` OK (9 s, 420 Ko, URL CDN en 200 sans
+        cookie). `DeEb3wAoK-Z` n'a jamais de `video_url`. Avec un User-Agent Chrome normal,
+        aucun des deux ;
+  - [x] TikTok : `playAddr` dans `webapp.reflow.video.detail` (page mobile). 403 sans le
+        cookie `tt_chain_token`, 200 avec (29 s, 2 Mo).
+- [ ] TikTok depuis l'app : le `fetch` natif voit-il le cookie posé par la WebView
+      (`incognito`) ? Non vérifié.
+- [ ] Fixer une limite de taille ou de durée de vidéo. Les vidéos mesurées font de 0,4 à
+      2,7 Mo ; aucune de 20 Mo testée.
+- [x] `react-native-notify-kit` 10.10.1 + `expo-file-system`, plugin `dataSync` :
+      `expo-doctor` 19/20 comme `master` (6 correctifs Expo sortis entre-temps ; notify-kit
+      n'est pas signalé), doctor de reusables OK, build local OK (branche
+      `spike/notify-kit`).
+- [x] Le JS continue-t-il de tourner après `BackHandler.exitApp()` ? Oui, avec le service,
+      **sauf les timers** :
+  - avec le service, écran éteint : téléchargement de 2,7 Mo, base64, puis 3 requêtes de
+    10 s, tout est fini en 31 s, puis le service s'arrête ;
+  - sans service (témoin) : les requêtes lentes ne finissent jamais, le processus est gelé ;
+  - les `setTimeout` restent gelés même avec le service, et partent à la réouverture.
+- [x] Analyse complète sur le LiteLLM : transcription en 4 à 7 s, chat en 4 à 11 s.
+      Mémoire pour une vidéo de 20 Mo non mesurée.
 
 **Fonctionnalité** (en parallèle, sur la branche) :
 

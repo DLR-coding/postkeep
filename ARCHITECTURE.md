@@ -796,8 +796,13 @@ message d'échec.
 - **Type de service `dataSync`**, démarré pendant que la feuille de partage est visible.
   `shortService` est écarté : il est limité à environ 3 min, avec une ANR en cas de
   dépassement.
-- La notification « Analyse du post… » est silencieuse et disparaît à la fin. Délai maximal
-  d'environ 150 s (`AbortController`).
+- La notification « Analyse du post… » est silencieuse et disparaît à la fin.
+- **Aucun timer dans le travail en arrière-plan** (vérifié le 24 novembre 2026 sur le S23).
+  Le runner notify-kit maintient le processus et le réseau en vie, même écran éteint. Mais les
+  `setTimeout` restent gelés tant que l'app est fermée : un `wait()` ou un `AbortController`
+  minuté ne se déclencherait qu'à la réouverture, et le service ne s'arrêterait pas. Le délai
+  maximal se vérifie donc par l'heure écoulée entre deux étapes (`Date.now()`), pas par un
+  timer.
 - `expo-file-system` sert à télécharger le mp4 dans un fichier, à l'envoyer (`FormData`) et
   à le lire en base64.
 - **Repli** : rattrapage au lancement et au retour au premier plan, sur le modèle de
