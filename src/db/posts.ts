@@ -156,6 +156,24 @@ export async function setPostMetadata(
     .where(eq(posts.id, postId));
 }
 
+/** Post à résumer, s'il existe encore (non supprimé). */
+export async function findPostForSummary(postId: string) {
+  const [row] = await db
+    .select({ url: posts.url, caption: posts.caption, note: posts.note, aiSummary: posts.aiSummary })
+    .from(posts)
+    .where(and(eq(posts.id, postId), isNull(posts.deletedAt)));
+  return row ?? null;
+}
+
+/** Écrit le résumé IA. Sans `overwrite`, ne remplit qu'un résumé vide : l'automatisme
+ *  n'écrase jamais un texte existant, corrigé à la main peut-être (ARCHITECTURE.md §13). */
+export async function setPostAiSummary(postId: string, aiSummary: string | null, overwrite: boolean): Promise<void> {
+  await db
+    .update(posts)
+    .set({ aiSummary })
+    .where(overwrite ? eq(posts.id, postId) : and(eq(posts.id, postId), isNull(posts.aiSummary)));
+}
+
 /**
  * Suppression logique (ARCHITECTURE.md §4) — jamais de vrai DELETE.
  *

@@ -34,6 +34,7 @@ import { Check, ChevronUp, X } from 'lucide-react-native';
 
 import Svg, { LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { AiSummarySection } from '@/components/ai-summary-section';
 import { CollectionChip } from '@/components/collection-chip';
 import { PortalHost } from '@rn-primitives/portal';
 import { PostThumb } from '@/components/post-thumb';
@@ -486,6 +487,14 @@ export function PostDetailSheet() {
                   </View>
                 </View>
               )}
+
+              <AiSummarySection
+                key={displayedPost.id}
+                postId={displayedPost.id}
+                aiSummary={displayedPost.aiSummary}
+                hasUrl={!!displayedPost.url}
+                portalHost={SHEET_PORTAL}
+              />
 
               <View className="mt-6 flex-row items-center justify-center gap-1 opacity-60">
                 <Icon as={ChevronUp} size={12} color={colors.mutedForeground} />

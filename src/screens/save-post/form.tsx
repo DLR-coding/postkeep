@@ -15,7 +15,10 @@ import { savePost, setPostMetadata } from '@/db/posts';
 import { extractCaptionFromText, PLATFORM_META, type AnalyzedUrl } from '@/lib/share-url';
 import { fetchOEmbed } from '@/lib/oembed';
 import { useExtractMetadata } from '@/lib/webview-metadata';
+import { startAiSummaries } from '@/lib/ai-runner';
+import { loadAiSettings } from '@/lib/ai-settings';
 import { THEME } from '@/lib/theme';
+import { useAiSummaryStore } from '@/stores/ai-summary-store';
 
 import type { Prefill } from './index';
 
@@ -84,6 +87,12 @@ export function SavePostForm({
         } else if (analyzed.platform === 'x' || analyzed.platform === 'reddit') {
           await setPostMetadata(postId, await fetchOEmbed(analyzed.url, analyzed.platform));
         }
+      }
+      // Résumé IA (ARCHITECTURE.md §13) : seulement si l'IA est configurée. Le service doit
+      // démarrer maintenant, feuille visible : Android le refuse une fois l'app quittée.
+      if (analyzed?.url && (await loadAiSettings())) {
+        useAiSummaryStore.getState().enqueue(postId);
+        await startAiSummaries();
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // `resetShareIntent()` déclenche `hasShareIntent: false` chez le parent,

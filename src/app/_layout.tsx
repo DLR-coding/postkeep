@@ -14,6 +14,7 @@ import Toast from 'react-native-toast-message';
 
 import { PortalHost } from '@rn-primitives/portal';
 
+import { AiSummaryBackfill } from '@/components/ai-summary-backfill';
 import { MetadataBackfill } from '@/components/metadata-backfill';
 import { PostDetailSheet } from '@/components/post-detail-sheet';
 import { db } from '@/db';
@@ -130,6 +131,7 @@ export default function RootLayout() {
                 {success && <ShareIntentRedirect />}
                 {success && <AuthGate />}
                 {success && <MetadataBackfill />}
+                {success && <AiSummaryBackfill />}
                 <Stack>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                   <Stack.Screen name="shareintent" options={{ presentation: 'modal', headerShown: false }} />
