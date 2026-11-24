@@ -30,8 +30,8 @@ test('validateAiSettings normalise et refuse http, clé ou modèle vides', () =>
   assert.throws(() => validateAiSettings({ ...settings, videoModel: '' }), /video model/);
 });
 
-test('aiSettingsSummary : hôte et modèle, ou Off', () => {
-  assert.equal(aiSettingsSummary(settings), 'ai.example.com · Qwen/Qwen3.5-35B-A3B');
+test('aiSettingsSummary : hôte, ou Off', () => {
+  assert.equal(aiSettingsSummary(settings), 'ai.example.com');
   assert.equal(aiSettingsSummary(null), 'Off');
 });
 
@@ -60,14 +60,24 @@ test('buildSummaryRequest : langue, contexte, vidéo en base64 et raisonnement c
   const [text, video] = body.messages[1].content as { type: string; text?: string; video_url?: { url: string } }[];
   assert.equal(
     text.text,
-    'Post caption: The Moon understood the assignment\nTranscript of the audio: On y trouve des chênes centenaires.'
+    'Post caption: The Moon understood the assignment\nTranscript of the audio: On y trouve des chênes centenaires.\nWrite the summary in French.'
   );
   assert.equal(video.video_url?.url, 'data:video/mp4;base64,AAAA');
 });
 
 test('readSummary renvoie le texte et refuse une réponse vide', () => {
   assert.equal(readSummary({ choices: [{ message: { content: '  Une fusée.  ' } }] }), 'Une fusée.');
+  assert.equal(readSummary({ choices: [{ message: { content: 'Sans point final' } }] }), 'Sans point final');
   assert.throws(() => readSummary({ choices: [{ message: { content: null } }] }), /empty/);
+});
+
+test('readSummary garde au plus 4 phrases', () => {
+  const long = 'Un. Deux ! Trois ? Quatre… Cinq. Six.';
+  assert.equal(readSummary({ choices: [{ message: { content: long } }] }), 'Un. Deux ! Trois ? Quatre…');
+  assert.equal(
+    readSummary({ choices: [{ message: { content: 'Version 2.5 du logiciel.\nIl est sorti.' } }] }),
+    'Version 2.5 du logiciel. Il est sorti.'
+  );
 });
 
 test('httpErrorMessage : clé refusée, 404, détail tronqué', () => {

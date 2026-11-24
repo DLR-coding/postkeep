@@ -434,6 +434,15 @@ export function PostDetailSheet() {
             {!typingNote && (
             <PostHero post={displayedPost} meta={meta} />
             )}
+            {/* Lisible et modifiable ici : l'aperçu ne défile pas et peut le couper. */}
+            {!typingNote && (
+              <AiSummarySection
+                postId={displayedPost.id}
+                aiSummary={displayedPost.aiSummary}
+                hasUrl={!!displayedPost.url}
+                portalHost={SHEET_PORTAL}
+              />
+            )}
             <PostFieldsForm
               control={control}
               variant="chips"
@@ -468,6 +477,16 @@ export function PostDetailSheet() {
                 </View>
               </PostHero>
 
+              {/* Avant la légende : l'aperçu ne défile pas (un glissé ouvre l'édition), une
+                  longue légende cacherait le résumé. */}
+              <AiSummarySection
+                key={displayedPost.id}
+                postId={displayedPost.id}
+                aiSummary={displayedPost.aiSummary}
+                hasUrl={!!displayedPost.url}
+                portalHost={SHEET_PORTAL}
+              />
+
               {!!displayedPost.caption && (
                 <View className="mt-5 gap-1.5">
                   <SectionLabel>Caption</SectionLabel>
@@ -487,14 +506,6 @@ export function PostDetailSheet() {
                   </View>
                 </View>
               )}
-
-              <AiSummarySection
-                key={displayedPost.id}
-                postId={displayedPost.id}
-                aiSummary={displayedPost.aiSummary}
-                hasUrl={!!displayedPost.url}
-                portalHost={SHEET_PORTAL}
-              />
 
               <View className="mt-6 flex-row items-center justify-center gap-1 opacity-60">
                 <Icon as={ChevronUp} size={12} color={colors.mutedForeground} />

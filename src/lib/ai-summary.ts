@@ -35,9 +35,9 @@ export function validateAiSettings(s: AiSettings): AiSettings {
   };
 }
 
-/** Sous-titre de la ligne des paramètres : « ai.example.com · Qwen/… » ou « Off ». */
+/** Sous-titre de la ligne des paramètres : l'hôte du service (« ai.example.com ») ou « Off ». */
 export const aiSettingsSummary = (s: AiSettings | null) =>
-  s ? `${s.baseUrl.replace(/^https?:\/\//i, '').split('/')[0]} · ${s.videoModel}` : 'Off';
+  s ? s.baseUrl.replace(/^https?:\/\//i, '').split('/')[0] : 'Off';
 
 /** Identifiants de `GET /models`, triés. Lève une erreur si la réponse n'en a pas. */
 export function parseModelIds(body: unknown): string[] {
@@ -82,14 +82,16 @@ export function buildSummaryRequest(settings: AiSettings, input: SummaryInput) {
         role: 'system',
         content:
           'You describe videos saved from social media so the user can find them later by searching. ' +
-          `Write 2 to 4 sentences in ${LANGUAGE_NAME[settings.language]}: what the video is about and what it ` +
-          'shows (people, places, objects, steps, products, text on screen). Use the transcript for what is ' +
-          'said. Plain text only: no preamble, no markdown, no remark about missing audio.',
+          `Answer in ${LANGUAGE_NAME[settings.language]}, in at most 4 short sentences and 70 words: what the ` +
+          'video is about and what it shows (people, places, objects, steps, products, text on screen). Use ' +
+          'the transcript for what is said. Keep the key words someone would search for; skip the scene by ' +
+          'scene narration. Plain text only: no preamble, no markdown, no remark about missing audio.',
       },
       {
         role: 'user',
         content: [
-          { type: 'text', text: context.length ? context.join('\n') : 'Describe this video.' },
+          // Langue répétée à la fin : sinon une légende en anglais l'emporte sur la consigne.
+          { type: 'text', text: [...context, `Write the summary in ${LANGUAGE_NAME[settings.language]}.`].join('\n') },
           { type: 'video_url', video_url: { url: `data:video/mp4;base64,${input.videoBase64}` } },
         ],
       },
@@ -97,13 +99,19 @@ export function buildSummaryRequest(settings: AiSettings, input: SummaryInput) {
   };
 }
 
-/** Texte du résumé dans une réponse `chat/completions`. Une réponse vide est une erreur. */
+/** Nombre de phrases gardées : le modèle ignore parfois la consigne (10 phrases vues sur
+ *  un S23, le 24 novembre 2026), et un long texte pousse la note hors de l'écran. */
+export const MAX_SENTENCES = 4;
+
+/** Texte du résumé dans une réponse `chat/completions`, coupé à `MAX_SENTENCES` phrases.
+ *  Une réponse vide est une erreur. */
 export function readSummary(body: unknown): string {
   const content = (body as { choices?: { message?: { content?: unknown } }[] } | null)?.choices?.[0]?.message
     ?.content;
-  const text = typeof content === 'string' ? content.trim() : '';
+  const text = typeof content === 'string' ? content.replace(/\s+/g, ' ').trim() : '';
   if (!text) throw new Error('The AI returned an empty summary.');
-  return text;
+  // Une phrase finit par . ! ? ou … suivi d'une espace ; « Aug. 12 » coupe trop tôt, sans gravité.
+  return text.split(/(?<=[.!?…])\s+/).slice(0, MAX_SENTENCES).join(' ');
 }
 
 /** Message lisible pour une réponse HTTP en échec du service IA. */

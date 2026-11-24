@@ -162,6 +162,10 @@ export function AiSettingsSheet({
           onChangeText={setBaseUrl}
           placeholder="https://…/v1"
           keyboardType="url"
+          // Pas d'autofill : Android proposait d'enregistrer l'URL et la clé dans le
+          // gestionnaire de mots de passe Google.
+          autoComplete="off"
+          importantForAutofill="no"
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -170,6 +174,8 @@ export function AiSettingsSheet({
           onChangeText={setApiKey}
           placeholder={current ? 'Saved key (leave empty to keep it)' : 'API key'}
           secureTextEntry
+          autoComplete="off"
+          importantForAutofill="no"
           autoCapitalize="none"
           autoCorrect={false}
         />
