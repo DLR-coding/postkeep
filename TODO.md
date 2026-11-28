@@ -236,7 +236,7 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       ~80 lignes de CONTRIBUTING.md) (11 novembre 2026)
 - [x] Supprimer `handoff.txt` (notes de session non suivies, à la racine)
 
-## 🟠 Résumé IA des vidéos (décidé le 23 novembre 2026, branche `feat/ai-summary`)
+## 🟠 Résumé IA des posts (décidé le 23 novembre 2026, branche `feat/ai-summary`)
 
 Décisions et raisons : [ARCHITECTURE.md §13](./ARCHITECTURE.md). Tests sur le compte de dev
 uniquement.
@@ -293,6 +293,27 @@ uniquement.
       répétée en fin de message, résumé coupé à 4 phrases (`readSummary`).
 - [ ] « Edit » du résumé (saisie au clavier dans la feuille) : pas essayé sur le téléphone.
 - [ ] Vidéo proche de 25 Mo : mémoire et durée non mesurées.
+
+**Photos et carrousels, résumé « utile »** (codé le 24 novembre 2026, à valider sur le S23) :
+
+- [x] Prompt pour tous les posts : ce que c'est, ce qui est remarquable, à quoi ça sert ;
+      noms des collections envoyés comme intention, jamais cités.
+- [x] X (photos de `mediaDetails`), Instagram (`contextJSON` : image, carrousel, mixte ;
+      `EmbeddedMediaImage` sans `contextJSON`), TikTok (`imagePost`). Jusqu'à 10 images et
+      la première vidéo.
+- [x] Vérifié depuis le PC avec le LiteLLM : photo X, photo Instagram `BsOGulcndj-` rangée
+      dans « Dessins à refaire » (« Utile pour s'entraîner au dessin… »), image + vidéo
+      dans la même requête.
+- [ ] Carrousel Instagram et post photo TikTok réels : formats supposés, aucun exemple
+      testé.
+- [ ] Sur le S23 : un post photo et un carrousel enregistrés app fermée.
+- [x] Paroles de chanson : question à part « LYRICS ou SPEECH ? » avant le résumé. Vérifié
+      depuis le PC le 28 novembre 2026 sur les collections « Test », « Body Goal » et
+      « TesTest » : 2 chansons jetées, 3 voix off gardées (dont une sur musique et une en
+      japonais), résumés sans paroles citées.
+- [x] Bug : une transcription en japonais (sans espaces) était jetée comme « moins de deux
+      mots ». `cleanTranscript` compte maintenant les lettres.
+- [ ] Sur le S23 : refaire ces vidéos depuis l'app (adb à installer sur le nouveau PC).
 
 ## ⏭️ Ensuite
 

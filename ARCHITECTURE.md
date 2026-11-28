@@ -692,11 +692,12 @@ jusqu'à la remise en route du projet depuis le tableau de bord.
 
 ---
 
-## 13. Résumé IA des vidéos (décidé le 23 novembre 2026, codé le 24, à valider)
+## 13. Résumé IA des posts (décidé le 23 novembre 2026, codé le 24, à valider)
 
 La légende d'un post ne dit pas forcément ce que montre la vidéo. À l'enregistrement, une
-IA configurée par l'utilisateur regarde la vidéo et en écrit un résumé, qui sert surtout à
-la recherche. Les décisions ci-dessous ont été prises en séance de questions-réponses. Les
+IA configurée par l'utilisateur regarde la vidéo ou les images du post et en écrit un
+résumé, qui sert à la recherche et à se rappeler pourquoi le post a été gardé. Les posts
+photo et carrousel sont traités depuis le 24 novembre 2026. Les décisions ci-dessous ont été prises en séance de questions-réponses. Les
 points marqués « essai » attendent l'essai jetable sur le téléphone (voir `TODO.md`).
 
 ### Données
@@ -720,8 +721,18 @@ points marqués « essai » attendent l'essai jetable sur le téléphone (voir `
 
 - 2 à 4 phrases, dans la langue choisie dans les réglages : FR ou EN, **EN par défaut**.
   Changer la langue ne touche que les prochains résumés.
-- L'IA reçoit la vidéo, la transcription de l'audio, la légende et la note de
-  l'utilisateur.
+- **Un résumé utile, pas une description**, pour tous les posts : ce qu'est le post
+  (dessin, photo, recette, tuto…), ce qu'il a de remarquable (style, technique, couleurs,
+  composition, ce qui est dit) et à quoi il sert (le redessiner, s'en inspirer, le
+  cuisiner…). Raison : l'utilisateur ne veut pas réécrire la même note à chaque post.
+- L'IA reçoit la vidéo et/ou les images, la transcription de l'audio, la légende, la note
+  et les **noms des collections** du post. Une collection comme « Dessins à refaire » dit
+  pourquoi le post a été gardé ; le prompt interdit de la citer (le modèle recopiait
+  « post de la catégorie Inspiration »). Une consigne par collection a été écartée tant
+  que les noms suffisent.
+- **Carrousel** : jusqu'à 10 images (`MAX_IMAGES`), plus la première vidéo s'il y en a
+  une. Qwen accepte images et vidéo dans la même requête (vérifié le 24 novembre 2026).
+  Une image coûte environ 270 tokens.
 
 ### Fournisseur : tout service compatible OpenAI
 
@@ -733,6 +744,19 @@ Vérifié le 23 novembre 2026 sur le LiteLLM de l'utilisateur (vLLM derrière) :
   environ 11 s par appel.
 - `openai/whisper-large-v3` (ou `Qwen/Qwen3-ASR-1.7B`) transcrit le **mp4 brut** sur
   `/audio/transcriptions`, sans extraction audio. Il faut environ 6 s pour 70 s de vidéo.
+  Sur une musique sans parole, Whisper rend des `♪` ou invente une phrase (« Outro
+  Music » sur un reel muet, le 24 novembre 2026). vLLM ne renvoie pas `no_speech_prob` :
+  `cleanTranscript` écarte une transcription faite seulement de ce bruit, et le prompt
+  distingue les deux cas : une voix off (même sur des images sans rapport) est souvent le
+  sujet du post et passe en tête du résumé ; des paroles de chanson sont ignorées. Une
+  première consigne « ignore une transcription qui ne colle pas aux images » faisait perdre
+  les voix off. `temperature: 0.2` réduit les écarts d'un essai à l'autre. Des paroles de chanson
+  passaient encore pour un narrateur une fois sur deux : une question à part, sur le texte
+  seul (« LYRICS ou SPEECH ? », `buildSpeechCheckRequest`, même modèle, `temperature: 0`)
+  écarte maintenant les paroles avant le résumé. Seule, elle a classé juste 12 fois sur 12
+  (3 transcriptions, le 24 novembre 2026). En cas d'erreur, la transcription est gardée.
+  Aucun modèle du serveur n'entend l'audio (pas d'Omni) : c'est la vraie solution, si un
+  jour il en sert un.
 - Sans `chat_template_kwargs: {enable_thinking: false}`, Qwen3.5 dépense tous ses tokens à
   raisonner et renvoie une réponse vide. Le paramètre est **envoyé à chaque appel**. Il
   n'est pas standard : un fournisseur qui le refuse sera traité le jour où il se présente.
@@ -741,11 +765,11 @@ Vérifié le 23 novembre 2026 sur le LiteLLM de l'utilisateur (vLLM derrière) :
 
 Pipeline :
 
-1. Récupérer le mp4.
-2. L'envoyer à `/audio/transcriptions`. Cette étape est sautée si aucun modèle de
-   transcription n'est choisi.
-3. Appeler `/chat/completions` avec la vidéo en base64, la transcription, la légende, la
-   note et la langue.
+1. Récupérer la première vidéo (mp4) et les images du post.
+2. S'il y a une vidéo, l'envoyer à `/audio/transcriptions`. Cette étape est sautée si
+   aucun modèle de transcription n'est choisi.
+3. Appeler `/chat/completions` avec les images (`image_url`) et la vidéo (`video_url`) en
+   data URL, la transcription, la légende, la note, les collections et la langue.
 
 ### Réglages
 
@@ -765,16 +789,18 @@ Sont traités les posts enregistrés **pendant que l'IA est configurée**. Les p
 anciens, ou ceux enregistrés sans configuration, gardent le bouton « Analyser ». Raison :
 configurer l'IA ne doit pas déclencher une avalanche d'appels.
 
-### Récupération de la vidéo (`src/lib/video-source.ts`)
+### Récupération des médias (`src/lib/media-source.ts`)
 
-Rien n'est vérifié sur l'appareil à ce stade :
-
-- **X** : `cdn.syndication.twimg.com/tweet-result` donne des mp4 directs. L'endpoint n'est
-  pas documenté.
-- **Instagram** : la page `/p/<code>/embed/captioned/` contient parfois le mp4. Le `<video>`
-  de la page normale est probablement un `blob:`, donc impossible à télécharger.
-- **TikTok** : l'URL de lecture exige le cookie anonyme `tt_chain_token` de la même session.
-  Il est lu dans la WebView et renvoyé avec la requête (accepté pour un usage personnel).
+- **X** : `cdn.syndication.twimg.com/tweet-result` donne des mp4 directs et les photos
+  (`mediaDetails`, prises en taille `medium`). L'endpoint n'est pas documenté.
+- **Instagram** : la page `/p/<code>/embed/captioned/` contient un `contextJSON` avec le
+  type du post (`GraphVideo`, `GraphImage`, `GraphSidecar` pour un carrousel), le mp4
+  (parfois) et les images. Sans `contextJSON` (vieux posts), seule l'image affichée
+  (`EmbeddedMediaImage`) est prise, et jamais pour un reel : ce n'est que sa couverture.
+  Un reel sans `video_url` reste en échec. Le `<video>` de la page normale est un `blob:`.
+- **TikTok** : l'URL de lecture exige le cookie anonyme `tt_chain_token` de la même session,
+  renvoyé tout seul par le cookie jar (accepté pour un usage personnel). Un post photo
+  (`imagePost`) donne ses images ; sa « vidéo » n'est que la musique du diaporama, ignorée.
 - **Reddit** : non supporté (l'id `v.redd.it` est inaccessible).
 - Pas de WebView : tout passe par `XMLHttpRequest`. Toutes les requêtes partagent le
   cookie jar d'OkHttp, donc le cookie TikTok posé par la page repart avec le
@@ -784,7 +810,7 @@ Rien n'est vérifié sur l'appareil à ce stade :
 - **Limite : 25 Mo** (`MAX_VIDEO_BYTES`). C'est la limite de `/audio/transcriptions` chez
   OpenAI, et une vidéo de 25 Mo fait environ 33 Mo de base64 dans Hermes. Les vidéos
   mesurées font de 0,4 à 2,7 Mo. Pour X, on prend la meilleure variante sous 1 Mbit/s.
-- Formats des pages relevés le 24 novembre 2026 (`video-source-logic.ts`, testé) : ils
+- Formats des pages relevés le 24 novembre 2026 (`media-source-logic.ts`, testé) : ils
   peuvent changer sans prévenir.
 - Écarté : un serveur yt-dlp. Instagram y exige les cookies d'un compte, et TikTok
   l'imitation de l'empreinte TLS d'un navigateur.
