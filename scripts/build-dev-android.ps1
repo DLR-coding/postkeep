@@ -75,6 +75,13 @@ try {
     Step 'Dépendances et config native inchangées : npm ci et prebuild sautés'
   }
 
+  # CMake du SDK le plus récent : le ninja 1.10 de CMake 3.22.1 (défaut d'AGP) ignore les chemins
+  # longs de Windows et échoue sur le codegen de gesture-handler (« mkdir … No such file or
+  # directory », 28 novembre 2026) ; celui de CMake 3.31 les gère.
+  $cmake = Get-ChildItem "$sdk\cmake" -Directory -ErrorAction SilentlyContinue |
+    Sort-Object { [version]$_.Name } | Select-Object -Last 1
+  if ($cmake) { Set-Content android\local.properties ('cmake.dir=' + ($cmake.FullName -replace '\\', '/')) }
+
   $task = if ($Release) { 'app:assembleRelease' } else { 'app:assembleDebug' }
   Step "Gradle : $task (arm64-v8a)"
   Push-Location android
