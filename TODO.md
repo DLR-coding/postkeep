@@ -180,10 +180,12 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       balayage et à la suppression d'une collection ; plus aucun `Alert.alert` dans `src/`
       (11 novembre 2026, livré en v0.2.0)
   - Connu et accepté : en édition, le pied de la feuille n'est pas assombri sous le dialog
-- [ ] **Recherche : la fiche s'ouvre derrière le clavier** — avec le clavier ouvert, taper un
+- [x] **Recherche : la fiche s'ouvre derrière le clavier** — avec le clavier ouvert, taper un
       résultat ouvre la feuille de détail sous le clavier (vu le 12 novembre 2026, existait
-      avant v0.4.1)
-- [ ] **Une carte ouverte (actions visibles) reste ouverte pendant le défilement** de la liste
+      avant v0.4.1). Corrigé le 28 novembre 2026 : `open` du store ferme le clavier ; vérifié
+      sur le S23, la recherche reste en place
+- [x] **Une carte ouverte (actions visibles) reste ouverte pendant le défilement** de la liste — corrigé le 28 novembre 2026 (`onScrollBeginDrag` → `closeOpenCard`), vérifié sur le
+      S23 dans « All posts » (pas encore dans une collection)
 
 ## 🟢 Aperçu des posts — par plateforme
 
