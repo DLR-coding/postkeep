@@ -66,10 +66,11 @@ test('buildSummaryRequest : langue, contexte, vidéo en base64 et raisonnement c
   assert.equal(body.model, 'Qwen/Qwen3.5-35B-A3B');
   assert.deepEqual(body.chat_template_kwargs, { enable_thinking: false });
   assert.match(body.messages[0].content as string, /in French/);
+  assert.match(body.messages[0].content as string, /speaker talks about/);
   const [text, video] = body.messages[1].content as { type: string; text?: string; video_url?: { url: string } }[];
   assert.equal(
     text.text,
-    'Post caption: The Moon understood the assignment\nTranscript of the audio: On y trouve des chênes centenaires.\nWrite the summary in French.'
+    'Post caption: The Moon understood the assignment\nWhat is said in the video: On y trouve des chênes centenaires.\nWrite the summary in French.'
   );
   assert.equal(video.video_url?.url, 'data:video/mp4;base64,AAAA');
 });
@@ -83,6 +84,8 @@ test('buildSummaryRequest : images seules, collections dans le contexte', () => 
     note: null,
     collections: ['Dessins à refaire', 'Encre'],
   });
+  // Sans transcription, pas de consigne sur la parole : le modèle inventait un « speaker ».
+  assert.doesNotMatch(body.messages[0].content as string, /speaker/);
   const content = body.messages[1].content as { type: string; text?: string; image_url?: { url: string } }[];
   assert.equal(content[0].text, 'Saved in the collections: Dessins à refaire, Encre\nWrite the summary in French.');
   assert.deepEqual(

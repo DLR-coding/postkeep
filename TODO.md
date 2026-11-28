@@ -317,7 +317,9 @@ uniquement.
       mots ». `cleanTranscript` compte maintenant les lettres.
 - [x] Sur le S23 (app Dev, app fermée, 28 novembre 2026) : villa + chanson rangée dans
       « Design inspo » (paroles jetées, résumé orienté design), photo X (selfie des Oscars),
-      voix off (thème repris, mais pas le propos de la voix en tête).
+      voix off (thème repris, mais pas le propos de la voix en tête). Corrigé depuis le PC :
+      consigne « première phrase = ce que dit la personne », envoyée seulement s'il y a une
+      transcription (sans elle, le modèle inventait un « speaker »).
 
 ## ⏭️ Ensuite
 

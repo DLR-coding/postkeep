@@ -85,7 +85,7 @@ export function buildSummaryRequest(settings: AiSettings, input: SummaryInput) {
     input.caption?.trim() && `Post caption: ${input.caption.trim()}`,
     input.collections.length && `Saved in the collections: ${input.collections.join(', ')}`,
     input.note?.trim() && `User's note: ${input.note.trim()}`,
-    input.transcript && `Transcript of the audio: ${input.transcript}`,
+    input.transcript && `What is said in the video: ${input.transcript}`,
   ].filter(Boolean);
   return {
     model: settings.videoModel,
@@ -100,10 +100,14 @@ export function buildSummaryRequest(settings: AiSettings, input: SummaryInput) {
           `want next to it, in ${language}, in at most 4 short sentences and 70 words: what it is about, what ` +
           'is notable (style, technique, colors, composition, what is said) and what it is useful for. The ' +
           'collection names say why it was saved: use them to judge what matters and what it is useful for ' +
-          '(a drawings collection: redraw it; a recipes one: cook it), but never write them. The transcript ' +
-          'is automatic: when it is someone talking (a voice-over, an explanation), lead with what they say, ' +
-          'it is usually the point of the post even over unrelated footage; when it is song lyrics or only ' +
-          'music, ignore it. Keep the key words someone would search for; skip the scene by scene narration. ' +
+          '(a drawings collection: redraw it; a recipes one: cook it), but never write them. ' +
+          // Seulement avec une transcription : sans elle, le modèle inventait un « speaker »
+          // d'après la légende (28 novembre 2026).
+          (input.transcript
+            ? 'Your first sentence must state what the speaker talks about and their main point: it is the ' +
+              'point of the post, even when the footage shows something unrelated. '
+            : '') +
+          'Keep the key words someone would search for; skip the scene by scene narration. ' +
           'Plain text only: start with the content itself, no label like "Post:", no markdown, no remark ' +
           'about missing audio or images.',
       },
