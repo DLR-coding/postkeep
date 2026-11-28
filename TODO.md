@@ -291,7 +291,9 @@ uniquement.
     résumé vers Supabase.
 - [x] Prompt : 10 phrases vues, et de l'anglais quand le français était demandé. Langue
       répétée en fin de message, résumé coupé à 4 phrases (`readSummary`).
-- [ ] « Edit » du résumé (saisie au clavier dans la feuille) : pas essayé sur le téléphone.
+- [x] « Edit » du résumé au clavier (S23, 28 novembre 2026) : le champ tombait à 2 lignes et
+      ses boutons passaient sous le clavier ; la feuille replie maintenant le reste pendant
+      la saisie, comme pour la note.
 - [ ] Vidéo proche de 25 Mo : mémoire et durée non mesurées.
 
 **Photos et carrousels, résumé « utile »** (codé le 24 novembre 2026, à valider sur le S23) :
@@ -313,7 +315,9 @@ uniquement.
       japonais), résumés sans paroles citées.
 - [x] Bug : une transcription en japonais (sans espaces) était jetée comme « moins de deux
       mots ». `cleanTranscript` compte maintenant les lettres.
-- [ ] Sur le S23 : refaire ces vidéos depuis l'app (adb à installer sur le nouveau PC).
+- [x] Sur le S23 (app Dev, app fermée, 28 novembre 2026) : villa + chanson rangée dans
+      « Design inspo » (paroles jetées, résumé orienté design), photo X (selfie des Oscars),
+      voix off (thème repris, mais pas le propos de la voix en tête).
 
 ## ⏭️ Ensuite
 

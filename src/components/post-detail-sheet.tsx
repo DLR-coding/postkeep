@@ -204,6 +204,8 @@ export function PostDetailSheet() {
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [noteFocused, setNoteFocused] = useState(false);
   const typingNote = keyboardOpen && noteFocused;
+  const [summaryEditing, setSummaryEditing] = useState(false);
+  const typingSummary = keyboardOpen && summaryEditing;
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
     const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
@@ -431,7 +433,7 @@ export function PostDetailSheet() {
             exiting={FadeOut.duration(120)}>
             {/* Saisie dans la note : en-tête et collections repliés, la note prend la place
                 (sinon 0 dp entre l'en-tête et le pied remonté, mesuré sur un S23). */}
-            {!typingNote && (
+            {!typingNote && !typingSummary && (
             <PostHero post={displayedPost} meta={meta} />
             )}
             {/* Lisible et modifiable ici : l'aperçu ne défile pas et peut le couper. */}
@@ -441,14 +443,19 @@ export function PostDetailSheet() {
                 aiSummary={displayedPost.aiSummary}
                 hasUrl={!!displayedPost.url}
                 portalHost={SHEET_PORTAL}
+                onEditingChange={setSummaryEditing}
               />
             )}
-            <PostFieldsForm
-              control={control}
-              variant="chips"
-              hideCollections={typingNote}
-              onNoteFocusChange={setNoteFocused}
-            />
+            {/* Saisie du résumé : même repli, sinon le champ tombe à 2 lignes et ses boutons
+                passent sous le clavier (S23, 28 novembre 2026). */}
+            {!typingSummary && (
+              <PostFieldsForm
+                control={control}
+                variant="chips"
+                hideCollections={typingNote}
+                onNoteFocusChange={setNoteFocused}
+              />
+            )}
           </Animated.View>
           </Animated.View>
         </BottomSheetView>

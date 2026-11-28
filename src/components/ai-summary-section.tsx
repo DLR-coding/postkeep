@@ -29,11 +29,14 @@ export function AiSummarySection({
   aiSummary,
   hasUrl,
   portalHost,
+  onEditingChange,
 }: {
   postId: string;
   aiSummary: string | null;
   hasUrl: boolean;
   portalHost: string;
+  /** Saisie en cours : la feuille d'édition replie le reste pour laisser la place au champ. */
+  onEditingChange?: (editing: boolean) => void;
 }) {
   const colors = THEME[useColorScheme() === 'dark' ? 'dark' : 'light'];
   const [enabled, setEnabled] = useState(false);
@@ -45,6 +48,7 @@ export function AiSummarySection({
   useEffect(() => {
     loadAiSettings().then((s) => setEnabled(!!s));
   }, []);
+  useEffect(() => onEditingChange?.(draft !== null), [draft, onEditingChange]);
 
   if (!aiSummary && !enabled && !entry) return null;
 
