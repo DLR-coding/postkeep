@@ -79,7 +79,7 @@ export function AiSummarySection({
             onChangeText={setDraft}
             multiline
             autoFocus
-            placeholder="What the video shows"
+            placeholder="What the post shows and why it is useful"
             placeholderTextColor={colors.mutedForeground}
             style={{
               minHeight: 96,
@@ -123,7 +123,7 @@ export function AiSummarySection({
         open={confirmRedo}
         onOpenChange={setConfirmRedo}
         title="Replace the summary?"
-        description="The AI will watch the video again. The current summary, including your edits, will be replaced."
+        description="The AI will look at the post again. The current summary, including your edits, will be replaced."
         confirmLabel="Replace"
         onConfirm={() => request(true)}
         portalHost={portalHost}

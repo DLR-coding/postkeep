@@ -4,15 +4,15 @@
  * routeur : le runner doit exister au chargement du bundle.
  *
  * Aucun `setTimeout` ici : les timers JS restent gelés app fermée, même avec le service.
- * Les délais sont ceux des requêtes, appliqués par OkHttp (`ai-client.ts`, `video-source.ts`).
+ * Les délais sont ceux des requêtes, appliqués par OkHttp (`ai-client.ts`, `media-source.ts`).
  */
 import notifee, { AndroidForegroundServiceType, AndroidImportance } from 'react-native-notify-kit';
 
 import { findPostForSummary, setPostAiSummary } from '@/db/posts';
-import { summarize, transcribe } from '@/lib/ai-client';
+import { isSpeech, summarize, transcribe } from '@/lib/ai-client';
 import { pendingIds } from '@/lib/ai-queue';
 import { loadAiSettings } from '@/lib/ai-settings';
-import { downloadVideo } from '@/lib/video-source';
+import { downloadMedia } from '@/lib/media-source';
 import { useAiSummaryStore } from '@/stores/ai-summary-store';
 
 const CHANNEL_ID = 'ai-summary';
@@ -24,19 +24,23 @@ async function summarizeOne(postId: string, overwrite: boolean): Promise<void> {
   const post = await findPostForSummary(postId);
   if (!post || (post.aiSummary && !overwrite)) return; // supprimé, ou déjà résumé
   if (!post.url) throw new Error('This post has no link.');
-  const video = await downloadVideo(post.url, postId);
+  const { video, images } = await downloadMedia(post.url, postId);
   try {
     // L'audio est un plus : une transcription ratée n'empêche pas le résumé.
-    const transcript = await transcribe(settings, video.file.uri).catch(() => null);
+    const heard = video ? await transcribe(settings, video.file.uri).catch(() => null) : null;
+    // Des paroles de chanson passeraient pour ce que dit la vidéo ; en cas d'erreur, on garde.
+    const transcript = heard && (await isSpeech(settings, heard).catch(() => true)) ? heard : null;
     const summary = await summarize(settings, {
-      videoBase64: video.base64,
+      videoBase64: video?.base64 ?? null,
+      images,
       transcript,
       caption: post.caption,
       note: post.note,
+      collections: post.collections,
     });
     await setPostAiSummary(postId, summary, overwrite);
   } finally {
-    if (video.file.exists) video.file.delete();
+    if (video?.file.exists) video.file.delete();
   }
 }
 
@@ -76,7 +80,7 @@ export async function startAiSummaries(): Promise<void> {
   try {
     await notifee.createChannel({ id: CHANNEL_ID, name: 'AI summary', importance: AndroidImportance.LOW });
     await notifee.displayNotification({
-      title: 'Summarizing your saved video…',
+      title: 'Summarizing your saved post…',
       android: {
         channelId: CHANNEL_ID,
         asForegroundService: true,

@@ -162,7 +162,14 @@ export async function findPostForSummary(postId: string) {
     .select({ url: posts.url, caption: posts.caption, note: posts.note, aiSummary: posts.aiSummary })
     .from(posts)
     .where(and(eq(posts.id, postId), isNull(posts.deletedAt)));
-  return row ?? null;
+  if (!row) return null;
+  // Les collections disent pourquoi le post a été gardé : contexte pour l'IA (§13).
+  const names = await db
+    .select({ name: collections.name })
+    .from(postCollections)
+    .innerJoin(collections, eq(collections.id, postCollections.collectionId))
+    .where(and(eq(postCollections.postId, postId), isNull(postCollections.deletedAt), isNull(collections.deletedAt)));
+  return { ...row, collections: names.map((c) => c.name) };
 }
 
 /** Écrit le résumé IA. Sans `overwrite`, ne remplit qu'un résumé vide : l'automatisme

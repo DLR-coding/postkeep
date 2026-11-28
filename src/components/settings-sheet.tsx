@@ -183,7 +183,7 @@ function AiSection() {
       <SectionLabel>AI</SectionLabel>
       <Row
         icon={Sparkles}
-        label="Video summary"
+        label="Post summary"
         detail={aiSettingsSummary(settings)}
         onPress={() => sheetRef.current?.present()}
         last

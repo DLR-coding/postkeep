@@ -1,9 +1,11 @@
 // Appels au service IA compatible OpenAI (ARCHITECTURE.md §13).
 import {
+  buildSpeechCheckRequest,
   buildSummaryRequest,
   cleanTranscript,
   httpErrorMessage,
   parseModelIds,
+  readIsSpeech,
   readSummary,
   type AiSettings,
   type SummaryInput,
@@ -46,6 +48,12 @@ export async function transcribe(settings: AiSettings, videoUri: string): Promis
   form.append('file', { uri: videoUri, name: 'video.mp4', type: 'video/mp4' } as unknown as Blob);
   const body = await request('POST', `${settings.baseUrl}/audio/transcriptions`, settings.apiKey, form, 120_000);
   return cleanTranscript((body as { text?: string } | null)?.text);
+}
+
+/** La transcription est-elle quelqu'un qui parle (et pas des paroles de chanson) ? */
+export async function isSpeech(settings: AiSettings, transcript: string): Promise<boolean> {
+  const body = JSON.stringify(buildSpeechCheckRequest(settings, transcript));
+  return readIsSpeech(await request('POST', `${settings.baseUrl}/chat/completions`, settings.apiKey, body, 60_000));
 }
 
 export async function summarize(settings: AiSettings, input: SummaryInput): Promise<string> {

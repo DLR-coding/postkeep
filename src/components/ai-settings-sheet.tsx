@@ -152,7 +152,7 @@ export function AiSettingsSheet({
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, paddingTop: 8, gap: 12 }}>
         <Text className="text-xl font-semibold">AI summary</Text>
         <Text variant="muted" className="text-sm">
-          When you save a video, your AI service watches it and writes a short summary you can search. Any
+          When you save a post, your AI service looks at its video or images and writes a short summary you can search. Any
           OpenAI-compatible service works. Your key stays encrypted on this phone.
         </Text>
 
@@ -192,7 +192,7 @@ export function AiSettingsSheet({
 
         {models.length > 0 && (
           <>
-            <SectionLabel>Video model</SectionLabel>
+            <SectionLabel>Vision model (video and images)</SectionLabel>
             <ModelChoice models={models} value={videoModel} onChange={setVideoModel} />
             <SectionLabel>Transcription model (audio)</SectionLabel>
             <ModelChoice models={models} value={transcriptionModel} onChange={setTranscriptionModel} noneLabel="None" />

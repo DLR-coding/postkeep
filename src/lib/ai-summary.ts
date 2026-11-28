@@ -25,7 +25,7 @@ export function validateAiSettings(s: AiSettings): AiSettings {
   // http refusé : la clé API circulerait en clair.
   if (!/^https:\/\/[^/\s]+/i.test(baseUrl)) throw new Error('The URL must start with https://');
   if (!apiKey) throw new Error('Enter the API key.');
-  if (!videoModel) throw new Error('Choose the video model.');
+  if (!videoModel) throw new Error('Choose the vision model.');
   return {
     baseUrl,
     apiKey,
@@ -49,54 +49,107 @@ export function parseModelIds(body: unknown): string[] {
     .sort((a, b) => a.localeCompare(b));
 }
 
-/** Transcription utile, ou null. Whisper rend « ♪ » sur une musique seule, et parfois un
- *  mot isolé inventé (« you ») : moins de deux mots n'apporte rien au résumé. */
+/** Phrases que Whisper invente sur une musique sans parole (vues le 24 novembre 2026 :
+ *  « Outro Music » sur un reel muet), et les annotations entre crochets ou parenthèses. */
+const WHISPER_NOISE =
+  /\[[^\]]*\]|\([^)]*\)|\b(?:(?:intro|outro|background|upbeat|soft|dramatic)\s+)?music\b|thanks? (?:you )?for watching!?|please subscribe!?|(?:sous-titres|subtitles)[^.]*amara\.org[^.]*\.?|merci d'avoir regardé[^.]*\.?/giu;
+
+/** Transcription utile, ou null. Whisper rend « ♪ » ou une phrase inventée sur une
+ *  musique seule, et parfois un mot isolé (« you ») : s'il reste moins de 6 lettres sans ce
+ *  bruit, rien n'est dit. Des lettres et pas des mots : le japonais n'a pas d'espaces.
+ *  Sinon le texte est gardé tel quel (« music » peut être dit). */
 export function cleanTranscript(text: string | null | undefined): string | null {
   const cleaned = (text ?? '').replace(/[♪♫🎵🎶]/gu, ' ').replace(/\s+/g, ' ').trim();
-  return cleaned.split(' ').filter(Boolean).length >= 2 ? cleaned : null;
+  const letters = cleaned.replace(WHISPER_NOISE, ' ').match(/\p{L}/gu)?.length ?? 0;
+  return letters >= 6 ? cleaned : null;
 }
 
 const LANGUAGE_NAME: Record<SummaryLanguage, string> = { en: 'English', fr: 'French' };
 
 export type SummaryInput = {
-  videoBase64: string;
+  videoBase64: string | null;
+  /** Images en data URL (`data:image/jpeg;base64,…`). */
+  images: string[];
   transcript: string | null;
   caption: string | null;
   note: string | null;
+  /** Noms des collections du post : l'intention de l'utilisateur (« Dessins à refaire »). */
+  collections: string[];
 };
 
 /** Corps de `POST /chat/completions`. `enable_thinking: false` est indispensable avec
  *  Qwen3.5 (vLLM) : sinon tous les tokens partent en raisonnement et la réponse est vide. */
 export function buildSummaryRequest(settings: AiSettings, input: SummaryInput) {
+  const language = LANGUAGE_NAME[settings.language];
   const context = [
     input.caption?.trim() && `Post caption: ${input.caption.trim()}`,
+    input.collections.length && `Saved in the collections: ${input.collections.join(', ')}`,
     input.note?.trim() && `User's note: ${input.note.trim()}`,
     input.transcript && `Transcript of the audio: ${input.transcript}`,
   ].filter(Boolean);
   return {
     model: settings.videoModel,
     max_tokens: 400,
+    temperature: 0.2,
     chat_template_kwargs: { enable_thinking: false },
     messages: [
       {
         role: 'system',
         content:
-          'You describe videos saved from social media so the user can find them later by searching. ' +
-          `Answer in ${LANGUAGE_NAME[settings.language]}, in at most 4 short sentences and 70 words: what the ` +
-          'video is about and what it shows (people, places, objects, steps, products, text on screen). Use ' +
-          'the transcript for what is said. Keep the key words someone would search for; skip the scene by ' +
-          'scene narration. Plain text only: no preamble, no markdown, no remark about missing audio.',
+          'The user saved this social media post to find it again and use it later. Write the note they would ' +
+          `want next to it, in ${language}, in at most 4 short sentences and 70 words: what it is about, what ` +
+          'is notable (style, technique, colors, composition, what is said) and what it is useful for. The ' +
+          'collection names say why it was saved: use them to judge what matters and what it is useful for ' +
+          '(a drawings collection: redraw it; a recipes one: cook it), but never write them. The transcript ' +
+          'is automatic: when it is someone talking (a voice-over, an explanation), lead with what they say, ' +
+          'it is usually the point of the post even over unrelated footage; when it is song lyrics or only ' +
+          'music, ignore it. Keep the key words someone would search for; skip the scene by scene narration. ' +
+          'Plain text only: start with the content itself, no label like "Post:", no markdown, no remark ' +
+          'about missing audio or images.',
       },
       {
         role: 'user',
         content: [
           // Langue répétée à la fin : sinon une légende en anglais l'emporte sur la consigne.
-          { type: 'text', text: [...context, `Write the summary in ${LANGUAGE_NAME[settings.language]}.`].join('\n') },
-          { type: 'video_url', video_url: { url: `data:video/mp4;base64,${input.videoBase64}` } },
+          { type: 'text', text: [...context, `Write the summary in ${language}.`].join('\n') },
+          ...input.images.map((url) => ({ type: 'image_url', image_url: { url } })),
+          ...(input.videoBase64
+            ? [{ type: 'video_url', video_url: { url: `data:video/mp4;base64,${input.videoBase64}` } }]
+            : []),
         ],
       },
     ],
   };
+}
+
+/** Question à part, sur le texte seul : paroles de chanson ou quelqu'un qui parle ?
+ *  Whisper ne fait pas la différence, et dans le prompt du résumé le modèle prenait une
+ *  fois sur deux des paroles pour un narrateur ; seul, il classe juste (12 sur 12 le
+ *  24 novembre 2026, ARCHITECTURE.md §13). */
+export function buildSpeechCheckRequest(settings: AiSettings, transcript: string) {
+  return {
+    model: settings.videoModel,
+    max_tokens: 5,
+    temperature: 0,
+    chat_template_kwargs: { enable_thinking: false },
+    messages: [
+      {
+        role: 'system',
+        content:
+          'This is an automatic transcript of the audio of a short social media video. Is it song lyrics ' +
+          '(singing, rap, music) or someone talking (voice-over, explanation, dialogue)? Answer with one ' +
+          'word: LYRICS or SPEECH.',
+      },
+      { role: 'user', content: transcript },
+    ],
+  };
+}
+
+/** Faux seulement sur une réponse LYRICS : dans le doute, la transcription est gardée. */
+export function readIsSpeech(body: unknown): boolean {
+  const content = (body as { choices?: { message?: { content?: unknown } }[] } | null)?.choices?.[0]?.message
+    ?.content;
+  return !(typeof content === 'string' && /lyrics/i.test(content));
 }
 
 /** Nombre de phrases gardées : le modèle ignore parfois la consigne (10 phrases vues sur
@@ -118,7 +171,7 @@ export function readSummary(body: unknown): string {
 export function httpErrorMessage(status: number, detail: string): string {
   if (status === 401 || status === 403) return 'The AI service rejected the API key.';
   if (status === 404) return 'URL or model not found (404). The URL usually ends with /v1.';
-  if (status === 413) return 'The video is too large for the AI service.';
+  if (status === 413) return 'The post is too large for the AI service.';
   const short = detail.trim().slice(0, 160);
   return `The AI service answered ${status}${short ? `: ${short}` : ''}.`;
 }
