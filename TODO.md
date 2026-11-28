@@ -185,7 +185,7 @@ connexion (`run-as … cat files/SQLite/postkeep.db`, DEVELOPMENT.md §9) :
       avant v0.4.1). Corrigé le 28 novembre 2026 : `open` du store ferme le clavier ; vérifié
       sur le S23, la recherche reste en place
 - [x] **Une carte ouverte (actions visibles) reste ouverte pendant le défilement** de la liste — corrigé le 28 novembre 2026 (`onScrollBeginDrag` → `closeOpenCard`), vérifié sur le
-      S23 dans « All posts » (pas encore dans une collection)
+      S23 dans « All posts » et dans une collection (« No collection »)
 
 ## 🟢 Aperçu des posts — par plateforme
 
