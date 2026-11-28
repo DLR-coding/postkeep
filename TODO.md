@@ -309,7 +309,9 @@ uniquement.
 - [x] Carrousels Instagram réels (collection « LatestTest », 28 novembre 2026, depuis le PC) :
       8 images (parfums, résumé juste, 25 000 tokens) ; 8 vidéos (seule la première est
       envoyée, comme prévu).
-- [ ] Post photo TikTok et post X à plusieurs photos : pas d'exemple, remis à plus tard.
+- [x] Post photo TikTok réel (`/photo/…`, « Latesttest ») : `imagePost` lu, 4 images JPEG
+      téléchargées avec le cookie de la page, pas de musique envoyée, résumé juste.
+- [ ] Post X à plusieurs photos : pas d'exemple, remis à plus tard.
 - [ ] Sur le S23 : un post photo et un carrousel enregistrés app fermée.
 - [x] Paroles de chanson : question à part « LYRICS ou SPEECH ? » avant le résumé. Vérifié
       depuis le PC le 28 novembre 2026 sur les collections « Test », « Body Goal » et
