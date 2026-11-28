@@ -732,7 +732,8 @@ points marqués « essai » attendent l'essai jetable sur le téléphone (voir `
   que les noms suffisent.
 - **Carrousel** : jusqu'à 10 images (`MAX_IMAGES`), plus la première vidéo s'il y en a
   une. Qwen accepte images et vidéo dans la même requête (vérifié le 24 novembre 2026).
-  Une image coûte environ 270 tokens.
+  Une image coûte de 270 tokens (photo X en `medium`) à 3 200 (Instagram, 1080 px) :
+  un carrousel de 8 images Instagram fait environ 25 000 tokens, deux vidéos.
 
 ### Fournisseur : tout service compatible OpenAI
 

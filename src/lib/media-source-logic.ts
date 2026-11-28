@@ -9,7 +9,8 @@
  *  OpenAI, et un base64 d'environ 33 Mo dans Hermes. */
 export const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 
-/** Images d'un carrousel envoyées au plus (environ 270 tokens chacune chez Qwen3.5). */
+/** Images d'un carrousel envoyées au plus. Chez Qwen3.5, de 270 tokens (photo X en
+ *  `medium`) à 3 200 (image Instagram en 1080 px) chacune. */
 export const MAX_IMAGES = 10;
 
 /** Ce qu'un post montre : la première vidéo et les images, dans l'ordre du post. */
