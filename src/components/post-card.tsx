@@ -50,6 +50,12 @@ const MAX_CHIPS = 3;
 // Carte dont les actions sont ouvertes (une seule à la fois, toutes listes confondues).
 let openCard: SwipeableMethods | null = null;
 
+/** Referme la carte ouverte. Branché sur `onScrollBeginDrag` des listes : une carte
+ *  ouverte ne doit pas défiler avec ses actions visibles (comportement Mail / Gmail). */
+export function closeOpenCard() {
+  openCard?.close();
+}
+
 /** Ligne « Fiche » de la refonte (spec, objectif 2) : vignette 9:16 à gauche, à droite
  *  « Plateforme · date », légende, note, puces de collection. `collectionId` : présent
  *  dans une vue collection, ajoute le balayage « Retirer de la collection »

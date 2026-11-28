@@ -11,7 +11,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { PlatformFilterPills } from '@/components/platform-filter-pills';
-import { PostCard } from '@/components/post-card';
+import { closeOpenCard, PostCard } from '@/components/post-card';
 import { GRID_COLUMNS, GRID_GAP, GRID_SIDE, gridCellWidth, PostGridCell } from '@/components/post-grid-cell';
 import { SettingsSheet } from '@/components/settings-sheet';
 import { TAB_BAR_CLEARANCE } from '@/components/glass-tab-bar';
@@ -109,6 +109,7 @@ export function PostsScreen() {
         // Défilement géré par gesture-handler : sinon le balayage d'une carte (PostCard)
         // prend la main dès 10 dp horizontaux et bloque le défilement en diagonale.
         renderScrollComponent={ScrollView}
+        onScrollBeginDrag={closeOpenCard}
         // Glisser la liste ferme le clavier : sans ça, pendant une recherche, les
         // derniers résultats restent sous le clavier et la barre (edge-to-edge).
         keyboardDismissMode="on-drag"

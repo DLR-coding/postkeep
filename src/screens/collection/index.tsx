@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 import { Text } from '@/components/ui/text';
-import { PostCard } from '@/components/post-card';
+import { closeOpenCard, PostCard } from '@/components/post-card';
 import { collectionPostsQuery, groupPostRows, uncategorizedPostsQuery, type PostListItem } from '@/db/posts';
 
 const UNCATEGORIZED_ID = 'none';
@@ -28,6 +28,7 @@ export function CollectionScreen() {
         // Défilement géré par gesture-handler : sinon le balayage d'une carte (PostCard)
         // prend la main dès 10 dp horizontaux et bloque le défilement en diagonale.
         renderScrollComponent={ScrollView}
+        onScrollBeginDrag={closeOpenCard}
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard item={item} collectionId={isUncategorized ? undefined : id} />}
